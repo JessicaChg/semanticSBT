@@ -1,13 +1,21 @@
 # relation-sbt
 
-## compile
+## Clone the Repository
 
+```
+git clone git@github.com:JessicaChg/semanticSBT.git
+```
+
+## prepare development environment, choose hardhat as the tool
 ```sh
 npm install --save-dev hardhat
+```
+
+## compile the contracts
+```
+cd semanticSBT
 npm install
-
 npx hardhat compile
-
 ```
 
 ## deploy 
@@ -23,8 +31,14 @@ npx hardhat run scripts/deploy.js
 
 + fill in the parameters in  hardhat.config.js
 ```
-const INFURA_PROJECT_ID = "";
-const PRIVATE_KEY = "";
+// Replace "INFURA PROJECT ID" with your INFURA project id
+// Go to https://infura.io/, sign up, create a new App in its dashboard, and replace "KEY" with its key
+const INFURA_PROJECT_ID = "INFURA INFURA PROJECT ID";
+
+// Replace "PRIVATE KEY" with your account private key
+// To export your private key from Metamask, open Metamask and go to Account Details > Export Private Key
+// Be aware of NEVER putting real Ether into testing accounts
+const PRIVATE_KEY = "PRIVATE KEY";
 ```
 
 + deploy and verify
