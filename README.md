@@ -21,6 +21,13 @@ npx hardhat run scripts/deploy.js
 
 2. deploy to testnet
 
++ fill in the parameters in  hardhat.config.js
+```
+const INFURA_PROJECT_ID = "";
+const PRIVATE_KEY = "";
+```
+
++ deploy and verify
 ```sh
 npx hardhat run scripts/deploy.js rinkeby
 

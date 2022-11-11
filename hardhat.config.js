@@ -2,7 +2,8 @@ require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
 require('@openzeppelin/hardhat-upgrades');
 
-
+const INFURA_PROJECT_ID = "";
+const PRIVATE_KEY = "";
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -19,8 +20,8 @@ module.exports = {
   },
   networks: {
     rinkeby: {
-      url: "<RPC URL>",
-      accounts: [privateKey1, privateKey2, ...]
+      url: `https://rinkeby.infura.io/v3/${INFURA_PROJECT_ID}`,
+      accounts: [`${PRIVATE_KEY}`]
     }
   },
   etherscan: {
