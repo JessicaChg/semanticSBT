@@ -9,12 +9,16 @@ npm install --save-dev hardhat
 ## Clone the Repository
 ```
 git clone git@github.com:JessicaChg/semanticSBT.git
+cd semanticSBT
 ```
 
 ## compile the contracts
+- install the library of this project depends on
 ```
-cd semanticSBT
 npm install
+```
+- compile contracts
+```
 npx hardhat compile
 ```
 
