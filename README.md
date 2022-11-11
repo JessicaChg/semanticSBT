@@ -1,14 +1,14 @@
 # relation-sbt
 
-## Clone the Repository
-
-```
-git clone git@github.com:JessicaChg/semanticSBT.git
-```
-
 ## prepare development environment, choose hardhat as the tool
+- To install Hardhat
 ```sh
 npm install --save-dev hardhat
+```
+
+## Clone the Repository
+```
+git clone git@github.com:JessicaChg/semanticSBT.git
 ```
 
 ## compile the contracts
@@ -27,7 +27,7 @@ npx hardhat run scripts/deploy.js
 
 ```
 
-2. deploy to testnet
+2. deploy to testnet, take the rinkeby as example
 
 + fill in the parameters in  hardhat.config.js
 ```
