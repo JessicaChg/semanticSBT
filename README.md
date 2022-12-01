@@ -21,6 +21,10 @@ npm install
 ```
 npx hardhat compile
 ```
+- test contracts
+```
+npx hardhat test
+```
 
 ## deploy 
 
