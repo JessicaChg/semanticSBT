@@ -47,7 +47,7 @@ const PRIVATE_KEY = "PRIVATE KEY";
 
 + deploy and verify
 ```sh
-npx hardhat run scripts/deploy.js rinkeby
+npx hardhat run scripts/deploy.js --network rinkeby
 
 npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network rinkeby <DEPLOYED_CONTRACT_ADDRESS>
 ```
