@@ -18,7 +18,7 @@ const blankNodePredicate = ['blankNodePredicate', 4];
 /*
 * Before Mint SBT, should initial the parameters of this contract. In this step, we prepare the element of semantic SBT
 * @param name The name for the Semantic SBT
-* @param name The symbol for the Semantic SBT
+* @param symbol The symbol for the Semantic SBT
 * @param baseURI The URI may point to a JSON file that conforms to the "ERC721Metadata JSON Schema".
 * @param schemaURI The URI of the contract witch point to a JSON file that conforms to the "ISemanticMetadata Metadata JSON Schema".
 * @param [className] The array of class name which are used for define the "SUBJECT" of SPO 
