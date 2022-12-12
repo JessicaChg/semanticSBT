@@ -14,14 +14,13 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "../interfaces/ISemanticSBTMetadata.sol";
-import "../interfaces/ISemanticSBTOperator.sol";
 
 import "../interfaces/ISemanticSBT.sol";
 import "./SemanticBaseStruct.sol";
 
 
 
-contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISemanticSBT, ISemanticSBTMetadata, ISemanticSBTOperator {
+contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISemanticSBT, ISemanticSBTMetadata {
     using Address for address;
     using Strings for uint256;
     using Strings for uint160;
@@ -138,7 +137,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         interfaceId == type(IERC721Metadata).interfaceId ||
         interfaceId == type(ISemanticSBT).interfaceId ||
         interfaceId == type(ISemanticSBTMetadata).interfaceId ||
-        interfaceId == type(ISemanticSBTOperator).interfaceId ||
         super.supportsInterface(interfaceId);
     }
 
