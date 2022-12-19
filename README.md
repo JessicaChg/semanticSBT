@@ -1,4 +1,10 @@
 # Semantic Soulbound Token
+## Semantic Soulbound Token
+Solidity Implementation of Semantic Soulbound Token.
+
+## Problem Trying to solve
+For now, social identity data has no common standard, then the corresponding NFT or SBT can usually only supply a single function.
+In order to solve this problem, Semantic Soulbound Token take ``Resource Description Framework`` as data model for SBT metadata, that make SBT can cantain more semantic information.
 
 ## How to Use 
 ```
