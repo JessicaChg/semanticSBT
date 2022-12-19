@@ -9,11 +9,11 @@ contracts/
 ```
 
 ## Contract
-``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity
-``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token
-``SemanticSBT.sol`` : Semantic Soulbound Token Contract
-``ISemanticSBT.sol`` : Semantic Soulbound Token Interface
-``ISemanticSBTMetadata.sol`` : Semantic Soulbound Token Metadata Interface
+``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
+``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token. \
+``SemanticSBT.sol`` : Semantic Soulbound Token Contract. \
+``ISemanticSBT.sol`` : Semantic Soulbound Token Interface. \
+``ISemanticSBTMetadata.sol`` : Semantic Soulbound Token Metadata Interface.
 
 
 ## prepare development environment, choose hardhat as the tool
