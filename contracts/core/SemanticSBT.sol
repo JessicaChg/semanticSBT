@@ -131,7 +131,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     }
 
 
-
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return interfaceId == type(IERC721).interfaceId ||
         interfaceId == type(IERC721Metadata).interfaceId ||
@@ -311,7 +310,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     }
 
 
-
     function approve(address to, uint256 tokenId) public override {
         address owner = ownerOf(tokenId);
         require(to != owner, "ERC721: approval to current owner");
@@ -427,7 +425,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         getApproved(tokenId) == spender ||
         isApprovedForAll(owner, spender));
     }
-
 
 
     function _addClass(string[] memory classList) internal {
@@ -610,27 +607,9 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     }
 
 
-    /* ============ External Functions ============ */
-
-
-    function addSubject(string memory value, string memory className_) external onlyMinter returns (uint256 sIndex) {
-        uint256 cIndex = _classIndex[className_];
-        require(cIndex > 0, "SemanticSBT: param error");
-        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
-        sIndex = _subjects.length;
-        _subjectIndex[cIndex][value] = sIndex;
-        _subjects.push(Subject(value, cIndex));
-    }
-
-    function mint(address account, uint256 sIndex, IntPO[] memory intPOList, StringPO[] memory stringPOList,
+    function _mint(uint256 tokenId, address account, IntPO[] memory intPOList, StringPO[] memory stringPOList,
         AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList) external onlyMinter returns (uint256) {
-        require(account != address(0), "SemanticSBT: mint to the zero address");
-        require(sIndex < _subjects.length, "SemanticSBT: param error");
-
-        uint256 tokenId = _tokens.length;
-
-        _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
+        BlankNodePO[] memory blankNodePOList) internal {
         uint256[] storage pIndex = _tokens[tokenId].pIndex;
         uint256[] storage oIndex = _tokens[tokenId].oIndex;
 
@@ -651,10 +630,36 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         );
         emit Transfer(address(0), account, tokenId);
         emit CreateSBT(msg.sender, account, tokenId, _buildRDF(_tokens[tokenId]));
-
-        return tokenId;
     }
 
+    function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
+        _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
+        return _tokens.length - 1;
+    }
+
+    /* ============ External Functions ============ */
+
+
+    function addSubject(string memory value, string memory className_) external onlyMinter returns (uint256 sIndex) {
+        uint256 cIndex = _classIndex[className_];
+        require(cIndex > 0, "SemanticSBT: param error");
+        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
+        sIndex = _subjects.length;
+        _subjectIndex[cIndex][value] = sIndex;
+        _subjects.push(Subject(value, cIndex));
+    }
+
+    function mint(address account, uint256 sIndex, IntPO[] memory intPOList, StringPO[] memory stringPOList,
+        AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
+        BlankNodePO[] memory blankNodePOList) external onlyMinter returns (uint256) {
+        require(account != address(0), "SemanticSBT: mint to the zero address");
+        require(sIndex < _subjects.length, "SemanticSBT: param error");
+
+        uint256 tokenId = _addEmptyToken(account, sIndex);
+
+        _mint(tokenId, account, intPOList, stringPOList, addressPOList, subjectPOList, blankNodePOList);
+        return tokenId;
+    }
 
     function burn(address account, uint256 id) external onlyMinter {
         require(
@@ -663,7 +668,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
         string memory _rdf = _buildRDF(_tokens[id]);
-       
+
         _approve(address(0), id);
         _burnCount++;
         _balances[account] -= 1;
