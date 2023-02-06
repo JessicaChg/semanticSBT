@@ -25,9 +25,9 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
     using Strings for address;
 
     mapping(address => mapping(uint256 => bool)) _isViewerOf;
-    mapping(address => uint256) _prepareTokenId;
+    mapping(address => uint256) _prepareToken;
     mapping(address => mapping(string => uint256)) _mintObject;
-    string constant PRIVACY_REFIX = "[Privacy]";
+    string constant PRIVACY_PREFIX = "[Privacy]";
 
     function _mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) internal {
         StringPO[] memory stringPOList = new StringPO[](1);
@@ -50,28 +50,32 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
         return isOwnerOf(viewer, tokenId) || _isViewerOf[viewer][tokenId];
     }
 
-    function ownedPrepareTokenId(address owner) external view returns (uint256) {
-        return _prepareTokenId[owner];
+    function ownedPrepareToken(address owner) external view returns (uint256) {
+        return _prepareToken[owner];
     }
 
-    function addViewer(address viewer, uint256 tokenId) external {
+    function addViewer(address[] memory viewer, uint256 tokenId) external {
         require(isOwnerOf(msg.sender, tokenId), "SemanticSBTPrivacy:Permission denied");
-        _isViewerOf[viewer][tokenId] = true;
+        for (uint256 i = 0; i < viewer.length; i++) {
+            if (!_isViewerOf[viewer[i]][tokenId]) {
+                _isViewerOf[viewer[i]][tokenId] = true;
+            }
+        }
     }
 
-    function prepareTokenId() external returns (uint256) {
-        require(_prepareTokenId[msg.sender] == 0, "SemanticSBTPrivacy:Already prepared");
+    function prepareToken() external returns (uint256) {
+        require(_prepareToken[msg.sender] == 0, "SemanticSBTPrivacy:Already prepared");
         uint256 tokenId = _addEmptyToken(msg.sender, 0);
-        _prepareTokenId[msg.sender] = tokenId;
+        _prepareToken[msg.sender] = tokenId;
         return tokenId;
     }
 
     function mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) external returns (uint256) {
         _checkPredicate(pIndex, FieldType.STRING);
-        require(_prepareTokenId[msg.sender] == tokenId, "SemanticSBTPrivacy:Permission denied");
+        require(_prepareToken[msg.sender] == tokenId, "SemanticSBTPrivacy:Permission denied");
         require(_mintObject[msg.sender][object] == 0, "SemanticSBTPrivacy:Already mint");
-        _mintPrivacy(tokenId, pIndex, string.concat(PRIVACY_REFIX, object));
-        delete _prepareTokenId[msg.sender];
+        _mintPrivacy(tokenId, pIndex, string.concat(PRIVACY_PREFIX, object));
+        delete _prepareToken[msg.sender];
         _mintObject[msg.sender][object] = tokenId;
         return tokenId;
     }
