@@ -86,16 +86,16 @@ describe("SemanticSBT contract", function () {
       const predicate = "p:intPredicate";
       const object = 100;
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
-      expect(await semanticSBT.mint(addr1.address, 0, [[1, 100]], [], [], [], []))
+      await expect(semanticSBT.mint(addr1.address, 0, [[1, 100]], [], [], [], []))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
     it("mint with only stringPredicatet,then burn", async function () {
@@ -105,16 +105,16 @@ describe("SemanticSBT contract", function () {
       const object = '"good"';
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-      expect(await semanticSBT.mint(addr1.address, 0, [], [[2, "good"]], [], [], []))
+      await expect(semanticSBT.mint(addr1.address, 0, [], [[2, "good"]], [], [], []))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
     it("mint with only addressPredicate,then burn", async function () {
@@ -124,16 +124,16 @@ describe("SemanticSBT contract", function () {
       const object = ':Soul_' + addr2.address.toLowerCase();
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-      expect(await semanticSBT.mint(addr1.address, 0, [], [], [[3, addr2.address.toLowerCase()]], [], []))
+      await expect(semanticSBT.mint(addr1.address, 0, [], [], [[3, addr2.address.toLowerCase()]], [], []))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
 
@@ -146,16 +146,16 @@ describe("SemanticSBT contract", function () {
       const object = ':' + className + '_' + subjectValue;
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-      expect(await semanticSBT.mint(addr1.address, 0, [], [], [], [[4, 1]], []))
+      await expect(semanticSBT.mint(addr1.address, 0, [], [], [], [[4, 1]], []))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
     it("mint with only blankNodePredicate,then burn", async function () {
@@ -167,16 +167,16 @@ describe("SemanticSBT contract", function () {
       const predicate = "p:blankNodePredicate";
       const object = '[p:intPredicate ' + 100 + ' ;p:subjectPredicate :' + className + '_' + subjectValue + ']';
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
-      expect(await semanticSBT.mint(addr1.address, 0, [], [], [], [], [[5, [[1, 100]], [], [], [[4, 1]]]]))
+      await expect(semanticSBT.mint(addr1.address, 0, [], [], [], [], [[5, [[1, 100]], [], [], [[4, 1]]]]))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
 
@@ -188,20 +188,32 @@ describe("SemanticSBT contract", function () {
         'p:addressPredicate :Soul_0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc;' +
         'p:subjectPredicate :TestClass_myTest;' +
         'p:blankNodePredicate [p:intPredicate 100 ;p:subjectPredicate :TestClass_myTest].'
-      expect(await semanticSBT.mint(addr1.address, 0, [[1, 100]], [[2, "good"]], [[3, addr2.address]], [[4, 1]], [[5, [[1, 100]], [], [], [[4, 1]]]]))
+      await expect(semanticSBT.mint(addr1.address, 0, [[1, 100]], [[2, "good"]], [[3, addr2.address]], [[4, 1]], [[5, [[1, 100]], [], [], [[4, 1]]]]))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
       expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
 
       await semanticSBT.connect(addr1).approve(owner.address, 1)
-      expect(await semanticSBT.burn(addr1.address, 1))
+      await expect(semanticSBT.burn(addr1.address, 1))
         .to.emit(semanticSBT, "RemoveSBT")
-        .withArgs(owner.address, owner.address, 1, rdf);
+        .withArgs(owner.address, addr1.address, 1, rdf);
     });
 
+    it("User should fail to mint privacy without call prepare token", async function () {
+      const { semanticSBT, owner } = await loadFixture(deployTokenFixture);
+      const subject = ':Soul_' + owner.address.toLowerCase();
+      const predicate = "p:stringPredicate";
+      const object = '"[Privacy]ar://the tx hash"';
+      const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-    it("User should prepare tokenId before mint privacy ", async function () {
+      expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(0);
+
+      await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
+          .to.revertedWith("SemanticSBTPrivacy:Permission denied")
+    });
+
+    it("User should prepare token before mint privacy ", async function () {
       const { semanticSBT, owner } = await loadFixture(deployTokenFixture);
       const subject = ':Soul_' + owner.address.toLowerCase();
       const predicate = "p:stringPredicate";
@@ -211,7 +223,7 @@ describe("SemanticSBT contract", function () {
       await semanticSBT.prepareToken();
       expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(1);
 
-      expect(await semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
+      await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, owner.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
@@ -227,7 +239,7 @@ describe("SemanticSBT contract", function () {
       await semanticSBT.prepareToken();
       expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(1);
 
-      expect(await semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
+      await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, owner.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
@@ -246,7 +258,7 @@ describe("SemanticSBT contract", function () {
       await semanticSBT.prepareToken();
       expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(1);
 
-      expect(await semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
+      await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, owner.address, 1, rdf);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
@@ -270,7 +282,7 @@ describe("SemanticSBT contract", function () {
 
         await semanticSBT.prepareToken();
         expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(i);
-        expect(await semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
+        await expect(semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
           .to.emit(semanticSBT, "CreateSBT")
           .withArgs(owner.address, owner.address, i, rdf);
         expect(await semanticSBT.rdfOf(i)).to.equal(rdf);
@@ -291,7 +303,7 @@ describe("SemanticSBT contract", function () {
 
         await semanticSBT.prepareToken();
         expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(i);
-        expect(await semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
+        await expect(semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
           .to.emit(semanticSBT, "CreateSBT")
           .withArgs(owner.address, owner.address, i, rdf);
         expect(await semanticSBT.rdfOf(i)).to.equal(rdf);
@@ -306,9 +318,9 @@ describe("SemanticSBT contract", function () {
         const object = '"ar://the tx hash' + i + '"';
         const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-        expect(await semanticSBT.mint(addr1.address, 0, [], [[2, "ar://the tx hash" + i]], [], [], []))
+        await expect(semanticSBT.mint(addr1.address, 0, [], [[2, "ar://the tx hash" + i]], [], [], []))
           .to.emit(semanticSBT, "CreateSBT")
-          .withArgs(owner.address, addr1.address, 1, rdf);
+          .withArgs(owner.address, addr1.address, i, rdf);
         expect(await semanticSBT.rdfOf(i)).to.equal(rdf);
         expect(await semanticSBT.ownerOf(i)).to.equal(addr1.address);
       }
@@ -323,7 +335,7 @@ describe("SemanticSBT contract", function () {
 
         await semanticSBT.prepareToken();
         expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(i);
-        expect(await semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
+        await expect(semanticSBT.mintPrivacy(i, 2, "ar://the tx hash" + i))
           .to.emit(semanticSBT, "CreateSBT")
           .withArgs(owner.address, owner.address, i, rdf);
         expect(await semanticSBT.rdfOf(i)).to.equal(rdf);
@@ -345,7 +357,7 @@ describe("SemanticSBT contract", function () {
       const object = '"ar://the tx hash"';
       const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-      expect(await semanticSBT.mint(addr1.address, 0, [], [[2, "ar://the tx hash"]], [], [], []))
+      await expect(semanticSBT.mint(addr1.address, 0, [], [[2, "ar://the tx hash"]], [], [], []))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, addr1.address, 2, rdf);
       expect(await semanticSBT.rdfOf(2)).to.equal(rdf);
@@ -360,7 +372,7 @@ describe("SemanticSBT contract", function () {
       const rdf1 = subject1 + ' ' + predicate1 + ' ' + object1 + '.';
       expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(1);
 
-      expect(await semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
+      await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
         .to.emit(semanticSBT, "CreateSBT")
         .withArgs(owner.address, owner.address, 1, rdf1);
       expect(await semanticSBT.rdfOf(1)).to.equal(rdf1);
