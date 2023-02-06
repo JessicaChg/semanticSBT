@@ -72,6 +72,7 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
 
     function mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) external returns (uint256) {
         _checkPredicate(pIndex, FieldType.STRING);
+        require(tokenId > 0, "SemanticSBTPrivacy:Token id not exist");
         require(_prepareToken[msg.sender] == tokenId, "SemanticSBTPrivacy:Permission denied");
         require(_mintObject[msg.sender][object] == 0, "SemanticSBTPrivacy:Already mint");
         _mintPrivacy(tokenId, pIndex, string.concat(PRIVACY_PREFIX, object));
