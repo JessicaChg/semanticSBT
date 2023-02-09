@@ -312,7 +312,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     function approve(address to, uint256 tokenId) public override {
         address owner = ownerOf(tokenId);
-        require(to != owner, "ERC721: approval to current owner");
+        require(to != owner, "ERC721: cannot approve to current owner");
 
         require(
             _msgSender() == owner || isApprovedForAll(owner, _msgSender()),
