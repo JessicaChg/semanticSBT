@@ -6,6 +6,7 @@ import "./ISemanticSBT.sol";
 
 /**
  * @dev Required interface of an ISemanticData compliant contract.
+ *       interfaceId: 0x41be3f18
  */
 interface ISemanticSBTPrivacy is ISemanticSBT {
 

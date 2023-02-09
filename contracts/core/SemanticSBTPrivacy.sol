@@ -80,4 +80,9 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
         _mintObject[msg.sender][object] = tokenId;
         return tokenId;
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT,IERC165) returns (bool) {
+        return interfaceId == type(ISemanticSBTPrivacy).interfaceId ||
+        super.supportsInterface(interfaceId);
+    }
 }
