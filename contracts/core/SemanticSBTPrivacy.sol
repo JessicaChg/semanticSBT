@@ -2,15 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "../interfaces/ISemanticSBTPrivacy.sol";
 
@@ -18,11 +10,7 @@ import "./SemanticSBT.sol";
 import "./SemanticBaseStruct.sol";
 
 contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
-    using Address for address;
-    using Strings for uint256;
-    using Strings for uint160;
 
-    using Strings for address;
 
     mapping(address => mapping(uint256 => bool)) _isViewerOf;
     mapping(address => uint256) _prepareToken;
@@ -52,6 +40,10 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
 
     function ownedPrepareToken(address owner) external view returns (uint256) {
         return _prepareToken[owner];
+    }
+
+    function mintedObject(address owner,string memory object) external view returns (uint256) {
+        return _mintObject[owner][object];
     }
 
     function addViewer(address[] memory viewer, uint256 tokenId) external {
