@@ -629,7 +629,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: transfer to non ERC721Receiver implementer"
         );
         emit Transfer(address(0), account, tokenId);
-        emit CreateSBT(msg.sender, account, tokenId, _buildRDF(_tokens[tokenId]));
+        emit CreateRDF(tokenId, _buildRDF(_tokens[tokenId]));
     }
 
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
@@ -675,7 +675,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         _tokens[id].owner = 0;
 
         emit Transfer(account, address(0), id);
-        emit RemoveSBT(msg.sender, account, id, _rdf);
+        emit RemoveRDF(id, _rdf);
     }
 
     function burnBatch(address account, uint256[] calldata ids)
@@ -698,7 +698,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             _tokens[tokenId].owner = 0;
 
             emit Transfer(account, address(0), tokenId);
-            emit RemoveSBT(msg.sender, account, tokenId, _rdf);
+            emit RemoveRDF(tokenId, _rdf);
         }
     }
 
