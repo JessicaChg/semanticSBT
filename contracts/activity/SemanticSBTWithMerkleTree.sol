@@ -53,7 +53,7 @@ contract SemanticSBTWithMerkleTree is SemanticSBT {
     }
 
 
-    function mint(bytes32[] calldata proof) external {
+    function mintWithProof(bytes32[] calldata proof) external {
         require(_freeMintable || _verify(_leaf(msg.sender), proof), "Activity: permission denied");
         require(_duplicatable || !_mintedSPO[msg.sender][_pIndex][_oIndex], "Activity: already minted");
         _mintedSPO[msg.sender][_pIndex][_oIndex] = true;

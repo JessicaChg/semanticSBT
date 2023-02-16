@@ -5,6 +5,7 @@ const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const {MerkleTree} = require('merkletreejs');
 const keccak256 = require('keccak256');
+var Web3 = require('web3');
 
 const name = 'privacy example SBT';
 const symbol = 'SBT';
@@ -94,6 +95,24 @@ describe("SemanticSBTWithMerkleTree contract", function () {
             expect(await  semanticSBT.whiteListURL()).to.equal(whiteListURL);
         });
 
+        it("Mint with proof", async function () {
+            const {semanticSBT, owner, addr1} = await loadFixture(deployTokenFixture);
+
+            let whitelistAddresses = [
+                owner.address,
+                addr1.address,
+            ];
+            let leafNodes = whitelistAddresses.map(address => keccak256(address));
+            let tree = new MerkleTree(leafNodes, keccak256, {sortPairs: true});
+            await expect(semanticSBT.setWhiteList(whiteListURL,tree.getHexRoot()));
+            expect(await  semanticSBT.whiteListURL()).to.equal(whiteListURL);
+
+            let leaf = keccak256(owner.address);
+            let proof = tree.getHexProof(leaf);
+            await semanticSBT.mintWithProof(proof);
+            expect(await semanticSBT.balanceOf(owner.address)).to.equal(1);
+        });
+
         it("User should failed to mint with a wrong proof ", async function () {
             const {semanticSBT, owner, addr1} = await loadFixture(deployTokenFixture);
 
@@ -106,10 +125,12 @@ describe("SemanticSBTWithMerkleTree contract", function () {
             await expect(semanticSBT.setWhiteList(whiteListURL,tree.getHexRoot()));
             expect(await  semanticSBT.whiteListURL()).to.equal(whiteListURL);
 
-            let leaf = keccak256('0xC441F40EEf994C16C48C286c946774B8C8b16A3a');
+            let leaf = keccak256('0xc441f40eef994c16c48c286c946774b8c8b16a31');
             let proof = tree.getHexProof(leaf);
-            await expect(semanticSBT.mint(proof)).to.be.revertedWith("Activity: permission denied")
+            await expect(semanticSBT.mintWithProof(proof)).to.be.revertedWith("Activity: permission denied")
         });
+
+
 
     })
 

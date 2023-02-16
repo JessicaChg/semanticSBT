@@ -73,7 +73,7 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
         return tokenId;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT,IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
         return interfaceId == type(ISemanticSBTPrivacy).interfaceId ||
         super.supportsInterface(interfaceId);
     }
