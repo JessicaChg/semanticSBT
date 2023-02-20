@@ -6,6 +6,7 @@ const {expect} = require("chai");
 const {MerkleTree} = require('merkletreejs');
 const keccak256 = require('keccak256');
 var Web3 = require('web3');
+const hre = require("hardhat");
 
 const name = 'privacy example SBT';
 const symbol = 'SBT';
@@ -30,7 +31,13 @@ const whiteListURL = "ar://";
 describe("SemanticSBTWithMerkleTree contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        const SemanticSBT = await ethers.getContractFactory("SemanticSBTWithMerkleTree");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
+        const SemanticSBT = await ethers.getContractFactory("SemanticSBTWithMerkleTree", {
+            libraries: {
+                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            }
+        });
         const semanticSBT = await SemanticSBT.deploy();
         await semanticSBT.initialize(
             owner.address,

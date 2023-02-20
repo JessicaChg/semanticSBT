@@ -3,6 +3,7 @@
 */
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
+const hre = require("hardhat");
 
 const name = 'example SBT';
 const symbol = 'SBT';
@@ -27,7 +28,15 @@ const blankNodePredicate = ['blankNodePredicate', 4];
 describe("SemanticSBT contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        const SemanticSBT = await ethers.getContractFactory("SemanticSBT");
+
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
+
+        const SemanticSBT = await ethers.getContractFactory("SemanticSBT", {
+            libraries: {
+                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            }
+        });
         const semanticSBT = await SemanticSBT.deploy();
         await semanticSBT.initialize(
             owner.address,

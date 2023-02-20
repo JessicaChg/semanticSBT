@@ -54,5 +54,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-
-https://mumbai.polygonscan.com/address/0xe8240317995f02c17288c31d26a15fbb9956b397
