@@ -6,24 +6,22 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 
+import "../interfaces/social/IActivity.sol";
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract SemanticSBTWithWhiteList is SemanticSBT {
+contract Activity is IActivity, SemanticSBT {
     using Strings for uint256;
     using Strings for address;
 
 
-    bytes32 constant MINT_ROLE = 0x0000000000000000000000000000000000000000000000000000000000000001;
-
-
-    mapping(address => bool) public whiteList;
-    address[] _whiteLists;
-
-    uint256 private constant _pIndex = 1;
-    uint256 private constant _oIndex = 1;
+    uint256 private _soulCIndex = 1;
+    uint256 private _activityCIndex = 2;
+    uint256 private _pIndex = 1;
+    uint256 private _oIndex = 1;
 
 
     mapping(address => mapping(uint256 => mapping(uint256 => bool)))  _mintedSPO;
@@ -31,7 +29,8 @@ contract SemanticSBTWithWhiteList is SemanticSBT {
     bool private _duplicatable;
     bool private _freeMintable;
 
-
+    string public whiteListURL;
+    bytes32 public merkleRoot;
 
     function duplicatable() public view returns (bool) {
         return _duplicatable;
@@ -41,29 +40,16 @@ contract SemanticSBTWithWhiteList is SemanticSBT {
         return _freeMintable;
     }
 
-    function whiteListRange(uint256 offset, uint256 limit) public view returns (address[] memory whiteList_){
-        if (offset > _whiteLists.length) {
-            return new address[](0);
-        }
-        uint256 end = (offset + limit) > _whiteLists.length ? _whiteLists.length : offset + limit;
-        limit = (offset + limit) > _whiteLists.length ? (_whiteLists.length - offset) : limit;
-        whiteList_ = new address[](limit);
-        for (uint256 i = offset; i < end; i++) {
-            whiteList_[i - offset] = _whiteLists[i];
-        }
+
+    function setActivity(string memory activityName) external onlyMinter{
+        require(getMinted() == 0,"Activity:can not set activity after minted!" );
+        _oIndex = super.addSubject(activityName, _classNames[_activityCIndex]);
     }
 
-
-    function addWhiteList(address[] memory addressList) external
-    onlyMinter {
-        for (uint256 i = 0; i < addressList.length; i++) {
-            if (!whiteList[addressList[i]]) {
-                whiteList[addressList[i]] = true;
-                _whiteLists.push(addressList[i]);
-            }
-        }
+    function setWhiteList(string memory whiteListURL_, bytes32 _root) external onlyOwner {
+        whiteListURL = whiteListURL_;
+        merkleRoot = _root;
     }
-
 
     function setDuplicatable(bool duplicatable_) external onlyOwner {
         _duplicatable = duplicatable_;
@@ -75,8 +61,8 @@ contract SemanticSBTWithWhiteList is SemanticSBT {
     }
 
 
-    function mint() external {
-        require(_freeMintable || whiteList[msg.sender], "Activity: permission denied");
+    function participate(bytes32[] calldata proof) external {
+        require(_freeMintable || _verify(_leaf(msg.sender), proof), "Activity: permission denied");
         require(_duplicatable || !_mintedSPO[msg.sender][_pIndex][_oIndex], "Activity: already minted");
         _mintedSPO[msg.sender][_pIndex][_oIndex] = true;
 
@@ -88,6 +74,14 @@ contract SemanticSBTWithWhiteList is SemanticSBT {
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
             subjectPO, new BlankNodePO[](0));
 
+    }
+
+    function _leaf(address account) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(account));
+    }
+
+    function _verify(bytes32 leaf, bytes32[] memory proof) internal view returns (bool) {
+        return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 
 }

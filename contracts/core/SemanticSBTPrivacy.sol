@@ -9,27 +9,13 @@ import "../interfaces/ISemanticSBTPrivacy.sol";
 import "./SemanticSBT.sol";
 import "./SemanticBaseStruct.sol";
 
-contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
+abstract contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
 
 
-    mapping(address => mapping(uint256 => bool)) _isViewerOf;
-    mapping(address => uint256) _prepareToken;
-    mapping(address => mapping(string => uint256)) _mintObject;
-    string constant PRIVACY_PREFIX = "[Privacy]";
-
-    function _mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) internal {
-        StringPO[] memory stringPOList = new StringPO[](1);
-        stringPOList[0] = StringPO(pIndex, object);
-        _mint(
-            tokenId,
-            msg.sender,
-            new IntPO[](0),
-            stringPOList,
-            new AddressPO[](0),
-            new SubjectPO[](0),
-            new BlankNodePO[](0)
-        );
-    }
+    mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
+    mapping(address => uint256) internal _prepareToken;
+    mapping(address => mapping(string => uint256)) internal _mintObject;
+    string internal constant PRIVACY_PREFIX = "[Privacy]";
 
 
     /* ============ External Functions ============ */
@@ -42,7 +28,7 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
         return _prepareToken[owner];
     }
 
-    function mintedObject(address owner,string memory object) external view returns (uint256) {
+    function mintedObject(address owner, string memory object) external view returns (uint256) {
         return _mintObject[owner][object];
     }
 
@@ -62,16 +48,6 @@ contract SemanticSBTPrivacy is ISemanticSBTPrivacy, SemanticSBT {
         return tokenId;
     }
 
-    function mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) external returns (uint256) {
-        _checkPredicate(pIndex, FieldType.STRING);
-        require(tokenId > 0, "SemanticSBTPrivacy:Token id not exist");
-        require(_prepareToken[msg.sender] == tokenId, "SemanticSBTPrivacy:Permission denied");
-        require(_mintObject[msg.sender][object] == 0, "SemanticSBTPrivacy:Already mint");
-        _mintPrivacy(tokenId, pIndex, string.concat(PRIVACY_PREFIX, object));
-        delete _prepareToken[msg.sender];
-        _mintObject[msg.sender][object] = tokenId;
-        return tokenId;
-    }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
         return interfaceId == type(ISemanticSBTPrivacy).interfaceId ||

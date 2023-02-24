@@ -1,4 +1,4 @@
-import {Connection} from "../social/Connection.sol";
+import {Connection} from "../template/Connection.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
 
 

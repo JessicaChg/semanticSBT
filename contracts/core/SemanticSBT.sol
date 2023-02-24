@@ -42,13 +42,13 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    mapping(address => bool) private _minters;
+    mapping(address => bool) internal _minters;
 
     bool private _transferable;
 
     Subject[] internal _subjects;
 
-    mapping(uint256 => mapping(string => uint256)) private _subjectIndex;
+    mapping(uint256 => mapping(string => uint256)) internal _subjectIndex;
 
     string private _baseURI;
 
@@ -126,8 +126,8 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         _baseURI = baseURI_;
         schemaURI = schemaURI_;
 
-        _addClass(classes_);
-        _addPredicate(predicates_);
+        SemanticSBTLogic.addClass(classes_, _classNames, _classIndex);
+        SemanticSBTLogic.addPredicate(predicates_, _predicates, _predicateIndex);
         emit EventMinterAdded(minter);
     }
 
@@ -196,7 +196,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     function rdfOf(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), "SemanticSBT: SemanticSBT does not exist");
-        return SemanticSBTLogic._buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+        return SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
     }
 
     function getMinted() public view returns (uint256) {
@@ -427,35 +427,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     }
 
 
-    function _addClass(string[] memory classList) internal {
-        for (uint256 i = 0; i < classList.length; i++) {
-            string memory className_ = classList[i];
-            require(
-                keccak256(abi.encode(className_)) != keccak256(abi.encode("")),
-                "SemanticSBT: Class cannot be empty"
-            );
-            require(_classIndex[className_] == 0, "SemanticSBT: already added");
-            _classNames.push(className_);
-            _classIndex[className_] = _classNames.length - 1;
-        }
-    }
-
-
-    function _addPredicate(Predicate[] memory predicates) internal {
-        for (uint256 i = 0; i < predicates.length; i++) {
-            Predicate memory predicate_ = predicates[i];
-            require(
-                keccak256(abi.encode(predicate_.name)) !=
-                keccak256(abi.encode("")),
-                "SemanticSBT: Predicate cannot be empty"
-            );
-            require(_predicateIndex[predicate_.name] == 0, "SemanticSBT: already added");
-            _predicates.push(predicate_);
-            _predicateIndex[predicate_.name] = _predicates.length - 1;
-        }
-    }
-
-
     function _checkPredicate(uint256 pIndex, FieldType fieldType) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
         require(_predicates[pIndex].fieldType == fieldType, "SemanticSBT: predicate type error");
@@ -479,7 +450,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: transfer to non ERC721Receiver implementer"
         );
         emit Transfer(address(0), account, tokenId);
-        emit CreateRDF(tokenId, SemanticSBTLogic._buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        emit CreateRDF(tokenId, SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
@@ -496,7 +467,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     /* ============ External Functions ============ */
 
 
-    function addSubject(string memory value, string memory className_) external onlyMinter returns (uint256 sIndex) {
+    function addSubject(string memory value, string memory className_) public onlyMinter returns (uint256 sIndex) {
         uint256 cIndex = _classIndex[className_];
         require(cIndex > 0, "SemanticSBT: param error");
         require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
@@ -521,7 +492,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        string memory _rdf = SemanticSBTLogic._buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+        string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
 
         _approve(address(0), id);
         _burnCount++;
@@ -545,7 +516,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
                 "SemanticSBT: caller is not approved or owner"
             );
             require(isOwnerOf(account, tokenId), "SemanticSBT: not owner");
-            string memory _rdf = SemanticSBTLogic._buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+            string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
 
             // Clear approvals
             _approve(address(0), tokenId);

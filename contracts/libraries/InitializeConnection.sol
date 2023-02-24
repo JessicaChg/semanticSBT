@@ -4,19 +4,16 @@ import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
 
 library InitializeConnection {
 
-    string constant PROFILE = "Profile";
     string constant  FOLLOWING = "following";
+    string constant NAME = "Connection";
     string constant SYMBOL = "CONNECT";
     string constant BASE_URI = "";
-    string constant SCHEMA_URI = "";
+    string constant SCHEMA_URI = "ar://k_dvbio3h16I82XK_O62oBBSTfMd9BnUXhY8uxfOmrk";
 
-    function initConnection(address connection, uint256 profileId,string memory name) external returns (bool) {
-
-        string[] memory classes_ = new string[](1);
-        classes_[0] = PROFILE;
+    function initConnection(address connection, address owner, address minter) external returns (bool) {
         Predicate[] memory predicates_ = new Predicate[](1);
         predicates_[0] = Predicate(FOLLOWING, FieldType.SUBJECT);
-        IConnection(connection).initialize(profileId, msg.sender, name, SYMBOL, BASE_URI, SCHEMA_URI, classes_, predicates_);
+        IConnection(connection).initialize(owner, minter, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
         return true;
     }
 

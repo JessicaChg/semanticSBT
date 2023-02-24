@@ -5,7 +5,7 @@ interface IConnection is ISemanticSBT {
 
 
     function initialize(
-        uint256 profileId,
+        address owner,
         address minter,
         string memory name_,
         string memory symbol_,
@@ -16,6 +16,6 @@ interface IConnection is ISemanticSBT {
     ) external;
 
 
-    function mint(uint256 profileId, address to) external returns (uint256);
+    function mint(address to) external returns (uint256);
 
 }

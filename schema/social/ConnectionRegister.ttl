@@ -12,12 +12,15 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     rdfs:label "soul" ;
     rdfs:comment "A soul" .
 
+:Contract a rdfs:Class ;
+    rdfs:label "contract" ;
+    rdfs:comment "A contract" .
 
 ###################
 # predicate
 ###################
 
-p:following a rdfs:Class ;
-    rdfs:label "following" ;
-    rdfs:comment "The following" ;
-    rdfs:range :Profile .
+p:connectionContract a rdfs:Class ;
+    rdfs:label "connectionAddress" ;
+    rdfs:comment "The user's connection contract" ;
+    rdfs:range :Contract .

@@ -16,12 +16,11 @@ contract Connection is IConnection, SemanticSBT {
     uint256 constant followingPredicateIndex = 1;
 
     uint256 constant soulCIndex = 1;
-    uint256 constant profileCIndex = 2;
 
     /* ============ External Functions ============ */
 
     function initialize(
-        uint256 profileId,
+        address owner,
         address minter,
         string memory name_,
         string memory symbol_,
@@ -31,13 +30,13 @@ contract Connection is IConnection, SemanticSBT {
         Predicate[] memory predicates_
     ) external override {
         super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
-        _setOwner(profileId);
+        _setOwner(owner);
     }
 
 
 
-    function mint(uint256 profileId, address to) external onlyMinter returns (uint256) {
-        uint256 sIndex = _addSubject(profileId.toString(), profileCIndex);
+    function mint( address to) external onlyMinter returns (uint256) {
+        uint256 sIndex = _addSubject(to.toHexString(), soulCIndex);
         uint256 tokenId = _addEmptyToken(to, sIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
 
@@ -50,8 +49,8 @@ contract Connection is IConnection, SemanticSBT {
 
     /* ============ Internal Functions ============ */
 
-    function _setOwner(uint256 profileId) internal {
-        uint256 sIndex = _addSubject(profileId.toString(), profileCIndex);
+    function _setOwner(address owner) internal {
+        uint256 sIndex = _addSubject(owner.toHexString(), soulCIndex);
         ownerSubjectPO.push(SubjectPO(followingPredicateIndex, sIndex));
     }
 

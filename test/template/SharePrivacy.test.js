@@ -25,13 +25,13 @@ const blankNodePredicate = ['blankNodePredicate', 4];
 * @param [className] The array of class name which are used for define the "SUBJECT" of SPO 
 * @param [className] The array of five data types of predicates which are used for define the "PREDICATE" of SPO 
 */
-describe("SemanticSBT contract", function () {
+describe("SharePrivacy contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
 
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-        const SemanticSBT = await ethers.getContractFactory("SemanticSBTPrivacy", {
+        const SemanticSBT = await ethers.getContractFactory("SharePrivacy", {
             libraries: {
                 SemanticSBTLogic: semanticSBTLogicLibrary.address,
             }
@@ -209,7 +209,7 @@ describe("SemanticSBT contract", function () {
             const {semanticSBT, owner} = await loadFixture(deployTokenFixture);
             expect(await semanticSBT.ownedPrepareToken(owner.address)).to.equal(0);
             await expect(semanticSBT.mintPrivacy(1, 2, "ar://the tx hash"))
-                .to.revertedWith("SemanticSBTPrivacy:Permission denied")
+                .to.revertedWith("SharePrivacy:Permission denied")
         });
 
         it("User should prepare token before mint privacy ", async function () {

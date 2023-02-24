@@ -6,38 +6,48 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 
+const name = 'Activity Template';
+const symbol = 'SBT';
+const baseURI = 'https://api.example.com/v1/';
+const schemaURI = 'ar://pEaI9o8moBFof5IkOSq1qNnl8RuP0edn2BFD1q6vdE4';
+const class_ = ["Activity"];
+const predicate_ = [["participate", 3]];
+const myActivity = "Example-Activity";
+
 async function main() {
+
+    const [owner] = await ethers.getSigners();
 
     const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-    console.log(
-        `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
-    );
+    console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
-
-    const contractName = "Connection";
+    const contractName = "Activity";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
             SemanticSBTLogic: semanticSBTLogicLibrary.address,
         }
     });
     const myContract = await MyContract.deploy();
+    console.log(`${contractName} deployed ,contract address: ${myContract.address}`);
+    await myContract.deployTransaction.wait();
 
-    await myContract.deployed();
-    console.log(
-        `${contractName} deployed ,contract address: ${myContract.address}`
-    );
-    const [owner] = await ethers.getSigners();
-    await myContract.initialize(
+    await (await myContract.initialize(
         owner.address,
-        "test_follow",
-        "SBT",
-        "124",
-        "https://7c7sincqgdslhlsfunhcel7xkv777fq4iay54krm32yqjwovxlvq.arweave.net/-L8kNFAw5LOuRaNOIi_3VX__lhxAMd4qLN6xBNnVuus",
-        ["Profile"],
-        [["following", 3]],
-    )
-    console.log(` initialize done!`);
+        name,
+        symbol,
+        baseURI,
+        schemaURI,
+        class_,
+        predicate_)).wait();
+    console.log(`${contractName} initialized!`);
+
+
+    await myContract.addSubject(
+        myActivity,
+        "Activity"
+    );
+    console.log(`${myActivity} has added to ${contractName}`);
 
 }
 
