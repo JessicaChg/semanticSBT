@@ -132,7 +132,7 @@ describe("SemanticSBTWithMerkleTree contract", function () {
             await expect(semanticSBT.setWhiteList(whiteListURL,tree.getHexRoot()));
             expect(await  semanticSBT.whiteListURL()).to.equal(whiteListURL);
 
-            let leaf = keccak256('0xc441f40eef994c16c48c286c946774b8c8b16a31');
+            let leaf = keccak256(addr1.address);
             let proof = tree.getHexProof(leaf);
             await expect(semanticSBT.mintWithProof(proof)).to.be.revertedWith("Activity: permission denied")
         });
