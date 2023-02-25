@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBT.sol";
-import "../interfaces/social/IConnection.sol";
+import "../interfaces/social/IFollow.sol";
 
-contract Follow is IConnection, SemanticSBT {
+contract Follow is IFollow, SemanticSBT {
 
     using Strings for uint256;
     using Strings for address;
@@ -65,7 +65,7 @@ contract Follow is IConnection, SemanticSBT {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
-        return interfaceId == type(IConnection).interfaceId ||
+        return interfaceId == type(IFollow).interfaceId ||
         super.supportsInterface(interfaceId);
     }
 

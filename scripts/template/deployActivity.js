@@ -45,11 +45,18 @@ async function main() {
     console.log(`${contractName} initialized!`);
 
 
-    await myContract.setActivity(myActivity);
+    await (await myContract.setActivity(myActivity)).wait()
     console.log(`The activity of ${myActivity} is set successfully!`);
 
-    await myContract.addWhiteList(whiteList);
-    console.log(`The whiteList is successfully!`);
+    whiteList.push(owner.address)
+    await (await myContract.addWhiteList(whiteList)).wait();
+    console.log(`The whiteList is set successfully!`);
+
+    await (await myContract.participate()).wait();
+    console.log(`${owner.address} participate the activity successfully!`);
+
+    const rdf = await myContract.rdfOf(1);
+    console.log(`The rdf of the first token is:  ${rdf}`);
 
 }
 

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/INameService.sol";
-import "../interfaces/social/IConnection.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 import {NameServiceLogic} from "../libraries/NameServiceLogic.sol";
 

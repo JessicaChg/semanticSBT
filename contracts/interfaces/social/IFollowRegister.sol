@@ -7,6 +7,6 @@ interface IFollowRegister is ISemanticSBT {
 
     function ownedFollowContract(address owner) external view returns (address);
 
-    function follow(address[] calldata profileIds, bytes[] calldata datas) external returns (uint256[] memory);
+    function follow(address[] calldata profileIds) external returns (uint256[] memory);
 
 }
