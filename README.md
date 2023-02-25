@@ -81,3 +81,13 @@ npx hardhat run scripts/deploy.js --network rinkeby
 
 npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network rinkeby <DEPLOYED_CONTRACT_ADDRESS>
 ```
+
++ deploy other template contracts
+
+```sh
+npx hardhat run scripts/template/deployActivity.js --network rinkeby
+npx hardhat run scripts/template/deployConnectionRegister.js --network rinkeby
+npx hardhat run scripts/template/deploySemanticSBTPrivacy.js --network rinkeby
+
+```
+
