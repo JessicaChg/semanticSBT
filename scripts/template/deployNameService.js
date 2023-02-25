@@ -4,50 +4,61 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
+const {ethers, upgrades} = require("hardhat");
 
-const name = 'Name Service';
+
+const name = 'Relation Name Service V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
 const class_ = ["Domain"];
 const predicate_ = [["hold", 3], ["resolved", 3]];
 
+const minDomainLength_ = 3;
+const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
+
 async function main() {
+    const [owner] = await ethers.getSigners();
 
-  const [owner] = await ethers.getSigners();
+    const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
+    const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
+    console.log(
+        `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
+    );
 
-  const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
-  const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-  console.log(
-      `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
-  );
+    const contractName = "NameService";
+    console.log(contractName)
 
-  const contractName = "NameService";
-  const MyContract = await hre.ethers.getContractFactory(contractName, {
-    libraries: {
-      SemanticSBTLogic: semanticSBTLogicLibrary.address,
-    }
-  });
-  const nameService = await MyContract.deploy();
+    const MyContract = await ethers.getContractFactory(contractName);
+    const myContract = await upgrades.deployProxy(MyContract,
+        [owner.address,
+            name,
+            symbol,
+            baseURI,
+            schemaURI,
+            class_,
+            predicate_],
+        {unsafeAllowLinkedLibraries: true});
 
-  await nameService.initialize(
-      owner.address,
-      name,
-      symbol,
-      baseURI,
-      schemaURI,
-      class_,
-      predicate_);
-  console.log(
-    `${contractName} deployed ,contract address: ${nameService.address}`
-  );
+    await myContract.deployed();
+    console.log(
+        `${contractName} deployed ,contract address: ${myContract.address}`
+    );
+    await (await myContract.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
+
+
+    //upgrade
+    // const proxyAddress = "0xa25243f934258F4267ed4C4bD37C03a0344414D0";
+    // await upgrades.upgradeProxy(
+    // proxyAddress,
+    //     MyContract,
+    //     {unsafeAllowLinkedLibraries: true});
 
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+    console.error(error);
+    process.exitCode = 1;
 });

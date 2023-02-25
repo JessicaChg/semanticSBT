@@ -4,6 +4,7 @@
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const hre = require("hardhat");
+const {ethers, upgrades} = require("hardhat");
 
 const name = 'Name Service';
 const symbol = 'SBT';
@@ -11,6 +12,9 @@ const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
 const class_ = ["Domain"];
 const predicate_ = [["hold", 3], ["resolved", 3]];
+
+const minDomainLength_ = 3;
+const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
 
 
 /*
@@ -26,28 +30,29 @@ describe("Name Service contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+
+        const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-        console.log(
-            `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
-        );
+        const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
+        const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
 
         const contractName = "NameService";
-        const MyContract = await hre.ethers.getContractFactory(contractName, {
-            libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
-            }
-        });
-        const nameService = await MyContract.deploy();
+        console.log(contractName)
 
-        await nameService.initialize(
-            owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_);
+        const MyContract = await ethers.getContractFactory(contractName);
+        const nameService = await upgrades.deployProxy(MyContract,
+            [owner.address,
+                name,
+                symbol,
+                baseURI,
+                schemaURI,
+                class_,
+                predicate_],
+            {unsafeAllowLinkedLibraries: true});
+
+        await nameService.deployed();
+        await (await nameService.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
+
         return {nameService, owner, addr1, addr2};
     }
 
@@ -56,6 +61,7 @@ describe("Name Service contract", function () {
         const {nameService, owner} = await loadFixture(deployTokenFixture);
         expect(await nameService.owner()).to.equal(owner.address);
     });
+
     // make sure contract owner can mint SBT
     it("minter", async function () {
         const {nameService, owner} = await loadFixture(deployTokenFixture);
@@ -87,27 +93,73 @@ describe("Name Service contract", function () {
             const domain = "my-fist-domain";
             await nameService.register(owner.address, domain, true);
 
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:hold :Domain_${domain};p:resolved :Domain_${domain}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Domain_${domain}.`;
             expect(await nameService.rdfOf(1)).to.be.equal(rdf);
         });
 
 
         it("User should fail to register a domain when the length of domain less than minDomainLength", async function () {
-            const {nameService, owner,addr1} = await loadFixture(deployTokenFixture);
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const domain = "do";
-            await  expect(nameService.connect(addr1).register(owner.address, domain, true)).to.be.revertedWith("NameService: invalid length of name");
+            await expect(nameService.connect(addr1).register(owner.address, domain, true)).to.be.revertedWith("NameService: invalid length of name");
         });
 
-        it("Register a domain,and then call the function setNameForAddr ", async function () {
-            const {nameService, owner,addr1} = await loadFixture(deployTokenFixture);
+        it("User should get name by domain after register a domain,and then call the function setNameForAddr ", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const domain = "my-domain";
-            await nameService.register(owner.address,domain,false);
-            expect(await  nameService.addr(domain)).to.be.equal("0x0000000000000000000000000000000000000000");
-            expect(await  nameService.nameOf(owner.address)).to.be.equal("");
+            await nameService.register(owner.address, domain, false);
+            expect(await nameService.addr(domain)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal("");
 
-            await nameService.setNameForAddr(owner.address,domain);
-            expect(await  nameService.addr(domain)).to.be.equal(owner.address);
-            expect(await  nameService.nameOf(owner.address)).to.be.equal(domain);
+            await nameService.setNameForAddr(owner.address, domain);
+            expect(await nameService.addr(domain)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(domain);
+        });
+
+        it("User should get addr by domain after call the function setNameForAddr ", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            const domain = "my-domain";
+            await nameService.register(owner.address, domain, false);
+            expect(await nameService.addr(domain)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal("");
+
+            await nameService.setNameForAddr(owner.address, domain);
+            expect(await nameService.addr(domain)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(domain);
+        });
+
+        it("User can not transfer when not transferable", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            const domain = "my-domain";
+            await nameService.register(owner.address, domain, false);
+            await expect(nameService.transferFrom(owner.address, addr1.address, 1)).to.be.revertedWith("SemanticSBT: must transferable")
+        });
+
+
+        it("User should fail to transfer when domain has resolved", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            await nameService.setTransferable(true);
+
+            const domain = "my-domain";
+            await nameService.register(owner.address, domain, true);
+            await expect(nameService.transferFrom(owner.address, addr1.address, 1)).to.be.revertedWith("NameService:can not transfer when resolved");
+        });
+
+
+        it("User could set resolve after own a transferred token", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            await nameService.setTransferable(true);
+
+            const domain = "my-domain";
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Domain_${domain}.`;
+            await expect(nameService.register(owner.address, domain, false))
+                .to.be.emit(nameService, "CreateRDF")
+                .withArgs(1, rdf1);
+
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Domain_${domain}.`;
+            await expect(nameService.transferFrom(owner.address, addr1.address, 1))
+                .to.be.emit(nameService, "UpdateRDF")
+                .withArgs(1, rdf2);
         });
 
     })

@@ -13,14 +13,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import "../interfaces/ISemanticSBTMetadata.sol";
+import "../interfaces/ISemanticSBTSchema.sol";
 
 import "../interfaces/ISemanticSBT.sol";
 import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogic} from "../libraries/SemanticSBTLogic.sol";
 
 
-contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISemanticSBT, ISemanticSBTMetadata {
+contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISemanticSBT, ISemanticSBTSchema, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
     using Strings for uint160;
@@ -136,7 +136,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         return interfaceId == type(IERC721).interfaceId ||
         interfaceId == type(IERC721Metadata).interfaceId ||
         interfaceId == type(ISemanticSBT).interfaceId ||
-        interfaceId == type(ISemanticSBTMetadata).interfaceId ||
+        interfaceId == type(ISemanticSBTSchema).interfaceId ||
         super.supportsInterface(interfaceId);
     }
 
@@ -294,7 +294,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
 
     function tokenURI(uint256 tokenId)
-    public
+    external
     view
     override
     returns (string memory)

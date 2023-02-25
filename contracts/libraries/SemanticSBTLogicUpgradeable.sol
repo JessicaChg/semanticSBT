@@ -3,11 +3,11 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
 
-library SemanticSBTLogic {
-    using Address for address;
-    using Strings for uint256;
-    using Strings for uint160;
-    using Strings for address;
+library SemanticSBTLogicUpgradeable {
+    using AddressUpgradeable for address;
+    using StringsUpgradeable for uint256;
+    using StringsUpgradeable for uint160;
+    using StringsUpgradeable for address;
 
     string  constant TURTLE_LINE_SUFFIX = " ;";
     string  constant TURTLE_END_SUFFIX = " . ";
@@ -22,7 +22,7 @@ library SemanticSBTLogic {
     string  constant BLANK_SPACE = " ";
 
 
-    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
+    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) internal {
         for (uint256 i = 0; i < classList.length; i++) {
             string memory className_ = classList[i];
             require(
@@ -36,7 +36,7 @@ library SemanticSBTLogic {
     }
 
 
-    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
+    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) internal {
         for (uint256 i = 0; i < predicates.length; i++) {
             Predicate memory predicate_ = predicates[i];
             require(
@@ -51,9 +51,19 @@ library SemanticSBTLogic {
     }
 
 
+    function addSubject(string memory value, string memory className_,
+        Subject[] storage _subjects,
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex,
+        mapping(string => uint256) storage _classIndex) internal returns (uint256 sIndex) {
+        uint256 cIndex = _classIndex[className_];
+        require(cIndex > 0, "SemanticSBT: param error");
+        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
+        sIndex = _addSubject(value, cIndex, _subjects, _subjectIndex);
+    }
+
     function mint(uint256[] storage pIndex, uint256[] storage oIndex,
         IntPO[] memory intPOList, StringPO[] memory stringPOList, AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) public {
+        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
 
         addIntPO(pIndex, oIndex, intPOList, _predicates);
         addStringPO(pIndex, oIndex, stringPOList, _predicates, _stringO);
@@ -64,7 +74,7 @@ library SemanticSBTLogic {
     }
 
 
-    function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) public {
+    function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) internal {
         for (uint256 i = 0; i < intPOList.length; i++) {
             IntPO memory intPO = intPOList[i];
             _checkPredicate(intPO.pIndex, FieldType.INT, _predicates);
@@ -73,7 +83,7 @@ library SemanticSBTLogic {
         }
     }
 
-    function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) public {
+    function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) internal {
         for (uint256 i = 0; i < stringPOList.length; i++) {
             StringPO memory stringPO = stringPOList[i];
             _checkPredicate(stringPO.pIndex, FieldType.STRING, _predicates);
@@ -84,7 +94,7 @@ library SemanticSBTLogic {
         }
     }
 
-    function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) public {
+    function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) internal {
         for (uint256 i = 0; i < addressPOList.length; i++) {
             AddressPO memory addressPO = addressPOList[i];
             _checkPredicate(addressPO.pIndex, FieldType.ADDRESS, _predicates);
@@ -93,7 +103,7 @@ library SemanticSBTLogic {
         }
     }
 
-    function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) public {
+    function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) internal {
         for (uint256 i = 0; i < subjectPOList.length; i++) {
             SubjectPO memory subjectPO = subjectPOList[i];
             _checkPredicate(subjectPO.pIndex, FieldType.SUBJECT, _predicates);
@@ -103,7 +113,7 @@ library SemanticSBTLogic {
         }
     }
 
-    function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) public {
+    function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
         for (uint256 i = 0; i < blankNodePOList.length; i++) {
             BlankNodePO memory blankNodePO = blankNodePOList[i];
             require(blankNodePO.pIndex < _predicates.length, "SemanticSBT: predicate not exist");
@@ -124,7 +134,7 @@ library SemanticSBTLogic {
     }
 
 
-    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
+    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
         for (uint256 i = 0; i < spo.pIndex.length; i++) {
@@ -213,5 +223,14 @@ library SemanticSBTLogic {
     function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
         require(_predicates[pIndex].fieldType == fieldType, "SemanticSBT: predicate type error");
+    }
+
+
+    function _addSubject(string memory value, uint256 cIndex,
+        Subject[] storage _subjects,
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) internal returns (uint256 sIndex){
+        sIndex = _subjects.length;
+        _subjectIndex[cIndex][value] = sIndex;
+        _subjects.push(Subject(value, cIndex));
     }
 }
