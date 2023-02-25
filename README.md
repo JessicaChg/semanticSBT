@@ -19,7 +19,7 @@ contracts/
 ``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token. \
 ``SemanticSBT.sol`` : Semantic Soulbound Token Contract. \
 ``ISemanticSBT.sol`` : Semantic Soulbound Token Interface. \
-``ISemanticSBTMetadata.sol`` : Semantic Soulbound Token Metadata Interface.
+``ISemanticSBTSchema.sol`` : Semantic Soulbound Token Metadata Interface.
 
 
 ## prepare development environment, choose hardhat as the tool

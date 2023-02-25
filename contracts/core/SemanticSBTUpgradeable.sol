@@ -3,29 +3,28 @@
 pragma solidity ^0.8.0;
 
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/ISemanticSBTSchema.sol";
-
 import "../interfaces/ISemanticSBT.sol";
 import "./SemanticBaseStruct.sol";
-import {SemanticSBTLogic} from "../libraries/SemanticSBTLogic.sol";
+import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 
 
-contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISemanticSBT, ISemanticSBTSchema, IERC721Metadata {
-    using Address for address;
-    using Strings for uint256;
-    using Strings for uint160;
+contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema, IERC721MetadataUpgradeable {
+    using AddressUpgradeable for address;
+    using StringsUpgradeable for uint256;
+    using StringsUpgradeable for uint160;
 
-    using Strings for address;
+    using StringsUpgradeable for address;
 
 
     string private _name;
@@ -66,18 +65,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     BlankNodeO[] internal _blankNodeO;
 
 
-    string  constant TURTLE_LINE_SUFFIX = " ;";
-    string  constant TURTLE_END_SUFFIX = " . ";
     string  constant SOUL_CLASS_NAME = "Soul";
-
-
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
-
-    string  constant CONCATENATION_CHARACTER = "_";
-    string  constant BLANK_NODE_START_CHARACTER = "[";
-    string  constant BLANK_NODE_END_CHARACTER = "]";
-    string  constant BLANK_SPACE = " ";
 
 
     event EventMinterAdded(address indexed newMinter);
@@ -97,7 +85,8 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     }
 
 
-    constructor() {
+    function before_init() internal {
+        __Ownable_init();
         SPO memory _spo = SPO(0, 0, new uint256[](0), new uint256[](0));
         Subject memory _subject = Subject("", 0);
         _tokens.push(_spo);
@@ -108,6 +97,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         _predicates.push(Predicate("", FieldType.INT));
     }
 
+
     function initialize(
         address minter,
         string memory name_,
@@ -116,25 +106,25 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer onlyOwner {
+    ) public initializer {
         require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schema URI cannot be empty");
         require(predicates_.length > 0, "SemanticSBT: predicate size can not be empty");
-
+        before_init();
         _minters[minter] = true;
         _name = name_;
         _symbol = symbol_;
         _baseURI = baseURI_;
         schemaURI = schemaURI_;
 
-        SemanticSBTLogic.addClass(classes_, _classNames, _classIndex);
-        SemanticSBTLogic.addPredicate(predicates_, _predicates, _predicateIndex);
+        SemanticSBTLogicUpgradeable.addClass(classes_, _classNames, _classIndex);
+        SemanticSBTLogicUpgradeable.addPredicate(predicates_, _predicates, _predicateIndex);
         emit EventMinterAdded(minter);
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return interfaceId == type(IERC721).interfaceId ||
-        interfaceId == type(IERC721Metadata).interfaceId ||
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+        return interfaceId == type(IERC721Upgradeable).interfaceId ||
+        interfaceId == type(IERC721MetadataUpgradeable).interfaceId ||
         interfaceId == type(ISemanticSBT).interfaceId ||
         interfaceId == type(ISemanticSBTSchema).interfaceId ||
         super.supportsInterface(interfaceId);
@@ -196,7 +186,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     function rdfOf(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), "SemanticSBT: SemanticSBT does not exist");
-        return SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+        return SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
     }
 
     function getMinted() public view returns (uint256) {
@@ -294,7 +284,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
 
     function tokenURI(uint256 tokenId)
-    external
+    public
     view
     override
     returns (string memory)
@@ -439,7 +429,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         uint256[] storage pIndex = _tokens[tokenId].pIndex;
         uint256[] storage oIndex = _tokens[tokenId].oIndex;
 
-        SemanticSBTLogic.mint(pIndex, oIndex, intPOList, stringPOList, addressPOList, subjectPOList, blankNodePOList, _predicates, _stringO, _subjects, _blankNodeO);
+        SemanticSBTLogicUpgradeable.mint(pIndex, oIndex, intPOList, stringPOList, addressPOList, subjectPOList, blankNodePOList, _predicates, _stringO, _subjects, _blankNodeO);
         require(pIndex.length > 0, "SemanticSBT: param error");
 
         _balances[account] += 1;
@@ -450,28 +440,20 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: transfer to non ERC721Receiver implementer"
         );
         emit Transfer(address(0), account, tokenId);
-        emit CreateRDF(tokenId, SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        emit CreateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
+
 
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
         _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
         return _tokens.length - 1;
     }
 
-    function _addSubject(string memory value, uint256 cIndex) internal returns (uint256 sIndex){
-        sIndex = _subjects.length;
-        _subjectIndex[cIndex][value] = sIndex;
-        _subjects.push(Subject(value, cIndex));
-    }
-
     /* ============ External Functions ============ */
 
 
     function addSubject(string memory value, string memory className_) public onlyMinter returns (uint256 sIndex) {
-        uint256 cIndex = _classIndex[className_];
-        require(cIndex > 0, "SemanticSBT: param error");
-        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
-        sIndex = _addSubject(value, cIndex);
+        return SemanticSBTLogicUpgradeable.addSubject(value, className_, _subjects, _subjectIndex, _classIndex);
     }
 
     function mint(address account, uint256 sIndex, IntPO[] memory intPOList, StringPO[] memory stringPOList,
@@ -492,7 +474,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
 
         _approve(address(0), id);
         _burnCount++;
@@ -501,30 +483,6 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
         emit Transfer(account, address(0), id);
         emit RemoveRDF(id, _rdf);
-    }
-
-    function burnBatch(address account, uint256[] calldata ids)
-    external
-    onlyMinter
-    {
-        _burnCount += ids.length;
-        _balances[account] -= ids.length;
-        for (uint256 i = 0; i < ids.length; i++) {
-            uint256 tokenId = ids[i];
-            require(
-                _isApprovedOrOwner(_msgSender(), tokenId),
-                "SemanticSBT: caller is not approved or owner"
-            );
-            require(isOwnerOf(account, tokenId), "SemanticSBT: not owner");
-            string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
-
-            // Clear approvals
-            _approve(address(0), tokenId);
-            _tokens[tokenId].owner = 0;
-
-            emit Transfer(account, address(0), tokenId);
-            emit RemoveRDF(tokenId, _rdf);
-        }
     }
 
 
@@ -562,23 +520,19 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     ) private returns (bool) {
         if (to.isContract()) {
             try
-            IERC721Receiver(to).onERC721Received(
+            IERC721ReceiverUpgradeable(to).onERC721Received(
                 _msgSender(),
                 from,
                 tokenId,
                 _data
             )
             returns (bytes4 retval) {
-                return retval == IERC721Receiver.onERC721Received.selector;
+                return retval == IERC721ReceiverUpgradeable.onERC721Received.selector;
             } catch (bytes memory reason) {
-                if (reason.length == 0) {
-                    revert(
-                    "ERC721: transfer to non ERC721Receiver implementer"
-                    );
-                } else {
-                    assembly {
-                        revert(add(32, reason), mload(reason))
-                    }
+                require(reason.length != 0, "ERC721: transfer to non ERC721Receiver implementer");
+
+                assembly {
+                    revert(add(32, reason), mload(reason))
                 }
             }
         }
