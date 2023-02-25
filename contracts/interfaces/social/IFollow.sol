@@ -1,7 +1,7 @@
 import "../../core/SemanticBaseStruct.sol";
 import "../ISemanticSBT.sol";
 
-interface IConnection is ISemanticSBT {
+interface IFollow is ISemanticSBT {
 
 
     function initialize(

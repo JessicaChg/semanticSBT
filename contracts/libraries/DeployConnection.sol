@@ -1,4 +1,4 @@
-import {Connection} from "../template/Connection.sol";
+import {Follow} from "../template/Follow.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
 
 
@@ -9,9 +9,9 @@ library DeployConnection {
 
     function deployConnection() external returns (address) {
 
-        address connection = address(new Connection());
+        address followContract = address(new Follow());
 
-        return connection;
+        return followContract;
     }
 
 

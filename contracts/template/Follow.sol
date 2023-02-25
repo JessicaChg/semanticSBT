@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBT.sol";
 import "../interfaces/social/IConnection.sol";
 
-contract Connection is IConnection, SemanticSBT {
+contract Follow is IConnection, SemanticSBT {
 
     using Strings for uint256;
     using Strings for address;

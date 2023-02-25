@@ -86,7 +86,7 @@ npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network ri
 
 ```sh
 npx hardhat run scripts/template/deployActivity.js --network rinkeby
-npx hardhat run scripts/template/deployConnectionRegister.js --network rinkeby
+npx hardhat run scripts/template/deployFollowRegister.js --network rinkeby
 npx hardhat run scripts/template/deploySemanticSBTPrivacy.js --network rinkeby
 
 ```

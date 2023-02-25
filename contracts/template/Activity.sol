@@ -29,8 +29,8 @@ contract Activity is IActivity, SemanticSBT {
     bool private _duplicatable;
     bool private _freeMintable;
 
-    string public whiteListURL;
-    bytes32 public merkleRoot;
+    mapping(address => bool) public whiteList;
+    address[] _whiteLists;
 
     function duplicatable() public view returns (bool) {
         return _duplicatable;
@@ -46,9 +46,14 @@ contract Activity is IActivity, SemanticSBT {
         _oIndex = super.addSubject(activityName, _classNames[_activityCIndex]);
     }
 
-    function setWhiteList(string memory whiteListURL_, bytes32 _root) external onlyOwner {
-        whiteListURL = whiteListURL_;
-        merkleRoot = _root;
+    function addWhiteList(address[] memory addressList) external
+    onlyMinter {
+        for (uint256 i = 0; i < addressList.length; i++) {
+            if (!whiteList[addressList[i]]) {
+                whiteList[addressList[i]] = true;
+                _whiteLists.push(addressList[i]);
+            }
+        }
     }
 
     function setDuplicatable(bool duplicatable_) external onlyOwner {
@@ -61,8 +66,8 @@ contract Activity is IActivity, SemanticSBT {
     }
 
 
-    function participate(bytes32[] calldata proof) external {
-        require(_freeMintable || _verify(_leaf(msg.sender), proof), "Activity: permission denied");
+    function participate() external {
+        require(_freeMintable || whiteList[msg.sender], "Activity: permission denied");
         require(_duplicatable || !_mintedSPO[msg.sender][_pIndex][_oIndex], "Activity: already minted");
         _mintedSPO[msg.sender][_pIndex][_oIndex] = true;
 
@@ -74,14 +79,6 @@ contract Activity is IActivity, SemanticSBT {
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
             subjectPO, new BlankNodePO[](0));
 
-    }
-
-    function _leaf(address account) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(account));
-    }
-
-    function _verify(bytes32 leaf, bytes32[] memory proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, merkleRoot, leaf);
     }
 
 }

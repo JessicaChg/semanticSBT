@@ -12,7 +12,9 @@ const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://pEaI9o8moBFof5IkOSq1qNnl8RuP0edn2BFD1q6vdE4';
 const class_ = ["Activity"];
 const predicate_ = [["participate", 3]];
+
 const myActivity = "Example-Activity";
+const whiteList = ["0x0000000000000000000000000000000000000011","0x0000000000000000000000000000000000000022"]
 
 async function main() {
 
@@ -43,11 +45,11 @@ async function main() {
     console.log(`${contractName} initialized!`);
 
 
-    await myContract.addSubject(
-        myActivity,
-        "Activity"
-    );
-    console.log(`${myActivity} has added to ${contractName}`);
+    await myContract.setActivity(myActivity);
+    console.log(`The activity of ${myActivity} is set successfully!`);
+
+    await myContract.addWhiteList(whiteList);
+    console.log(`The whiteList is successfully!`);
 
 }
 
