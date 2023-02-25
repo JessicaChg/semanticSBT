@@ -9,12 +9,16 @@ In order to solve this problem, Semantic Soulbound Token take ``Resource Descrip
 ## How to Use 
 ```
 contracts/
-          activity/
           core/
           interfaces/
+          libraries/
+          template/
 ```
 
 ## Contract
+``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
+``NameService.sol`` : A example which use semantic Soubound Token contract to create a contract for a name service. \
+``SharePrivacy.sol`` : A example which use semantic Soubound Token contract to create a contract for share privacy data. \
 ``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
 ``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token. \
 ``SemanticSBT.sol`` : Semantic Soulbound Token Contract. \
