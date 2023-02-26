@@ -56,7 +56,7 @@ contract Follow is IFollow, SemanticSBT {
 
     }
 
-    function mint(address to) external returns (uint256) {
+    function mint(address to) external onlyMinter returns (uint256) {
         require(getMinted() == 0 || super.tokenOfOwnerByIndex(to, 0) == 0, "Connection:Already follow");
         uint256 sIndex = _addSubject(to.toHexString(), soulCIndex);
         uint256 tokenId = _addEmptyToken(to, sIndex);
