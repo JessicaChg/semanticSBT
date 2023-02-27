@@ -209,7 +209,7 @@ library SemanticSBTLogicUpgradeable {
             } else if (FieldType.ADDRESS == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                // _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);

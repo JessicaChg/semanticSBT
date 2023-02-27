@@ -48,7 +48,7 @@ async function main() {
 
 
     //upgrade
-    // const proxyAddress = "0xa25243f934258F4267ed4C4bD37C03a0344414D0";
+    // const proxyAddress = "";
     // await upgrades.upgradeProxy(
     // proxyAddress,
     //     MyContract,
