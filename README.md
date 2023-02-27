@@ -29,7 +29,7 @@ contracts/
 ## prepare development environment, choose hardhat as the tool
 - To install Hardhat
 ```sh
-npm install --save-dev hardhat
+npm install -g --save-dev hardhat
 ```
 
 ## Clone the Repository

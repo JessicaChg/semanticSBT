@@ -46,7 +46,7 @@ describe("ConnectionRegister contract", function () {
         console.log(`InitializeConnection deployed ,contract address: ${initializeConnectionLibrary.address}`);
 
 
-        const contractName = "ConnectionRegister";
+        const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
                 SemanticSBTLogic: semanticSBTLogicLibrary.address,

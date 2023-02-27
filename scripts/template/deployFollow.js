@@ -15,7 +15,7 @@ const predicate_ = [["following", 3]];
 
 async function main() {
 
-  const [owner] = await ethers.getSigners();
+  const [owner,addr1] = await ethers.getSigners();
 
   const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
   const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
@@ -23,18 +23,18 @@ async function main() {
       `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
   );
 
-  const contractName = "Connection";
+  const contractName = "Follow";
   const MyContract = await hre.ethers.getContractFactory(contractName, {
     libraries: {
       SemanticSBTLogic: semanticSBTLogicLibrary.address,
     }
   });
-  const connection = await MyContract.deploy();
-  await connection.deployTransaction.wait();
+  const follow = await MyContract.deploy();
+  await follow.deployTransaction.wait();
   console.log(
-      `connection deployed ,contract address: ${connection.address}`
+      `Follow deployed ,contract address: ${follow.address}`
   );
-  await connection.init(
+  await follow.init(
       owner.address,
       owner.address,
       name,
@@ -44,8 +44,14 @@ async function main() {
       class_,
       predicate_);
   console.log(
-    `${contractName} deployed ,contract address: ${connection.address}`
+    `${contractName} initialize successfully!`
   );
+
+  await follow.connect(addr1).follow()
+  console.log(`${addr1.address} following  ${owner.address} successfully!`);
+
+  const rdf = await follow.rdfOf(1);
+  console.log(`The rdf of the first token is:  ${rdf}`);
 
 }
 
