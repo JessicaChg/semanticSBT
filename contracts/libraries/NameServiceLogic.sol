@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.12;
+
 import "../core/SemanticBaseStruct.sol";
 import {StringUtils} from "./StringUtils.sol";
 
@@ -25,7 +28,7 @@ library NameServiceLogic {
     }
 
 
-    function setNameForAddr(address addr, address owner, uint256 dSIndex,
+    function setNameForAddr(address addr,uint256 dSIndex,
         mapping(uint256 => uint256) storage _tokenIdOfDomain, mapping(address => uint256) storage _ownedResolvedDomain,
         mapping(uint256 => address) storage _ownerOfResolvedDomain, mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) internal {
         require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
@@ -59,7 +62,7 @@ library NameServiceLogic {
         _domainOf[tokenId] = sIndex;
         SubjectPO[] memory subjectPOList = new SubjectPO[](1);
         if (resolve) {
-            setNameForAddr(owner, owner, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
+            setNameForAddr(owner, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
                 _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
             subjectPOList[0] = SubjectPO(resolvePredicateIndex, sIndex);
         } else {

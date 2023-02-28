@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBT.sol";
@@ -48,7 +48,7 @@ contract Follow is IFollow, SemanticSBT {
     }
 
 
-    function follow() external returns (uint256) {
+    function follow() external {
         require(getMinted() == 0 || super.tokenOfOwnerByIndex(msg.sender, 0) == 0, "Follow:Already followed!");
         uint256 sIndex = _addSubject(msg.sender.toHexString(), soulCIndex);
         uint256 tokenId = _addEmptyToken(msg.sender, sIndex);
@@ -56,13 +56,7 @@ contract Follow is IFollow, SemanticSBT {
 
     }
 
-    function mint(address to) external onlyMinter returns (uint256) {
-        require(getMinted() == 0 || super.tokenOfOwnerByIndex(to, 0) == 0, "Connection:Already follow");
-        uint256 sIndex = _addSubject(to.toHexString(), soulCIndex);
-        uint256 tokenId = _addEmptyToken(to, sIndex);
-        _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
 
-    }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
         return interfaceId == type(IFollow).interfaceId ||

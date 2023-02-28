@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.12;
+
 import "../../core/SemanticBaseStruct.sol";
 import "../ISemanticSBT.sol";
 
@@ -16,6 +19,6 @@ interface IFollow is ISemanticSBT {
     ) external;
 
 
-    function mint(address to) external returns (uint256);
+    function follow() external;
 
 }

@@ -1,13 +1,13 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.12;
+
 import {Follow} from "../template/Follow.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
 
 
-library DeployConnection {
+library DeployFollow {
 
-    string constant PROFILE = "Profile";
-    string constant  FOLLOWING = "following";
-
-    function deployConnection() external returns (address) {
+    function deployFollow() external returns (address) {
 
         address followContract = address(new Follow());
 
