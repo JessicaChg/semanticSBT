@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.8.4;
+pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
@@ -54,27 +54,27 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
 
-    function setNameForAddr(address addr, string memory name) external override {
-        require(addr == msg.sender || addr == address(0), "NameService:can not set for others");
+    function setNameForAddr(address addr_, string memory name) external override {
+        require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
         uint256 sIndex = _subjectIndex[domainCIndex][name];
         uint256 tokenId = _tokenIdOfDomain[sIndex];
         require(ownerOf(tokenId) == msg.sender, "NameService:not the owner of domain");
         SPO storage spo = _tokens[tokenId];
-        NameServiceLogic.setNameForAddr(addr, msg.sender, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
+        NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
             _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
-        NameServiceLogic.updatePIndexOfToken(addr, tokenId, spo);
+        NameServiceLogic.updatePIndexOfToken(addr_, tokenId, spo, _profileHash);
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
 
-    function addr(string calldata name) virtual override external view returns (address){
-        uint256 sIndex = _subjectIndex[domainCIndex][name];
+    function addr(string calldata name_) override external view returns (address){
+        uint256 sIndex = _subjectIndex[domainCIndex][name_];
         return _ownerOfResolvedDomain[sIndex];
     }
 
 
-    function nameOf(address addr) external view returns (string memory){
-        uint256 sIndex = _ownedResolvedDomain[addr];
+    function nameOf(address addr_) external view returns (string memory){
+        uint256 sIndex = _ownedResolvedDomain[addr_];
         return _subjects[sIndex].value;
     }
 
