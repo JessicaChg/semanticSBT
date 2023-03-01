@@ -19,18 +19,11 @@ contracts/
 ``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
 ``NameService.sol`` : A example which use semantic Soubound Token contract to create a contract for a name service. \
 ``SharePrivacy.sol`` : A example which use semantic Soubound Token contract to create a contract for share privacy data. \
-``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
 ``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token. \
 ``SemanticSBT.sol`` : Semantic Soulbound Token Contract. \
 ``ISemanticSBT.sol`` : Semantic Soulbound Token Interface. \
 ``ISemanticSBTSchema.sol`` : Semantic Soulbound Token Metadata Interface.
 
-
-## prepare development environment, choose hardhat as the tool
-- To install Hardhat
-```sh
-npm install -g --save-dev hardhat
-```
 
 ## Clone the Repository
 ```
@@ -54,16 +47,7 @@ npx hardhat test
 
 ## deploy 
 
-1. deploy to local
-```sh
-npx hardhat node
-npx hardhat run scripts/deploy.js
-
-```
-
-2. deploy to testnet, take the rinkeby as example
-
-+ fill in the parameters in  hardhat.config.js
+1. fill in the parameters in  hardhat.config.js
 ```
 // Replace "INFURA PROJECT ID" with your INFURA project id
 // Go to https://infura.io/, sign up, create a new App in its dashboard, and replace "KEY" with its key
@@ -75,19 +59,19 @@ const INFURA_PROJECT_ID = "INFURA INFURA PROJECT ID";
 const PRIVATE_KEY = "PRIVATE KEY";
 ```
 
+2. deploy to local
+```sh
+npx hardhat node
+npx hardhat run scripts/deploy.js
+
+```
+
+3. deploy to testnet, take the rinkeby as example
+
 + deploy and verify
 ```sh
 npx hardhat run scripts/deploy.js --network rinkeby
 
 npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network rinkeby <DEPLOYED_CONTRACT_ADDRESS>
-```
-
-+ deploy other template contracts
-
-```sh
-npx hardhat run scripts/template/deployActivity.js --network rinkeby
-npx hardhat run scripts/template/deployFollowRegister.js --network rinkeby
-npx hardhat run scripts/template/deploySemanticSBTPrivacy.js --network rinkeby
-
 ```
 
