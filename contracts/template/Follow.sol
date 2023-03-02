@@ -17,6 +17,8 @@ contract Follow is IFollow, SemanticSBT {
 
     uint256 constant soulCIndex = 1;
 
+    mapping(address => bool) _isFollowing;
+
     /* ============ External Functions ============ */
 
     function init(
@@ -53,12 +55,17 @@ contract Follow is IFollow, SemanticSBT {
         uint256 sIndex = _addSubject(msg.sender.toHexString(), soulCIndex);
         uint256 tokenId = _addEmptyToken(msg.sender, sIndex);
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
-
+        _isFollowing[msg.sender] = true;
     }
 
     function unfollow() external {
         uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
         super._burn(msg.sender, tokenId);
+        _isFollowing[msg.sender] = false;
+    }
+
+    function isFollowing(address addr) external view returns (bool){
+        return _isFollowing[addr];
     }
 
 

@@ -5,6 +5,10 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "../interfaces/social/IPrivacyContent.sol";
+import "../interfaces/social/IFollowRegister.sol";
+import "../interfaces/social/IFollow.sol";
+import "../interfaces/social/IDaoRegister.sol";
+import "../interfaces/social/IDao.sol";
 
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
@@ -14,16 +18,23 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
     string constant PRIVACY_PREFIX = "[Privacy]";
 
+    address public followRegister;
+
     mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
     mapping(address => uint256) internal _prepareToken;
     mapping(address => mapping(string => uint256)) internal _mintObject;
     mapping(uint256 => string) _contentOf;
 
+    mapping(uint256 => mapping(address => bool)) _shareToDao;
+    mapping(uint256 => address[]) _shareDaoAddress;
+
     /* ============ External Functions ============ */
 
 
     function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
-        return isOwnerOf(viewer, tokenId) || _isViewerOf[viewer][tokenId];
+        return isOwnerOf(viewer, tokenId) ||
+        _isFollowing(viewer, ownerOf(tokenId)) ||
+        _inSameDao(viewer, tokenId);
     }
 
 
@@ -36,6 +47,15 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         return _prepareToken[owner];
     }
 
+    function setRegisterAddress(address _followRegister) external onlyOwner {
+        followRegister = _followRegister;
+    }
+
+    function setShareToDao(uint256 tokenId, address daoAddress, bool isShare) external {
+        require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
+        _shareToDao[tokenId][daoAddress] = isShare;
+        _shareDaoAddress[tokenId].push(daoAddress);
+    }
 
     function postPrivacy(uint256 tokenId, string memory object) external returns (uint256) {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
@@ -77,5 +97,22 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
             new SubjectPO[](0),
             new BlankNodePO[](0)
         );
+    }
+
+
+    function _isFollowing(address viewer, address owner) internal view returns (bool){
+        address followContractAddress = IFollowRegister(followRegister).ownedFollowContract(owner);
+        return IFollow(followContractAddress).isFollowing(viewer);
+    }
+
+    function _inSameDao(address viewer, uint256 tokenId) internal view returns (bool){
+        address[] memory daoAddress = _shareDaoAddress[tokenId];
+        for (uint256 i = 0; i < daoAddress.length; i++) {
+            if (_shareToDao[tokenId][daoAddress[i]] && IDao(daoAddress[i]).isMember(viewer)) {
+                return true;
+            }
+        }
+        return false;
+
     }
 }

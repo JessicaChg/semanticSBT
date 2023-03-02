@@ -47,9 +47,9 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
         return tokenId;
     }
 
-    function daoOf(uint256 tokenId) external returns (address owner, address contractAddress){
+    function daoOf(uint256 tokenId) external view returns (address daoOwner, address contractAddress){
         DaoStruct memory dao = _daoOf[tokenId];
-        owner = dao.owner;
+        daoOwner = dao.owner;
         contractAddress = dao.contractAddress;
     }
 

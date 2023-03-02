@@ -28,4 +28,5 @@ interface IDao is ISemanticSBT {
 
     function quit(address to) external returns (uint256);
 
+    function isMember(address addr) external view returns (bool);
 }

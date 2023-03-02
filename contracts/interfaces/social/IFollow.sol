@@ -23,4 +23,6 @@ interface IFollow is ISemanticSBT {
 
     function unfollow() external;
 
+    function isFollowing(address addr) external view returns(bool);
+
 }

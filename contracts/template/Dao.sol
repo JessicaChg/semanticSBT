@@ -77,25 +77,31 @@ contract Dao is IDao, SemanticSBT {
         root = root_;
     }
 
-    function join(bytes32[] calldata proof) external returns (uint256){
+    function join(bytes32[] calldata proof) external returns (uint256 tokenId){
         require(_isFreeJoin || _verify(_leaf(msg.sender), proof), "Activity: permission denied");
         require(ownedTokenId[msg.sender] == 0, "Activity: already minted");
 
-        uint256 tokenId = _addEmptyToken(msg.sender, 0);
+        tokenId = _addEmptyToken(msg.sender, 0);
 
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
             joinDaoSubjectPO, new BlankNodePO[](0));
         ownedTokenId[msg.sender] = tokenId;
     }
 
-    function quit(address to) external returns (uint256){
+    function quit(address to) external returns (uint256 tokenId){
         require(msg.sender == daoOwner || msg.sender == to, "Dao: permission denied");
+        tokenId = ownedTokenId[to];
         require(ownedTokenId[to] != 0, "Dao: not the member of dao");
         super._burn(to, ownedTokenId[to]);
+        delete ownedTokenId[to];
     }
 
     function isFreeJoin() external view returns (bool){
         return _isFreeJoin;
+    }
+
+    function isMember(address addr) external view returns (bool){
+        return ownedTokenId[addr] != 0;
     }
 
 
