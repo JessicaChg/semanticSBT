@@ -167,6 +167,25 @@ describe("Name Service contract", function () {
                 .withArgs(1, rdf2);
         });
 
+
+        it("User should fail to setProfileHash when domain has not resolved", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            const domain = "my-domain";
+            
+            await nameService.register(owner.address, domain, false);
+            const profileHash = String(Math.random())
+            expect(nameService.setProfileHash(profileHash)).to.be.revertedWith("NameService:not resolved the domain")
+        })
+
+        it("User could setProfileHash when domain has resolved and get the right profileHash", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            const domain = "my-domain";
+            
+            await nameService.register(owner.address, domain, true);
+            const profileHash = String(Math.random())
+            await nameService.setProfileHash(profileHash)
+            expect(await nameService.profileHash(owner.address.toLowerCase())).to.be.equal(profileHash)
+        })
     })
 
 })
