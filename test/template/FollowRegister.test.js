@@ -133,6 +133,24 @@ describe("FollowRegister contract", function () {
             expect(await followContract.rdfOf(1)).to.be.equal(rdf);
         });
 
+        it("User should burn the SBT when unfollow", async function () {
+            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            await followRegister.deployFollowContract(addr1.address);
+
+            const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
+            const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
+            await expect(followContract.connect(owner).follow())
+                .to.emit(followContract,"CreateRDF")
+                .withArgs(1,rdf);
+            expect(await followContract.rdfOf(1)).to.be.equal(rdf);
+
+            await expect(followContract.connect(owner).unfollow())
+                .to.emit(followContract,"RemoveRDF")
+                .withArgs(1,rdf);
+
+        });
+
 
     })
 

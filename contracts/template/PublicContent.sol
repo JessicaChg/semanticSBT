@@ -4,50 +4,38 @@ pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-import "../interfaces/social/IPrivacyContent.sol";
+import "../interfaces/social/IPublicContent.sol";
 
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract PrivacyContent is IPrivacyContent, SemanticSBT {
+contract PublicContent is IPublicContent, SemanticSBT {
 
-    uint256 constant  PRIVACY_DATA_PREDICATE = 1;
-    string constant PRIVACY_PREFIX = "[Privacy]";
+    uint256 constant  PUBLIC_CONTENT_PREDICATE = 1;
 
-    mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
     mapping(address => uint256) internal _prepareToken;
-    mapping(address => mapping(string => uint256)) internal _mintObject;
+    mapping(address => mapping(string => uint256)) internal _mintContent;
     mapping(uint256 => string) _contentOf;
 
     /* ============ External Functions ============ */
-
-
-    function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
-        return isOwnerOf(viewer, tokenId) || _isViewerOf[viewer][tokenId];
-    }
-
-
-    function contentOf(uint256 tokenId) external view returns (string memory){
-        return _contentOf[tokenId];
-    }
-
 
     function ownedPrepareToken(address owner) external view returns (uint256) {
         return _prepareToken[owner];
     }
 
 
-    function postPrivacy(uint256 tokenId, string memory object) external returns (uint256) {
-        _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
+    function post(uint256 tokenId, string memory content) external returns (uint256) {
+        _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[msg.sender] == tokenId, "PrivacyContent:Permission denied");
-        require(_mintObject[msg.sender][object] == 0, "PrivacyContent:Already mint");
-        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, object));
+        require(_mintContent[msg.sender][content] == 0, "PrivacyContent:Already mint");
+        _mint(tokenId, PUBLIC_CONTENT_PREDICATE, content);
         delete _prepareToken[msg.sender];
-        _mintObject[msg.sender][object] = tokenId;
-        _contentOf[tokenId] = object;
+        _mintContent[msg.sender][content] = tokenId;
+        _contentOf[tokenId] = content;
         return tokenId;
     }
+
 
     function prepareToken() external returns (uint256) {
         require(_prepareToken[msg.sender] == 0, "PrivacyContent:Already prepared");
@@ -56,16 +44,21 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         return tokenId;
     }
 
+    function contentOf(uint256 tokenId) external view returns (string memory){
+        return _contentOf[tokenId];
+    }
+
+
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
-        return interfaceId == type(IPrivacyContent).interfaceId ||
+        return interfaceId == type(IPublicContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }
 
 
     /* ============ Internal Functions ============ */
 
-    function _mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) internal {
+    function _mint(uint256 tokenId, uint256 pIndex, string memory object) internal {
         StringPO[] memory stringPOList = new StringPO[](1);
         stringPOList[0] = StringPO(pIndex, object);
         _mint(

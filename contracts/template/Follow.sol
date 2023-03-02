@@ -28,7 +28,7 @@ contract Follow is IFollow, SemanticSBT {
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) external  {
+    ) external {
         super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
         _setOwner(owner);
     }
@@ -56,10 +56,10 @@ contract Follow is IFollow, SemanticSBT {
 
     }
 
-    function unfollow() external{
-
+    function unfollow() external {
+        uint256 tokenId = tokenOfOwnerByIndex(msg.sender, 0);
+        super._burn(msg.sender, tokenId);
     }
-
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
