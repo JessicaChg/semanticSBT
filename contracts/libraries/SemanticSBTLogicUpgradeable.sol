@@ -25,7 +25,7 @@ library SemanticSBTLogicUpgradeable {
     string  constant BLANK_SPACE = " ";
 
 
-    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) internal {
+    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
         for (uint256 i = 0; i < classList.length; i++) {
             string memory className_ = classList[i];
             require(
@@ -39,7 +39,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) internal {
+    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
         for (uint256 i = 0; i < predicates.length; i++) {
             Predicate memory predicate_ = predicates[i];
             require(
@@ -57,7 +57,7 @@ library SemanticSBTLogicUpgradeable {
     function addSubject(string memory value, string memory className_,
         Subject[] storage _subjects,
         mapping(uint256 => mapping(string => uint256)) storage _subjectIndex,
-        mapping(string => uint256) storage _classIndex) internal returns (uint256 sIndex) {
+        mapping(string => uint256) storage _classIndex) external returns (uint256 sIndex) {
         uint256 cIndex = _classIndex[className_];
         require(cIndex > 0, "SemanticSBT: param error");
         require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
@@ -66,7 +66,7 @@ library SemanticSBTLogicUpgradeable {
 
     function mint(uint256[] storage pIndex, uint256[] storage oIndex,
         IntPO[] memory intPOList, StringPO[] memory stringPOList, AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
+        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external {
 
         addIntPO(pIndex, oIndex, intPOList, _predicates);
         addStringPO(pIndex, oIndex, stringPOList, _predicates, _stringO);
@@ -137,7 +137,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal view returns (string memory _rdf){
+    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
         for (uint256 i = 0; i < spo.pIndex.length; i++) {
@@ -212,7 +212,7 @@ library SemanticSBTLogicUpgradeable {
             } else if (FieldType.ADDRESS == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                // _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                 _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
@@ -231,7 +231,7 @@ library SemanticSBTLogicUpgradeable {
 
     function _addSubject(string memory value, uint256 cIndex,
         Subject[] storage _subjects,
-        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) internal returns (uint256 sIndex){
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) public returns (uint256 sIndex){
         sIndex = _subjects.length;
         _subjectIndex[cIndex][value] = sIndex;
         _subjects.push(Subject(value, cIndex));

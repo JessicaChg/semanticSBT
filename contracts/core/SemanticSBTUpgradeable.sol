@@ -19,7 +19,7 @@ import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 
 
-contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema, IERC721MetadataUpgradeable {
+contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, IERC721MetadataUpgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for uint160;
@@ -497,10 +497,14 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         );
         require(to != address(0), "ERC721: transfer to the zero address");
 
+        _beforeTokenTransfer(from, to, tokenId, 1);
+
         _approve(address(0), tokenId);
         _balances[from] -= 1;
         _balances[to] += 1;
         _tokens[tokenId].owner = uint160(to);
+
+        _afterTokenTransfer(from, to, tokenId, 1);
 
         emit Transfer(from, to, tokenId);
     }
@@ -538,6 +542,23 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         }
         return true;
     }
+
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual {}
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual {}
+
+
 
     /* ============ Util Functions ============ */
 

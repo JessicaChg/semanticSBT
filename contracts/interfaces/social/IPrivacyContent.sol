@@ -2,14 +2,12 @@
 
 pragma solidity ^0.8.12;
 
-import "./ISemanticSBT.sol";
+import "../ISemanticSBT.sol";
 
 /**
  * @dev Required interface of an ISemanticData compliant contract.
- *       interfaceId: 0x41be3f18
  */
-interface ISemanticSBTPrivacy is ISemanticSBT {
-
+interface IPrivacyContent is ISemanticSBT {
 
 
     /**
@@ -21,4 +19,11 @@ interface ISemanticSBTPrivacy is ISemanticSBT {
         external
         view
         returns (bool);
+
+    function prepareToken() external returns (uint256);
+
+    function ownedPrepareToken(address owner) external view returns (uint256);
+
+    function postPrivacy(uint256 tokenId, string memory object) external returns (uint256);
+
 }

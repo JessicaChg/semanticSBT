@@ -28,30 +28,24 @@ describe("FollowRegister contract", function () {
 
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-        console.log(
-            `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
-        );
-        const DeployConnection = await hre.ethers.getContractFactory("DeployConnection", {
+
+        const DeployFollow = await hre.ethers.getContractFactory("DeployFollow", {
             libraries: {
                 SemanticSBTLogic: semanticSBTLogicLibrary.address,
             }
         });
-        const deployConnectionLibrary = await DeployConnection.deploy();
-        console.log(
-            `DeployConnection deployed ,contract address: ${deployConnectionLibrary.address}`
-        );
+        const deployFollowLibrary = await DeployFollow.deploy();
 
-        const InitializeConnection = await hre.ethers.getContractFactory("InitializeConnection");
-        const initializeConnectionLibrary = await InitializeConnection.deploy();
-        console.log(`InitializeConnection deployed ,contract address: ${initializeConnectionLibrary.address}`);
 
+        const InitializeFollow = await hre.ethers.getContractFactory("InitializeFollow");
+        const initializeFollowLibrary = await InitializeFollow.deploy();
 
         const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
                 SemanticSBTLogic: semanticSBTLogicLibrary.address,
-                DeployConnection: deployConnectionLibrary.address,
-                InitializeConnection: initializeConnectionLibrary.address,
+                DeployFollow: deployFollowLibrary.address,
+                InitializeFollow: initializeFollowLibrary.address,
             }
         });
         const followRegister = await MyContract.deploy();
@@ -108,8 +102,8 @@ describe("FollowRegister contract", function () {
             const {followRegister, owner} = await loadFixture(deployTokenFixture);
             await followRegister.deployFollowContract(owner.address);
 
-            const connectionContract = await followRegister.ownedFollowContract(owner.address);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${connectionContract.toLowerCase()}.`;
+            const followContract = await followRegister.ownedFollowContract(owner.address);
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract.toLowerCase()}.`;
             expect(await followRegister.rdfOf(1)).equal(rdf);
         });
 
@@ -118,31 +112,25 @@ describe("FollowRegister contract", function () {
             await followRegister.deployFollowContract(owner.address);
             await followRegister.deployFollowContract(addr1.address);
 
-            const connectionContract1 = await followRegister.ownedFollowContract(owner.address);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${connectionContract1.toLowerCase()}.`;
+            const followContract1 = await followRegister.ownedFollowContract(owner.address);
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract1.toLowerCase()}.`;
             expect(await followRegister.rdfOf(1)).equal(rdf1);
-            const connectionContract2 = await followRegister.ownedFollowContract(addr1.address);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${connectionContract2.toLowerCase()}.`;
+            const followContract2 = await followRegister.ownedFollowContract(addr1.address);
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${followContract2.toLowerCase()}.`;
             expect(await followRegister.rdfOf(2)).equal(rdf2);
         });
 
-        it("User should fail to follow when the followed user doesn't have follow contract", async function () {
-            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
-            await followRegister.deployFollowContract(owner.address);
-            expect(followRegister.follow([addr1.address], [])).to.be.revertedWith(`${addr1.address} does not have connection contract`);
-        });
 
-        it("User should have a SBT at followed user's connection contract", async function () {
+        it("User should have a SBT at followed user's follow contract", async function () {
             const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await followRegister.deployFollowContract(owner.address);
             await followRegister.deployFollowContract(addr1.address);
-            await followRegister.follow([addr1.address], []);
 
-            const connectionContractAddress = await followRegister.ownedFollowContract(addr1.address);
-            const connection = await hre.ethers.getContractAt("Follow", connectionContractAddress);
-
+            const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
+            const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
+            await followContract.connect(owner).follow();
             const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
-            expect(await connection.rdfOf(1)).to.be.equal(rdf);
+            expect(await followContract.rdfOf(1)).to.be.equal(rdf);
         });
 
 

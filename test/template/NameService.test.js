@@ -39,7 +39,12 @@ describe("Name Service contract", function () {
         const contractName = "NameService";
         console.log(contractName)
 
-        const MyContract = await ethers.getContractFactory(contractName);
+        const MyContract = await ethers.getContractFactory(contractName,{
+            libraries:{
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                NameServiceLogic: nameServiceLogicLibrary.address,
+            }
+        });
         const nameService = await upgrades.deployProxy(MyContract,
             [owner.address,
                 name,
@@ -128,7 +133,7 @@ describe("Name Service contract", function () {
             expect(await nameService.nameOf(owner.address)).to.be.equal(domain);
         });
 
-        it("User can not transfer when not transferable", async function () {
+        it("User should fail to transfer when not be transferable", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const domain = "my-domain";
             await nameService.register(owner.address, domain, false);

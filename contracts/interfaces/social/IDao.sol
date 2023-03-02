@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 import "../../core/SemanticBaseStruct.sol";
 import "../ISemanticSBT.sol";
 
-interface IFollow is ISemanticSBT {
+interface IDao is ISemanticSBT {
 
 
     function initialize(
@@ -18,9 +18,14 @@ interface IFollow is ISemanticSBT {
         Predicate[] memory predicates_
     ) external;
 
+    function setDaoInfo(string memory daoHash) external;
 
-    function follow() external;
+    function isFreeJoin() external view returns (bool);
 
-    function unfollow() external;
+    function invite(string memory whiteListURL, bytes32 root) external;
+
+    function join(bytes32[] calldata proof) external returns (uint256);
+
+    function quit(address to) external returns (uint256);
 
 }

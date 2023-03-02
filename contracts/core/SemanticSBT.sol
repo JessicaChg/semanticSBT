@@ -65,20 +65,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     string[] internal _stringO;
     BlankNodeO[] internal _blankNodeO;
 
-
-    string  constant TURTLE_LINE_SUFFIX = " ;";
-    string  constant TURTLE_END_SUFFIX = " . ";
     string  constant SOUL_CLASS_NAME = "Soul";
-
-
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
-
-    string  constant CONCATENATION_CHARACTER = "_";
-    string  constant BLANK_NODE_START_CHARACTER = "[";
-    string  constant BLANK_NODE_END_CHARACTER = "]";
-    string  constant BLANK_SPACE = " ";
-
 
     event EventMinterAdded(address indexed newMinter);
 
@@ -453,6 +440,18 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         emit CreateRDF(tokenId, SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
+    function _burn(address account,uint256 tokenId) internal {
+        string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+
+        _approve(address(0), tokenId);
+        _burnCount++;
+        _balances[account] -= 1;
+        _tokens[tokenId].owner = 0;
+
+        emit Transfer(account, address(0), tokenId);
+        emit RemoveRDF(tokenId, _rdf);
+    }
+
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
         _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
         return _tokens.length - 1;
@@ -492,15 +491,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
-
-        _approve(address(0), id);
-        _burnCount++;
-        _balances[account] -= 1;
-        _tokens[id].owner = 0;
-
-        emit Transfer(account, address(0), id);
-        emit RemoveRDF(id, _rdf);
+        _burn(account, id);
     }
 
     function burnBatch(address account, uint256[] calldata ids)

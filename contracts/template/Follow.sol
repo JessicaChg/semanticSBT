@@ -56,6 +56,10 @@ contract Follow is IFollow, SemanticSBT {
 
     }
 
+    function unfollow() external{
+
+    }
+
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
