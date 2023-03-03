@@ -7,7 +7,7 @@ import "../ISemanticSBT.sol";
 /**
  * @dev Required interface of an ISemanticData compliant contract.
  */
-interface IPublicContent is ISemanticSBT {
+interface IContent is ISemanticSBT {
 
 
     function prepareToken() external returns (uint256);

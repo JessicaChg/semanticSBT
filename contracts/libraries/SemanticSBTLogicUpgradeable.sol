@@ -16,8 +16,8 @@ library SemanticSBTLogicUpgradeable {
     string  constant TURTLE_END_SUFFIX = " . ";
     string  constant SOUL_CLASS_NAME = "Soul";
 
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
+    string  constant public ENTITY_PREFIX = ":";
+    string  constant public PROPERTY_PREFIX = "p:";
 
     string  constant CONCATENATION_CHARACTER = "_";
     string  constant BLANK_NODE_START_CHARACTER = "[";
@@ -158,7 +158,7 @@ library SemanticSBTLogicUpgradeable {
         }
     }
 
-    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) internal view returns (string memory){
+    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) public view returns (string memory){
         string memory _className = spo.sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[spo.sIndex].cIndex];
         string memory subjectValue = spo.sIndex == 0 ? address(spo.owner).toHexString() : _subjects[spo.sIndex].value;
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);

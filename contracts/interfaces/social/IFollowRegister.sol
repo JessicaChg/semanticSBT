@@ -20,10 +20,4 @@ interface IFollowRegister is ISemanticSBT {
      */
     function ownedFollowContract(address owner) external view returns (address);
 
-    /**
-     * Follow in batches
-     * @param followingIds: The address of the persons to be followed.包地址
-     * @return tokenIds: The collection of tokenIds
-     */
-    function follow(address[] calldata followingIds) external returns (uint256[] memory);
 }

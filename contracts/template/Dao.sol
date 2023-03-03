@@ -24,8 +24,6 @@ contract Dao is IDao, SemanticSBT {
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
 
-    string public whiteListURL;
-    bytes32 public root;
 
     modifier onlyDaoOwner{
         require(msg.sender == daoOwner, "Dao: must be daoOwner");
@@ -58,22 +56,18 @@ contract Dao is IDao, SemanticSBT {
     }
 
 
-    function invite(string memory whiteListURL_, bytes32 root_) external onlyDaoOwner {
-        whiteListURL = whiteListURL_;
-        root = root_;
+    function join(address[] memory to) external onlyDaoOwner {
+        for (uint256 i = 0; i < to.length; i++) {
+            _join(to[i]);
+        }
     }
 
-    function join(bytes32[] calldata proof) external returns (uint256 tokenId){
-        require(_isFreeJoin || _verify(_leaf(msg.sender), proof), "Dao: permission denied");
-        require(ownedTokenId[msg.sender] == 0, "Dao: already minted");
-        tokenId = _addEmptyToken(msg.sender, 0);
-
-        _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
-            joinDaoSubjectPO, new BlankNodePO[](0));
-        ownedTokenId[msg.sender] = tokenId;
+    function join() external returns (uint256 tokenId){
+        require(_isFreeJoin, "Dao: permission denied");
+        tokenId = _join(msg.sender);
     }
 
-    function quit(address to) external returns (uint256 tokenId){
+    function remove(address to) external returns (uint256 tokenId){
         require(msg.sender == daoOwner || msg.sender == to, "Dao: permission denied");
         tokenId = ownedTokenId[to];
         require(ownedTokenId[to] != 0, "Dao: not the member of dao");
@@ -103,13 +97,13 @@ contract Dao is IDao, SemanticSBT {
         joinDaoSubjectPO.push(SubjectPO(joinPredicateIndex, sIndex));
     }
 
+    function _join(address to) internal returns (uint256 tokenId){
+        require(ownedTokenId[to] == 0, string.concat("Dao:", to.toHexString(), " already minted"));
+        tokenId = _addEmptyToken(to, 0);
 
-    function _leaf(address account) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(account));
-    }
-
-    function _verify(bytes32 leaf, bytes32[] memory proof) internal view returns (bool) {
-        return MerkleProof.verify(proof, root, leaf);
+        _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
+            joinDaoSubjectPO, new BlankNodePO[](0));
+        ownedTokenId[to] = tokenId;
     }
 
 

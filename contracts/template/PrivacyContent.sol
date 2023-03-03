@@ -26,6 +26,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     mapping(uint256 => string) _contentOf;
 
     mapping(uint256 => mapping(address => bool)) _shareToDao;
+    mapping(uint256 => bool) _shareToFollower;
     mapping(uint256 => address[]) _shareDaoAddress;
 
     /* ============ External Functions ============ */
@@ -33,7 +34,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
     function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
         return isOwnerOf(viewer, tokenId) ||
-        _isFollowing(viewer, ownerOf(tokenId)) ||
+        _isFollowing(viewer, tokenId, ownerOf(tokenId)) ||
         _isMemberOfDao(viewer, tokenId);
     }
 
@@ -51,17 +52,22 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         followRegister = _followRegister;
     }
 
-    function setShareToDao(uint256 tokenId, address daoAddress, bool isShare) external {
+    function shareToFollower(uint256 tokenId) external {
         require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
-        _shareToDao[tokenId][daoAddress] = isShare;
+        _shareToFollower[tokenId] = true;
+    }
+
+    function shareToDao(uint256 tokenId, address daoAddress) external {
+        require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
+        require(_shareDaoAddress[tokenId].length < 100, "PrivacyContent: shared to too many DAOs");
+        _shareToDao[tokenId][daoAddress] = true;
         _shareDaoAddress[tokenId].push(daoAddress);
     }
 
-    function postPrivacy(uint256 tokenId, string memory object) external returns (uint256) {
+    function post(uint256 tokenId, string memory object) external returns (uint256) {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[msg.sender] == tokenId, "PrivacyContent:Permission denied");
-        require(_mintObject[msg.sender][object] == 0, "PrivacyContent:Already mint");
         _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, object));
         delete _prepareToken[msg.sender];
         _mintObject[msg.sender][object] = tokenId;
@@ -100,8 +106,8 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     }
 
 
-    function _isFollowing(address viewer, address owner) internal view returns (bool){
-        if (followRegister == address(0)) {
+    function _isFollowing(address viewer, uint256 tokenId, address owner) internal view returns (bool){
+        if (followRegister == address(0) || !_shareToFollower[tokenId]) {
             return false;
         }
         address followContractAddress = IFollowRegister(followRegister).ownedFollowContract(owner);

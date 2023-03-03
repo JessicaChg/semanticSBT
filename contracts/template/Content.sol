@@ -4,12 +4,12 @@ pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-import "../interfaces/social/IPublicContent.sol";
+import "../interfaces/social/IContent.sol";
 
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract PublicContent is IPublicContent, SemanticSBT {
+contract Content is IContent, SemanticSBT {
 
     uint256 constant  PUBLIC_CONTENT_PREDICATE = 1;
 
@@ -26,9 +26,8 @@ contract PublicContent is IPublicContent, SemanticSBT {
 
     function post(uint256 tokenId, string memory content) external returns (uint256) {
         _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
-        require(tokenId > 0, "PublicContent:Token id not exist");
-        require(_prepareToken[msg.sender] == tokenId, "PublicContent:Permission denied");
-        require(_mintContent[msg.sender][content] == 0, "PublicContent:Already mint");
+        require(tokenId > 0, "Content:Token id not exist");
+        require(_prepareToken[msg.sender] == tokenId, "Content:Permission denied");
         _mint(tokenId, PUBLIC_CONTENT_PREDICATE, content);
         delete _prepareToken[msg.sender];
         _mintContent[msg.sender][content] = tokenId;
@@ -38,7 +37,7 @@ contract PublicContent is IPublicContent, SemanticSBT {
 
 
     function prepareToken() external returns (uint256) {
-        require(_prepareToken[msg.sender] == 0, "PublicContent:Already prepared");
+        require(_prepareToken[msg.sender] == 0, "Content:Already prepared");
         uint256 tokenId = _addEmptyToken(msg.sender, 0);
         _prepareToken[msg.sender] = tokenId;
         return tokenId;
@@ -51,7 +50,7 @@ contract PublicContent is IPublicContent, SemanticSBT {
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
-        return interfaceId == type(IPublicContent).interfaceId ||
+        return interfaceId == type(IContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }
 

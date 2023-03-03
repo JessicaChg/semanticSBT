@@ -22,11 +22,11 @@ interface IDao is ISemanticSBT {
 
     function isFreeJoin() external view returns (bool);
 
-    function invite(string memory whiteListURL, bytes32 root) external;
+    function join(address[] memory to) external;
 
-    function join(bytes32[] calldata proof) external returns (uint256);
+    function join() external returns (uint256);
 
-    function quit(address to) external returns (uint256);
+    function remove(address to) external returns (uint256);
 
     function isMember(address addr) external view returns (bool);
 }

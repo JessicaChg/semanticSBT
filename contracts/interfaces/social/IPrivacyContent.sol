@@ -24,7 +24,7 @@ interface IPrivacyContent is ISemanticSBT {
 
     function ownedPrepareToken(address owner) external view returns (uint256);
 
-    function postPrivacy(uint256 tokenId, string memory object) external returns (uint256);
+    function post(uint256 tokenId, string memory object) external returns (uint256);
 
     function contentOf(uint256 tokenId) external view returns (string memory);
 

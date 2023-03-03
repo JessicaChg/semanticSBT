@@ -21,20 +21,6 @@ contract Follow is IFollow, SemanticSBT {
 
     /* ============ External Functions ============ */
 
-    function init(
-        address owner,
-        address minter,
-        string memory name_,
-        string memory symbol_,
-        string memory baseURI_,
-        string memory schemaURI_,
-        string[] memory classes_,
-        Predicate[] memory predicates_
-    ) external {
-        super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
-        _setOwner(owner);
-    }
-
     function initialize(
         address owner,
         address minter,

@@ -29,10 +29,6 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
     mapping(address => address[]) _ownedDaoContract;
     mapping(uint256 => DaoStruct) _daoOf;
 
-    function ownedDaoContract(address owner) external view returns (address[] memory){
-        return _ownedDaoContract[owner];
-    }
-
 
     function deployDaoContract(address to) external returns (uint256){
         uint256 tokenId = _addEmptyToken(to, 0);

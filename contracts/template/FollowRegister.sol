@@ -43,9 +43,6 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
         return tokenId;
     }
 
-    function follow(address[] calldata followingIds) external returns (uint256[] memory){
-
-    }
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {

@@ -497,14 +497,14 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         );
         require(to != address(0), "ERC721: transfer to the zero address");
 
-        _beforeTokenTransfer(from, to, tokenId, 1);
+        _beforeTokenTransfer(from, to, tokenId);
 
         _approve(address(0), tokenId);
         _balances[from] -= 1;
         _balances[to] += 1;
         _tokens[tokenId].owner = uint160(to);
 
-        _afterTokenTransfer(from, to, tokenId, 1);
+        _afterTokenTransfer(from, to, tokenId);
 
         emit Transfer(from, to, tokenId);
     }
@@ -547,15 +547,13 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 firstTokenId,
-        uint256 batchSize
+        uint256 tokenId
     ) internal virtual {}
 
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 firstTokenId,
-        uint256 batchSize
+        uint256 tokenId
     ) internal virtual {}
 
 

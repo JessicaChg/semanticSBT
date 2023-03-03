@@ -5,6 +5,11 @@ import "../ISemanticSBT.sol";
 
 interface INameService is ISemanticSBT {
 
+    event SetProfile (
+        address indexed owner,
+        string  profileHash
+    );
+
     /**
       * To register a domain name
       * @param owner : The owner of a domain name

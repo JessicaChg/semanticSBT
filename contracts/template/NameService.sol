@@ -18,9 +18,11 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     uint256 constant holdPredicateIndex = 1;
     uint256 constant resolvePredicateIndex = 2;
+    uint256 constant profileHashPredicateIndex = 3;
 
     uint256 constant soulCIndex = 1;
     uint256 constant domainCIndex = 2;
+
 
     uint256 _minDomainLength;
     mapping(uint256 => uint256) _domainLengthControl;
@@ -34,7 +36,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     mapping(uint256 => address) _ownerOfResolvedDomain;
     mapping(uint256 => uint256) _tokenIdOfResolvedDomain;
 
-    mapping(uint256 => string) _profileHash;
+    mapping(address => string) _profileHash;
 
 
     function setDomainLengthControl(uint256 minDomainLength_, uint256 _domainLength, uint256 _maxCount) external onlyMinter {
@@ -64,13 +66,18 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         SPO storage spo = _tokens[tokenId];
         NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
             _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
-        NameServiceLogic.updatePIndexOfToken(addr_, tokenId, spo, _profileHash);
+        NameServiceLogic.updatePIndexOfToken(addr_, tokenId, spo);
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
     function setProfileHash(string memory profileHash) external {
         require(_ownedResolvedDomain[msg.sender] != 0, "NameService:not resolved the domain");
-        _profileHash[_tokenIdOfResolvedDomain[_ownedResolvedDomain[msg.sender]]] = profileHash;
+        _profileHash[msg.sender] = profileHash;
+        emit SetProfile(msg.sender, profileHash);
+        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[profileHashPredicateIndex].name,SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory o = string.concat('"', profileHash, '"');
+        emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
     }
 
 
@@ -86,7 +93,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
     function profileHash(address addr_) external view returns (string memory){
-        return _profileHash[_tokenIdOfResolvedDomain[_ownedResolvedDomain[addr_]]];
+        return _profileHash[addr_];
     }
 
 
@@ -99,20 +106,17 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 firstTokenId,
-        uint256 batchSize
+        uint256 tokenId
     ) internal override(SemanticSBTUpgradeable) virtual {
-        require(_ownerOfResolvedDomain[_domainOf[firstTokenId]] == address(0), "NameService:can not transfer when resolved");
+        require(_ownerOfResolvedDomain[_domainOf[tokenId]] == address(0), "NameService:can not transfer when resolved");
     }
 
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 firstTokenId,
-        uint256 batchSize
+        uint256 tokenId
     ) internal override(SemanticSBTUpgradeable) virtual {
-        delete _profileHash[firstTokenId];
-        emit UpdateRDF(firstTokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[firstTokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
 
