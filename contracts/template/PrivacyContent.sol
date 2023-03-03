@@ -34,7 +34,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
         return isOwnerOf(viewer, tokenId) ||
         _isFollowing(viewer, ownerOf(tokenId)) ||
-        _inSameDao(viewer, tokenId);
+        _isMemberOfDao(viewer, tokenId);
     }
 
 
@@ -101,11 +101,18 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
 
     function _isFollowing(address viewer, address owner) internal view returns (bool){
+        if (followRegister == address(0)) {
+            return false;
+        }
         address followContractAddress = IFollowRegister(followRegister).ownedFollowContract(owner);
+        if (followContractAddress == address(0)) {
+            return false;
+        }
+
         return IFollow(followContractAddress).isFollowing(viewer);
     }
 
-    function _inSameDao(address viewer, uint256 tokenId) internal view returns (bool){
+    function _isMemberOfDao(address viewer, uint256 tokenId) internal view returns (bool){
         address[] memory daoAddress = _shareDaoAddress[tokenId];
         for (uint256 i = 0; i < daoAddress.length; i++) {
             if (_shareToDao[tokenId][daoAddress[i]] && IDao(daoAddress[i]).isMember(viewer)) {
@@ -113,6 +120,5 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
             }
         }
         return false;
-
     }
 }

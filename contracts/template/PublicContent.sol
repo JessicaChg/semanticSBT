@@ -26,9 +26,9 @@ contract PublicContent is IPublicContent, SemanticSBT {
 
     function post(uint256 tokenId, string memory content) external returns (uint256) {
         _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
-        require(tokenId > 0, "PrivacyContent:Token id not exist");
-        require(_prepareToken[msg.sender] == tokenId, "PrivacyContent:Permission denied");
-        require(_mintContent[msg.sender][content] == 0, "PrivacyContent:Already mint");
+        require(tokenId > 0, "PublicContent:Token id not exist");
+        require(_prepareToken[msg.sender] == tokenId, "PublicContent:Permission denied");
+        require(_mintContent[msg.sender][content] == 0, "PublicContent:Already mint");
         _mint(tokenId, PUBLIC_CONTENT_PREDICATE, content);
         delete _prepareToken[msg.sender];
         _mintContent[msg.sender][content] = tokenId;
@@ -38,7 +38,7 @@ contract PublicContent is IPublicContent, SemanticSBT {
 
 
     function prepareToken() external returns (uint256) {
-        require(_prepareToken[msg.sender] == 0, "PrivacyContent:Already prepared");
+        require(_prepareToken[msg.sender] == 0, "PublicContent:Already prepared");
         uint256 tokenId = _addEmptyToken(msg.sender, 0);
         _prepareToken[msg.sender] = tokenId;
         return tokenId;

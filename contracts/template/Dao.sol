@@ -17,7 +17,7 @@ contract Dao is IDao, SemanticSBT {
     uint256 constant joinPredicateIndex = 1;
 
     uint256 constant soulCIndex = 1;
-    uint256 constant daoCIndex = 1;
+    uint256 constant daoCIndex = 2;
 
     address public daoOwner;
     string public daoInfo;
@@ -34,20 +34,6 @@ contract Dao is IDao, SemanticSBT {
 
 
     /* ============ External Functions ============ */
-
-    function init(
-        address owner,
-        address minter,
-        string memory name_,
-        string memory symbol_,
-        string memory baseURI_,
-        string memory schemaURI_,
-        string[] memory classes_,
-        Predicate[] memory predicates_
-    ) external {
-        super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
-        _setOwner(owner);
-    }
 
     function initialize(
         address owner,
@@ -78,9 +64,8 @@ contract Dao is IDao, SemanticSBT {
     }
 
     function join(bytes32[] calldata proof) external returns (uint256 tokenId){
-        require(_isFreeJoin || _verify(_leaf(msg.sender), proof), "Activity: permission denied");
-        require(ownedTokenId[msg.sender] == 0, "Activity: already minted");
-
+        require(_isFreeJoin || _verify(_leaf(msg.sender), proof), "Dao: permission denied");
+        require(ownedTokenId[msg.sender] == 0, "Dao: already minted");
         tokenId = _addEmptyToken(msg.sender, 0);
 
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
