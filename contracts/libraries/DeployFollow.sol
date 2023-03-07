@@ -2,8 +2,6 @@
 pragma solidity ^0.8.12;
 
 import {Follow} from "../template/Follow.sol";
-import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
-
 
 library DeployFollow {
 

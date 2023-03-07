@@ -31,7 +31,7 @@ describe("Public Content contract", function () {
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const contractName = "PublicContent";
+        const contractName = "Content";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
                 SemanticSBTLogic: semanticSBTLogicLibrary.address,
@@ -86,15 +86,15 @@ describe("Public Content contract", function () {
     * the fist five cases are belonging to the respective data type
     * the last one is for the unions of five data types
     */
-    describe("Post public content", function () {
+    describe("Post  content", function () {
         it("User should fail to post without call prepare token", async function () {
             const {publicContent, owner} = await loadFixture(deployTokenFixture);
             expect(await publicContent.ownedPrepareToken(owner.address)).to.equal(0);
             await expect(publicContent.post(1, "ar://the tx hash"))
-                .to.revertedWith("PublicContent:Permission denied")
+                .to.revertedWith("Content:Permission denied")
         });
 
-        it("User should owner a sbt after post a public content ", async function () {
+        it("User should owner a sbt after post a  content ", async function () {
             const {publicContent, owner} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:publicContent";

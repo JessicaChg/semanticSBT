@@ -6,42 +6,48 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 
-const name = "Bob's Connection Template";
+const name = 'Dao Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://5WULgp7dEkBShlT37fKXpyr0tSLyS2xXdYw8VHf06MY';
-const class_ = [];
-const predicate_ = [["following", 3]];
+const schemaURI = 'ar://MaXW2Db8G5EY2LNIR_JoiTqkIB9GUxWvAtN0vzYKl5w';
+const class_ = ["Contract"];
+const predicate_ = [["daoContract", 3]];
 
 async function main() {
 
-    const [owner, addr1] = await ethers.getSigners();
+    const [owner] = await ethers.getSigners();
 
     const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(
         `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
-    const FollowTokenLogic = await hre.ethers.getContractFactory("FollowTokenLogic");
-    const followTokenLogicLibrary = await FollowTokenLogic.deploy();
+    const DeployDao = await hre.ethers.getContractFactory("DeployDao", {
+        libraries: {
+            SemanticSBTLogic: semanticSBTLogicLibrary.address,
+        }
+    });
+    const deployDaoLibrary = await DeployDao.deploy();
     console.log(
-        `FollowTokenLogic deployed ,contract address: ${followTokenLogicLibrary.address}`
+        `DeployDao deployed ,contract address: ${deployDaoLibrary.address}`
     );
 
-    const contractName = "Follow";
+    const InitializeDao = await hre.ethers.getContractFactory("InitializeDao");
+    const initializeDaoLibrary = await InitializeDao.deploy();
+    console.log(`InitializeDao deployed ,contract address: ${initializeDaoLibrary.address}`);
+
+
+    const contractName = "DaoRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
             SemanticSBTLogic: semanticSBTLogicLibrary.address,
-            FollowTokenLogic: followTokenLogicLibrary.address,
+            DeployDao: deployDaoLibrary.address,
+            InitializeDao: initializeDaoLibrary.address,
         }
     });
-    const follow = await MyContract.deploy();
-    await follow.deployTransaction.wait();
-    console.log(
-        `Follow deployed ,contract address: ${follow.address}`
-    );
-    await follow.init(
-        owner.address,
+    const daoRegister = await MyContract.deploy();
+
+    await daoRegister.initialize(
         owner.address,
         name,
         symbol,
@@ -50,14 +56,8 @@ async function main() {
         class_,
         predicate_);
     console.log(
-        `${contractName} initialize successfully!`
+        `${contractName} deployed ,contract address: ${daoRegister.address}`
     );
-
-    await follow.connect(addr1).follow()
-    console.log(`${addr1.address} following  ${owner.address} successfully!`);
-
-    const rdf = await follow.rdfOf(1);
-    console.log(`The rdf of the first token is:  ${rdf}`);
 
 }
 

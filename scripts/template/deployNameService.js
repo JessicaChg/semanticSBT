@@ -37,24 +37,24 @@ async function main() {
     const contractName = "NameService";
     console.log(contractName)
 
-    const MyContract = await ethers.getContractFactory(contractName,{
-        libraries:{
+    const MyContract = await ethers.getContractFactory(contractName, {
+        libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             NameServiceLogic: nameServiceLogicLibrary.address,
         }
     });
-    // // const myContract = await upgrades.deployProxy(MyContract,
-    // //     [owner.address,
-    // //         name,
-    // //         symbol,
-    // //         baseURI,
-    // //         schemaURI,
-    // //         class_,
-    // //         predicate_],
-    // //     {unsafeAllowLinkedLibraries: true});
-    //
-    // await myContract.deployed();
-    const myContract = await MyContract.deploy();
+    const myContract = await upgrades.deployProxy(MyContract,
+        [owner.address,
+            name,
+            symbol,
+            baseURI,
+            schemaURI,
+            class_,
+            predicate_],
+        {unsafeAllowLinkedLibraries: true});
+
+    await myContract.deployed();
+    // const myContract = await MyContract.deploy();
     await myContract.deployTransaction.wait();
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`

@@ -11,7 +11,7 @@ const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
 const class_ = ["Domain"];
-const predicate_ = [["hold", 3], ["resolved", 3]];
+const predicate_ = [["hold", 3], ["resolved", 3],["profileHash", 1]];
 
 const minDomainLength_ = 3;
 const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1

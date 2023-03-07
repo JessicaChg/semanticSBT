@@ -56,7 +56,7 @@ contract Dao is IDao, SemanticSBT {
     }
 
 
-    function join(address[] memory to) external onlyDaoOwner {
+    function addMember(address[] memory to) external onlyDaoOwner {
         for (uint256 i = 0; i < to.length; i++) {
             _join(to[i]);
         }

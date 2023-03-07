@@ -101,17 +101,18 @@ describe("DaoRegister contract", function () {
     * the fist five cases are belonging to the respective data type
     * the last one is for the unions of five data types
     */
-    describe("Deploy dao contracts ", function () {
-        it("Deploy one dao contract ", async function () {
+    describe("Deploy DAO contracts ", function () {
+        it("Deploy one DAO contract ", async function () {
             const {daoRegister, owner} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(owner.address);
 
-            const daoContract = await daoRegister.ownedDaoContract(owner.address);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${daoContract[0].toLowerCase()}.`;
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
+            const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(1)).equal(rdf);
         });
 
-        it("Deploy two dao contracts for two users", async function () {
+        it("Deploy two DAO contracts for two users", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(owner.address);
             await daoRegister.deployDaoContract(addr1.address);
@@ -119,27 +120,30 @@ describe("DaoRegister contract", function () {
             expect((await daoRegister.daoOf(2)).daoOwner).to.be.equal(addr1.address);
 
 
-            const daoContract1 = await daoRegister.ownedDaoContract(owner.address);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${daoContract1[0].toLowerCase()}.`;
+            const tokenId1 = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
+            const tokenId2 = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId1);
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(1)).equal(rdf1);
-            const daoContract2 = await daoRegister.ownedDaoContract(addr1.address);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Dao_${daoContract2[0].toLowerCase()}.`;
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId2);
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(2)).equal(rdf2);
         });
 
 
-        it("User should failed to join the dao without a correct proof", async function () {
+        it("User should failed to join the DAO when the DAO is not free to join", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(owner.address);
             await daoRegister.deployDaoContract(addr1.address);
 
-            const daoContractAddress = await daoRegister.ownedDaoContract(addr1.address);
-            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress[0]);
-            await expect(daoContract.connect(owner).join([])).to.be.revertedWith("Dao: permission denied");
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
+            await expect(daoContract.connect(owner).join()).to.be.revertedWith("Dao: permission denied");
         });
 
 
-        it("User should join the dao when use correct proof", async function () {
+        it("Users should join a DAO after the owner adds them to the DAO", async function () {
             const {
                 daoRegister,
                 owner,
@@ -152,74 +156,71 @@ describe("DaoRegister contract", function () {
             } = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address);
 
-            const daoContractAddress = await daoRegister.ownedDaoContract(addr1.address);
-            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress[0]);
-            let whitelistAddresses = [
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
+            let member = [
                 owner.address,
                 addr2.address,
                 addr3.address,
                 addr4.address,
                 addr5.address,
             ];
-            let leafNodes = whitelistAddresses.map(address => keccak256(address));
-            let tree = new MerkleTree(leafNodes, keccak256, {sortPairs: true});
-            await expect(daoContract.connect(addr1).invite(whiteListURL, tree.getHexRoot()));
-            expect(await daoContract.whiteListURL()).to.equal(whiteListURL);
-            expect(await daoContract.root()).to.equal(tree.getHexRoot());
+            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr1).addMember(member))
+                .to.emit(daoContract,"CreateRDF")
+                .withArgs(1,rdf)
 
-            let leaf = keccak256(addr2.address);
-            let proof = tree.getHexProof(leaf);
-            const rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(addr2).join(proof))
-                .to.emit(daoContract, "CreateRDF")
-                .withArgs(1, rdf);
-            await expect(daoContract.connect(addr6).join([])).to.be.revertedWith("Dao: permission denied");
+            await expect(daoContract.connect(addr6).join()).to.be.revertedWith("Dao: permission denied");
         });
 
-        it("User should join the dao when free join", async function () {
+        it("User should join the DAO when free join", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address);
 
-            const daoContractAddress = await daoRegister.ownedDaoContract(addr1.address);
-            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress[0]);
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).join([]))
+            await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await daoContract.rdfOf(1)).equal(rdf);
             expect(await daoContract.isMember(owner.address)).equal(true);
         });
 
-        it("User should burn the sbt when quit from dao", async function () {
+        it("User should burn the sbt when remove from DAO", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address);
 
-            const daoContractAddress = await daoRegister.ownedDaoContract(addr1.address);
-            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress[0]);
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).join([]))
+            await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(1, rdf);
-            await expect(daoContract.connect(owner).quit(owner.address))
+            await expect(daoContract.connect(owner).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(1, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
         });
 
-        it("User should burn the sbt when the owner of dao remove user from dao", async function () {
+        it("User should burn the sbt when the owner of DAO remove user from DAO", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address);
 
-            const daoContractAddress = await daoRegister.ownedDaoContract(addr1.address);
-            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress[0]);
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).join([]))
+            await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(1, rdf);
-            await expect(daoContract.connect(addr1).quit(owner.address))
+            await expect(daoContract.connect(addr1).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(1, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);

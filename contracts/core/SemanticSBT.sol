@@ -283,6 +283,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
     function tokenURI(uint256 tokenId)
     external
     view
+    virtual
     override
     returns (string memory)
     {

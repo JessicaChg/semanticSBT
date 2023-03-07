@@ -21,7 +21,7 @@ contract Follow is IFollow, SemanticSBT {
 
     /* ============ External Functions ============ */
 
-    function initialize(
+    function init(
         address owner,
         address minter,
         string memory name_,

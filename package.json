@@ -24,6 +24,7 @@
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@openzeppelin/contracts": "^4.8.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.5",
     "@openzeppelin/contracts-upgradeable": "^4.8.1",
     "hardhat-contract-sizer": "^2.7.0",
     "keccak256": "^1.0.6",

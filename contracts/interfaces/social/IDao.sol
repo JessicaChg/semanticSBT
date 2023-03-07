@@ -22,7 +22,7 @@ interface IDao is ISemanticSBT {
 
     function isFreeJoin() external view returns (bool);
 
-    function join(address[] memory to) external;
+    function addMember(address[] memory to) external;
 
     function join() external returns (uint256);
 

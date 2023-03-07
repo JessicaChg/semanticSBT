@@ -66,7 +66,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         SPO storage spo = _tokens[tokenId];
         NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
             _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
-        NameServiceLogic.updatePIndexOfToken(addr_, tokenId, spo);
+        NameServiceLogic.updatePIndexOfToken(addr_, spo);
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
@@ -75,7 +75,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         _profileHash[msg.sender] = profileHash;
         emit SetProfile(msg.sender, profileHash);
         string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[profileHashPredicateIndex].name,SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[profileHashPredicateIndex].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
         string memory o = string.concat('"', profileHash, '"');
         emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
     }

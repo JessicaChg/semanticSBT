@@ -22,32 +22,32 @@ async function main() {
     console.log(
         `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
-    const DeployConnection = await hre.ethers.getContractFactory("DeployConnection", {
+    const DeployFollow = await hre.ethers.getContractFactory("DeployFollow", {
         libraries: {
             SemanticSBTLogic: semanticSBTLogicLibrary.address,
         }
     });
-    const deployConnectionLibrary = await DeployConnection.deploy();
+    const deployFollowLibrary = await DeployFollow.deploy();
     console.log(
-        `DeployConnection deployed ,contract address: ${deployConnectionLibrary.address}`
+        `DeployFollow deployed ,contract address: ${deployFollowLibrary.address}`
     );
 
-    const InitializeConnection = await hre.ethers.getContractFactory("InitializeConnection");
-    const initializeConnectionLibrary = await InitializeConnection.deploy();
-    console.log(`InitializeConnection deployed ,contract address: ${initializeConnectionLibrary.address}`);
+    const InitializeFollow = await hre.ethers.getContractFactory("InitializeFollow");
+    const initializeFollowLibrary = await InitializeFollow.deploy();
+    console.log(`InitializeFollow deployed ,contract address: ${initializeFollowLibrary.address}`);
 
 
     const contractName = "FollowRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
             SemanticSBTLogic: semanticSBTLogicLibrary.address,
-            DeployConnection: deployConnectionLibrary.address,
-            InitializeConnection: initializeConnectionLibrary.address,
+            DeployFollow: deployFollowLibrary.address,
+            InitializeFollow: initializeFollowLibrary.address,
         }
     });
-    const connectionRegister = await MyContract.deploy();
+    const followRegister = await MyContract.deploy();
 
-    await connectionRegister.initialize(
+    await followRegister.initialize(
         owner.address,
         name,
         symbol,
@@ -56,7 +56,7 @@ async function main() {
         class_,
         predicate_);
     console.log(
-        `${contractName} deployed ,contract address: ${connectionRegister.address}`
+        `${contractName} deployed ,contract address: ${followRegister.address}`
     );
 
 }

@@ -45,7 +45,7 @@ library NameServiceLogic {
         _tokenIdOfResolvedDomain[dSIndex] = _tokenIdOfDomain[dSIndex];
     }
 
-    function updatePIndexOfToken(address addr, uint256 tokenId, SPO storage spo) public {
+    function updatePIndexOfToken(address addr, SPO storage spo) public {
         if (addr == address(0)) {
             spo.pIndex[0] = holdPredicateIndex;
         } else {

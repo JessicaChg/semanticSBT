@@ -7,7 +7,7 @@ import "../ISemanticSBT.sol";
 interface IFollow is ISemanticSBT {
 
 
-    function initialize(
+    function init(
         address owner,
         address minter,
         string memory name_,
