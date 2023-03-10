@@ -52,7 +52,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     string private _baseURI;
 
-    string public schemaURI;
+    string public _schemaURI;
 
 
     mapping(string => uint256) private _classIndex;
@@ -104,14 +104,14 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         string[] memory classes_,
         Predicate[] memory predicates_
     ) public initializer onlyOwner {
-        require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schema URI cannot be empty");
-        require(predicates_.length > 0, "SemanticSBT: predicate size can not be empty");
+        require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schemaURI cannot be empty");
+        require(predicates_.length > 0, "SemanticSBT: predicate can not be empty");
 
         _minters[minter] = true;
         _name = name_;
         _symbol = symbol_;
         _baseURI = baseURI_;
-        schemaURI = schemaURI_;
+        _schemaURI = schemaURI_;
 
         SemanticSBTLogic.addClass(classes_, _classNames, _classIndex);
         SemanticSBTLogic.addPredicate(predicates_, _predicates, _predicateIndex);
@@ -169,20 +169,24 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
 
     function subjectIndex(string memory subjectValue, string memory className_) public view returns (uint256){
         uint256 sIndex = _subjectIndex[_classIndex[className_]][subjectValue];
-        require(sIndex > 0, "SemanticSBT: does not exist");
+        require(sIndex > 0, "SemanticSBT: not exist");
         return sIndex;
     }
 
 
     function subject(uint256 index) public view returns (string memory subjectValue, string memory className_){
-        require(index > 0 && index < _subjects.length, "SemanticSBT: does not exist");
+        require(index > 0 && index < _subjects.length, "SemanticSBT: not exist");
         subjectValue = _subjects[index].value;
         className_ = _classNames[_subjects[index].cIndex];
     }
 
 
+    function schemaURI() public view override returns (string memory) {
+        return _schemaURI;
+    }
+
     function rdfOf(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "SemanticSBT: SemanticSBT does not exist");
+        require(_exists(tokenId), "SemanticSBT: not exist");
         return SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
     }
 
@@ -441,7 +445,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         emit CreateRDF(tokenId, SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
-    function _burn(address account,uint256 tokenId) internal {
+    function _burn(address account, uint256 tokenId) internal {
         string memory _rdf = SemanticSBTLogic.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
 
         _approve(address(0), tokenId);

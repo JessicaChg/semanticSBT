@@ -1,0 +1,37 @@
+PREFIX : <http://relationlabs.ai/entity/>
+PREFIX p: <http://relationlabs.ai/property/>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+###################
+# class
+###################
+:Soul a rdfs:Class ;
+    rdfs:label "Soul" ;
+    rdfs:comment "A soul." .
+
+:Domain a rdfs:Class ;
+    rdfs:label "Domain" ;
+    rdfs:comment "A domain." .
+
+###################
+# predicate
+###################
+p:hold a rdf:Property ;
+    rdfs:label "hold" ;
+    rdfs:comment "A Soul to own a domain." ;
+    rdfs:domain :Soul ;
+    rdfs:range :Domain .
+
+p:resolved a rdf:Property ;
+    rdfs:label "resolved" ;
+    rdfs:comment "The resolved domain of a soul." ;
+    rdfs:domain :Soul ;
+    rdfs:range :Domain .
+
+p:profileHash a rdf:Property ;
+    rdfs:label "profileHash" ;
+    rdfs:comment "The profileHash of a soul." ;
+    rdfs:domain :Soul ;
+    rdfs:range xsd:string .

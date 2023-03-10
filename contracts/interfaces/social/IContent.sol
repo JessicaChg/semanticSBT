@@ -5,7 +5,7 @@ pragma solidity ^0.8.12;
 import "../ISemanticSBT.sol";
 
 /**
- * @dev Required interface of an ISemanticData compliant contract.
+ * @dev Required interface of an ISemanticSBT compliant contract.
  */
 interface IContent is ISemanticSBT {
 

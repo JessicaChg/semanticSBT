@@ -37,7 +37,7 @@ contract Follow is IFollow, SemanticSBT {
 
 
     function follow() external {
-        require(getMinted() == 0 || super.tokenOfOwnerByIndex(msg.sender, 0) == 0, "Follow:Already followed!");
+        require(!_isFollowing[msg.sender], "Follow:Already followed!");
         uint256 sIndex = _addSubject(msg.sender.toHexString(), soulCIndex);
         uint256 tokenId = _addEmptyToken(msg.sender, sIndex);
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));

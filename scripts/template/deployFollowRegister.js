@@ -47,17 +47,18 @@ async function main() {
     });
     const followRegister = await MyContract.deploy();
 
-    await followRegister.initialize(
+    await (await followRegister.initialize(
         owner.address,
         name,
         symbol,
         baseURI,
         schemaURI,
         class_,
-        predicate_);
+        predicate_)).wait();
     console.log(
         `${contractName} deployed ,contract address: ${followRegister.address}`
     );
+
 
 }
 

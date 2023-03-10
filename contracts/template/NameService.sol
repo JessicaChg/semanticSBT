@@ -9,7 +9,6 @@ import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/INameService.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 import {NameServiceLogic} from "../libraries/NameServiceLogic.sol";
-import "hardhat/console.sol";
 
 
 contract NameService is INameService, SemanticSBTUpgradeable {
@@ -27,7 +26,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     uint256 _minDomainLength;
     mapping(uint256 => uint256) _domainLengthControl;
     mapping(uint256 => uint256) _countOfDomainLength;
-
+    string _suffix;
 
     mapping(uint256 => uint256) _tokenIdOfDomain;
     mapping(uint256 => uint256) _domainOf;
@@ -38,6 +37,9 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     mapping(address => string) _profileHash;
 
+    function setSuffix(string calldata suffix_) external onlyMinter {
+        _suffix = suffix_;
+    }
 
     function setDomainLengthControl(uint256 minDomainLength_, uint256 _domainLength, uint256 _maxCount) external onlyMinter {
         _minDomainLength = minDomainLength_;
@@ -89,11 +91,18 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     function nameOf(address addr_) external view returns (string memory){
         uint256 sIndex = _ownedResolvedDomain[addr_];
-        return _subjects[sIndex].value;
+        return string.concat(_subjects[sIndex].value, _suffix);
     }
 
     function profileHash(address addr_) external view returns (string memory){
         return _profileHash[addr_];
+    }
+
+
+    function ownerOfName(string calldata name) external view returns (address){
+        uint256 sIndex = _subjectIndex[domainCIndex][name];
+        uint256 tokenId = _tokenIdOfDomain[sIndex];
+        return ownerOf(tokenId);
     }
 
 
