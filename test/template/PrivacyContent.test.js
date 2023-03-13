@@ -178,7 +178,7 @@ describe("Privacy Content contract", function () {
         it("User should fail to post without call prepare token", async function () {
             const {privacyContent, owner} = await loadFixture(deployTokenFixture);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(0);
-            await expect(privacyContent.postPrivacy(1, content))
+            await expect(privacyContent.post(1, content))
                 .to.revertedWith("PrivacyContent:Permission denied")
         });
 
@@ -192,7 +192,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.postPrivacy(1, content))
+            await expect(privacyContent.post(1, content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -209,7 +209,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.postPrivacy(1, content))
+            await expect(privacyContent.post(1, content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -228,7 +228,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.postPrivacy(1, content))
+            await expect(privacyContent.post(1, content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -240,11 +240,13 @@ describe("Privacy Content contract", function () {
             const followContractAddress = await followRegister.ownedFollowContract(owner.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
             await followContract.connect(addr1).follow();
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
+            await privacyContent.connect(owner).shareToFollower(1);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
         });
 
 
-        it("Should return true when the address in the dao which the owner of token has shared", async function () {
+        it("Should return true when the address in the dao shared by the token owner", async function () {
             const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
@@ -254,7 +256,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.postPrivacy(1, content))
+            await expect(privacyContent.post(1, content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -267,12 +269,10 @@ describe("Privacy Content contract", function () {
             const daoContractAddress = await daoRegister.daoOf(1);
             const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress.contractAddress);
             await daoContract.setFreeJoin(true);
-            await daoContract.connect(addr1).join([]);
-            await privacyContent.setShareToDao(1, daoContractAddress.contractAddress, true);
+            await daoContract.connect(addr1).join();
+            await privacyContent.shareToDao(1, daoContractAddress.contractAddress);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
 
-            await privacyContent.setShareToDao(1, daoContractAddress.contractAddress, false);
-            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
         });
 
     })

@@ -18,8 +18,8 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
 
     uint256 constant CONNECTION_CONTRACT_PREDICATE_INDEX = 1;
 
-    uint256 constant soulCIndex = 1;
-    uint256 constant contractCIndex = 2;
+    uint256 constant SOUL_CLASS_INDEX = 1;
+    uint256 constant CONTRACT_CLASS_INDEX = 2;
 
     mapping(address => address) _ownedFollowContract;
 
@@ -36,7 +36,7 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
         address connectionAddress = DeployFollow.deployFollow();
         InitializeFollow.initFollow(connectionAddress, to, address(this));
         _ownedFollowContract[to] = connectionAddress;
-        uint256 contractIndex = _addSubject(connectionAddress.toHexString(), contractCIndex);
+        uint256 contractIndex = _addSubject(connectionAddress.toHexString(), CONTRACT_CLASS_INDEX);
 
         SubjectPO[] memory subjectPOList = generateSubjectPOList(contractIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));

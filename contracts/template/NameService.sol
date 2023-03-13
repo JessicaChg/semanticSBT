@@ -15,12 +15,12 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    uint256 constant holdPredicateIndex = 1;
-    uint256 constant resolvePredicateIndex = 2;
-    uint256 constant profileHashPredicateIndex = 3;
+    uint256 constant HOLD_PREDICATE_INDEX = 1;
+    uint256 constant RESOLVED_PREDICATE_INDEX = 2;
+    uint256 constant PROFILE_HASH_PREDICATE_INDEX = 3;
 
-    uint256 constant soulCIndex = 1;
-    uint256 constant domainCIndex = 2;
+    uint256 constant SOUL_CLASS_INDEX = 1;
+    uint256 constant DOMAIN_CLASS_INDEX = 2;
 
 
     uint256 _minDomainLength;
@@ -48,9 +48,9 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
-        require(_subjectIndex[domainCIndex][name] == 0, "NameService: already added");
+        require(_subjectIndex[DOMAIN_CLASS_INDEX][name] == 0, "NameService: already added");
         tokenId = _addEmptyToken(owner, 0);
-        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(name, domainCIndex, _subjects, _subjectIndex);
+        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(name, DOMAIN_CLASS_INDEX, _subjects, _subjectIndex);
         SubjectPO[] memory subjectPOList = NameServiceLogic.register(tokenId, owner, sIndex, resolve,
             _tokenIdOfDomain, _domainOf,
             _ownedResolvedDomain, _ownerOfResolvedDomain, _tokenIdOfResolvedDomain,
@@ -62,7 +62,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     function setNameForAddr(address addr_, string memory name) external override {
         require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
-        uint256 sIndex = _subjectIndex[domainCIndex][name];
+        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
         uint256 tokenId = _tokenIdOfDomain[sIndex];
         require(ownerOf(tokenId) == msg.sender, "NameService:not the owner");
         SPO storage spo = _tokens[tokenId];
@@ -72,19 +72,19 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
-    function setProfileHash(string memory profileHash) external {
+    function setProfileHash(string memory _profileHash) external {
         require(_ownedResolvedDomain[msg.sender] != 0, "NameService:not resolved the domain");
-        _profileHash[msg.sender] = profileHash;
-        emit SetProfile(msg.sender, profileHash);
+        _profileHash[msg.sender] = _profileHash;
+        emit SetProfile(msg.sender, _profileHash);
         string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[profileHashPredicateIndex].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory o = string.concat('"', profileHash, '"');
+        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory o = string.concat('"', _profileHash, '"');
         emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
     }
 
 
     function addr(string calldata name) virtual override external view returns (address){
-        uint256 sIndex = _subjectIndex[domainCIndex][name];
+        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
         return _ownerOfResolvedDomain[sIndex];
     }
 
@@ -100,7 +100,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function ownerOfName(string calldata name) external view returns (address){
-        uint256 sIndex = _subjectIndex[domainCIndex][name];
+        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
         uint256 tokenId = _tokenIdOfDomain[sIndex];
         return ownerOf(tokenId);
     }

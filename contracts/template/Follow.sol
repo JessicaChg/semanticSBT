@@ -3,19 +3,20 @@
 pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../core/SemanticSBT.sol";
 import "../interfaces/social/IFollow.sol";
 
-contract Follow is IFollow, SemanticSBT {
+contract Follow is IFollow, SemanticSBT, ReentrancyGuard {
 
     using Strings for uint256;
     using Strings for address;
 
     SubjectPO[] private ownerSubjectPO;
 
-    uint256 constant followingPredicateIndex = 1;
+    uint256 constant FOLLOWING_PREDICATE_INDEX = 1;
 
-    uint256 constant soulCIndex = 1;
+    uint256 constant SOUL_CLASS_INDEX = 1;
 
     mapping(address => bool) _isFollowing;
 
@@ -38,10 +39,10 @@ contract Follow is IFollow, SemanticSBT {
 
     function follow() external {
         require(!_isFollowing[msg.sender], "Follow:Already followed!");
-        uint256 sIndex = _addSubject(msg.sender.toHexString(), soulCIndex);
+        _isFollowing[msg.sender] = true;
+        uint256 sIndex = _addSubject(msg.sender.toHexString(), SOUL_CLASS_INDEX);
         uint256 tokenId = _addEmptyToken(msg.sender, sIndex);
         _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
-        _isFollowing[msg.sender] = true;
     }
 
     function unfollow() external {
@@ -63,8 +64,8 @@ contract Follow is IFollow, SemanticSBT {
     /* ============ Internal Functions ============ */
 
     function _setOwner(address owner) internal {
-        uint256 sIndex = _addSubject(owner.toHexString(), soulCIndex);
-        ownerSubjectPO.push(SubjectPO(followingPredicateIndex, sIndex));
+        uint256 sIndex = _addSubject(owner.toHexString(), SOUL_CLASS_INDEX);
+        ownerSubjectPO.push(SubjectPO(FOLLOWING_PREDICATE_INDEX, sIndex));
     }
 
 

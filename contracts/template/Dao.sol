@@ -14,10 +14,10 @@ contract Dao is IDao, SemanticSBT {
 
     SubjectPO[] private joinDaoSubjectPO;
 
-    uint256 constant joinPredicateIndex = 1;
+    uint256 constant JOIN_PREDICATE_INDEX = 1;
 
-    uint256 constant soulCIndex = 1;
-    uint256 constant daoCIndex = 2;
+    uint256 constant SOUL_CLASS_INDEX = 1;
+    uint256 constant DAO_CLASS_INDEX = 2;
 
     address public daoOwner;
     string public daoInfo;
@@ -56,6 +56,14 @@ contract Dao is IDao, SemanticSBT {
     }
 
 
+    function ownerTransfer(address to) external onlyDaoOwner {
+        daoOwner = to;
+    }
+
+    function ownerOfDao() external view returns (address){
+        return daoOwner;
+    }
+
     function addMember(address[] memory to) external onlyDaoOwner {
         for (uint256 i = 0; i < to.length; i++) {
             _join(to[i]);
@@ -93,17 +101,16 @@ contract Dao is IDao, SemanticSBT {
 
     function _setOwner(address owner) internal {
         daoOwner = owner;
-        uint256 sIndex = _addSubject(address(this).toHexString(), daoCIndex);
-        joinDaoSubjectPO.push(SubjectPO(joinPredicateIndex, sIndex));
+        uint256 sIndex = _addSubject(address(this).toHexString(), DAO_CLASS_INDEX);
+        joinDaoSubjectPO.push(SubjectPO(JOIN_PREDICATE_INDEX, sIndex));
     }
 
     function _join(address to) internal returns (uint256 tokenId){
         require(ownedTokenId[to] == 0, string.concat("Dao:", to.toHexString(), " already minted"));
         tokenId = _addEmptyToken(to, 0);
-
+        ownedTokenId[to] = tokenId;
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
             joinDaoSubjectPO, new BlankNodePO[](0));
-        ownedTokenId[to] = tokenId;
     }
 
 

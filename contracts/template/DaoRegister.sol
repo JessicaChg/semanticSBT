@@ -23,10 +23,9 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
 
     uint256 constant DAO_CONTRACT_PREDICATE_INDEX = 1;
 
-    uint256 constant soulCIndex = 1;
-    uint256 constant contractCIndex = 2;
+    uint256 constant SOUL_CLASS_INDEX = 1;
+    uint256 constant CONTRACT_CLASS_INDEX = 2;
 
-    mapping(address => address[]) _ownedDaoContract;
     mapping(uint256 => DaoStruct) _daoOf;
 
 
@@ -34,9 +33,8 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
         uint256 tokenId = _addEmptyToken(to, 0);
         address daoContractAddress = DeployDao.deployDao();
         InitializeDao.initDao(daoContractAddress, to, address(this));
-        _ownedDaoContract[to].push(daoContractAddress);
         _daoOf[tokenId] = DaoStruct(to, daoContractAddress);
-        uint256 contractIndex = _addSubject(daoContractAddress.toHexString(), contractCIndex);
+        uint256 contractIndex = _addSubject(daoContractAddress.toHexString(), CONTRACT_CLASS_INDEX);
 
         SubjectPO[] memory subjectPOList = generateSubjectPOList(contractIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));

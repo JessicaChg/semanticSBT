@@ -20,13 +20,17 @@ interface IDao is ISemanticSBT {
 
     function setDaoInfo(string memory daoHash) external;
 
-    function isFreeJoin() external view returns (bool);
-
     function addMember(address[] memory to) external;
 
     function join() external returns (uint256);
 
     function remove(address to) external returns (uint256);
+
+    function ownerTransfer(address to) external;
+
+    function ownerOfDao() external view returns (address);
+
+    function isFreeJoin() external view returns (bool);
 
     function isMember(address addr) external view returns (bool);
 }

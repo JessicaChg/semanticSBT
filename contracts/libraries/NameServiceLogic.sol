@@ -39,7 +39,11 @@ library NameServiceLogic {
     function setNameForAddr(address addr, uint256 dSIndex,
         mapping(uint256 => uint256) storage _tokenIdOfDomain, mapping(address => uint256) storage _ownedResolvedDomain,
         mapping(uint256 => address) storage _ownerOfResolvedDomain, mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) public {
-        require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
+        if (addr != address(0)) {
+            require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
+        } else {
+            require(_ownerOfResolvedDomain[dSIndex] != address(0), "NameService:not resolved");
+        }
         _ownedResolvedDomain[addr] = dSIndex;
         _ownerOfResolvedDomain[dSIndex] = addr;
         _tokenIdOfResolvedDomain[dSIndex] = _tokenIdOfDomain[dSIndex];

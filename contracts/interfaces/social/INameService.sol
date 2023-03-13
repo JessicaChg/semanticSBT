@@ -7,7 +7,7 @@ interface INameService is ISemanticSBT {
 
     event SetProfile (
         address indexed owner,
-        string  profileHash
+        string profileHash
     );
 
     /**
@@ -37,7 +37,7 @@ interface INameService is ISemanticSBT {
      * @param name : The domain name.
      * @return owner : The address.
      */
-    function addr(string calldata name) virtual external view returns (address owner);
+    function addr(string calldata name) external view returns (address owner);
 
     /**
      * Reverse mapping
