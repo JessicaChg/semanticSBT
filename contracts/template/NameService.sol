@@ -26,7 +26,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     uint256 _minDomainLength;
     mapping(uint256 => uint256) _domainLengthControl;
     mapping(uint256 => uint256) _countOfDomainLength;
-    string _suffix;
+    string public suffix;
 
     mapping(uint256 => uint256) _tokenIdOfDomain;
     mapping(uint256 => uint256) _domainOf;
@@ -38,7 +38,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     mapping(address => string) _profileHash;
 
     function setSuffix(string calldata suffix_) external onlyMinter {
-        _suffix = suffix_;
+        suffix = suffix_;
     }
 
     function setDomainLengthControl(uint256 minDomainLength_, uint256 _domainLength, uint256 _maxCount) external onlyMinter {
@@ -48,13 +48,14 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
-        require(_subjectIndex[DOMAIN_CLASS_INDEX][name] == 0, "NameService: already added");
+        require(NameServiceLogic.checkValidLength(name, _minDomainLength, _domainLengthControl, _countOfDomainLength), "NameService: invalid length of name");
+        string memory fullName = string.concat(name, suffix);
+        require(_subjectIndex[DOMAIN_CLASS_INDEX][fullName] == 0, "NameService: already added");
         tokenId = _addEmptyToken(owner, 0);
-        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(name, DOMAIN_CLASS_INDEX, _subjects, _subjectIndex);
+        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, DOMAIN_CLASS_INDEX, _subjects, _subjectIndex);
         SubjectPO[] memory subjectPOList = NameServiceLogic.register(tokenId, owner, sIndex, resolve,
             _tokenIdOfDomain, _domainOf,
-            _ownedResolvedDomain, _ownerOfResolvedDomain, _tokenIdOfResolvedDomain,
-            name, _minDomainLength, _domainLengthControl, _countOfDomainLength
+            _ownedResolvedDomain, _ownerOfResolvedDomain, _tokenIdOfResolvedDomain
         );
         _mint(tokenId, owner, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
     }
@@ -91,7 +92,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     function nameOf(address addr_) external view returns (string memory){
         uint256 sIndex = _ownedResolvedDomain[addr_];
-        return string.concat(_subjects[sIndex].value, _suffix);
+        return _subjects[sIndex].value;
     }
 
     function profileHash(address addr_) external view returns (string memory){

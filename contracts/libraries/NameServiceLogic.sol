@@ -16,12 +16,7 @@ library NameServiceLogic {
         mapping(uint256 => uint256) storage _domainOf,
         mapping(address => uint256) storage _ownedResolvedDomain,
         mapping(uint256 => address) storage _ownerOfResolvedDomain,
-        mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain,
-        string memory name,
-        uint256 _minDomainLength,
-        mapping(uint256 => uint256) storage _domainLengthControl,
-        mapping(uint256 => uint256) storage _countOfDomainLength) external returns (SubjectPO[] memory) {
-        require(checkValidLength(name, _minDomainLength, _domainLengthControl, _countOfDomainLength), "NameService: invalid length of name");
+        mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) external returns (SubjectPO[] memory) {
         _tokenIdOfDomain[sIndex] = tokenId;
         _domainOf[tokenId] = sIndex;
         SubjectPO[] memory subjectPOList = new SubjectPO[](1);
@@ -43,6 +38,7 @@ library NameServiceLogic {
             require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
         } else {
             require(_ownerOfResolvedDomain[dSIndex] != address(0), "NameService:not resolved");
+            delete _ownedResolvedDomain[_ownerOfResolvedDomain[dSIndex]];
         }
         _ownedResolvedDomain[addr] = dSIndex;
         _ownerOfResolvedDomain[dSIndex] = addr;
@@ -61,7 +57,7 @@ library NameServiceLogic {
     function checkValidLength(string memory name,
         uint256 _minDomainLength,
         mapping(uint256 => uint256) storage _domainLengthControl,
-        mapping(uint256 => uint256) storage _countOfDomainLength) internal view returns (bool){
+        mapping(uint256 => uint256) storage _countOfDomainLength) external view returns (bool){
         uint256 len = name.strlen();
         if (len < _minDomainLength) {
             return false;

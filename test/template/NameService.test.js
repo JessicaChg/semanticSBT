@@ -15,7 +15,7 @@ const predicate_ = [["hold", 3], ["resolved", 3],["profileHash", 1]];
 
 const minDomainLength_ = 3;
 const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
-
+const suffix = ".rel";
 
 /*
 * Before Mint SBT, should initial the parameters of this contract. In this step, we prepare the element of semantic SBT
@@ -57,7 +57,7 @@ describe("Name Service contract", function () {
 
         await nameService.deployed();
         await (await nameService.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
-
+        await (await nameService.setSuffix(suffix)).wait();
         return {nameService, owner, addr1, addr2};
     }
 
@@ -98,7 +98,8 @@ describe("Name Service contract", function () {
             const domain = "my-fist-domain";
             await nameService.register(owner.address, domain, true);
 
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Domain_${domain}.`;
+            const fullDomain = domain + suffix;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Domain_${fullDomain}.`;
             expect(await nameService.rdfOf(1)).to.be.equal(rdf);
         });
 
@@ -113,24 +114,46 @@ describe("Name Service contract", function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const domain = "my-domain";
             await nameService.register(owner.address, domain, false);
-            expect(await nameService.addr(domain)).to.be.equal("0x0000000000000000000000000000000000000000");
+
+            const fullDomain = domain + suffix;
+            expect(await nameService.addr(fullDomain)).to.be.equal("0x0000000000000000000000000000000000000000");
             expect(await nameService.nameOf(owner.address)).to.be.equal("");
 
-            await nameService.setNameForAddr(owner.address, domain);
-            expect(await nameService.addr(domain)).to.be.equal(owner.address);
-            expect(await nameService.nameOf(owner.address)).to.be.equal(domain);
+            await nameService.setNameForAddr(owner.address, fullDomain);
+            expect(await nameService.addr(fullDomain)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(fullDomain);
         });
 
-        it("User should get addr by domain after call the function setNameForAddr ", async function () {
+        it("User should get address by domain after call the function setNameForAddr ", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const domain = "my-domain";
             await nameService.register(owner.address, domain, false);
-            expect(await nameService.addr(domain)).to.be.equal("0x0000000000000000000000000000000000000000");
+
+            const fullDomain = domain + suffix;
+            expect(await nameService.addr(fullDomain)).to.be.equal("0x0000000000000000000000000000000000000000");
             expect(await nameService.nameOf(owner.address)).to.be.equal("");
 
-            await nameService.setNameForAddr(owner.address, domain);
-            expect(await nameService.addr(domain)).to.be.equal(owner.address);
-            expect(await nameService.nameOf(owner.address)).to.be.equal(domain);
+            await nameService.setNameForAddr(owner.address, fullDomain);
+            expect(await nameService.addr(fullDomain)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(fullDomain);
+        });
+
+        it("Should return zero address after call setNameForAddr with zero address", async function () {
+            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
+            const domain = "my-domain";
+            await nameService.register(owner.address, domain, false);
+
+            const fullDomain = domain + suffix;
+            expect(await nameService.addr(fullDomain)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal("");
+
+            await nameService.setNameForAddr(owner.address, fullDomain);
+            expect(await nameService.addr(fullDomain)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(fullDomain);
+
+            await nameService.setNameForAddr("0x0000000000000000000000000000000000000000", fullDomain);
+            expect(await nameService.addr(fullDomain)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal("");
         });
 
         it("User should fail to transfer when not be transferable", async function () {
@@ -156,12 +179,13 @@ describe("Name Service contract", function () {
             await nameService.setTransferable(true);
 
             const domain = "my-domain";
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Domain_${domain}.`;
+            const fullDomain = domain + suffix;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Domain_${fullDomain}.`;
             await expect(nameService.register(owner.address, domain, false))
                 .to.be.emit(nameService, "CreateRDF")
                 .withArgs(1, rdf1);
 
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Domain_${domain}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Domain_${fullDomain}.`;
             await expect(nameService.transferFrom(owner.address, addr1.address, 1))
                 .to.be.emit(nameService, "UpdateRDF")
                 .withArgs(1, rdf2);
