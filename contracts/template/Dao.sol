@@ -20,7 +20,7 @@ contract Dao is IDao, SemanticSBT {
     uint256 constant DAO_CLASS_INDEX = 2;
 
     address public daoOwner;
-    string public daoInfo;
+    string public _daoURI;
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
 
@@ -47,8 +47,8 @@ contract Dao is IDao, SemanticSBT {
         _setOwner(owner);
     }
 
-    function setDaoInfo(string memory daoInfo_) external onlyDaoOwner {
-        daoInfo = daoInfo_;
+    function setDaoURI(string memory daoURI_) external onlyDaoOwner {
+        _daoURI = daoURI_;
     }
 
     function setFreeJoin(bool isFreeJoin_) external onlyDaoOwner {
@@ -60,13 +60,9 @@ contract Dao is IDao, SemanticSBT {
         daoOwner = to;
     }
 
-    function ownerOfDao() external view returns (address){
-        return daoOwner;
-    }
-
-    function addMember(address[] memory to) external onlyDaoOwner {
-        for (uint256 i = 0; i < to.length; i++) {
-            _join(to[i]);
+    function addMember(address[] memory addr) external onlyDaoOwner {
+        for (uint256 i = 0; i < addr.length; i++) {
+            _join(addr[i]);
         }
     }
 
@@ -75,12 +71,20 @@ contract Dao is IDao, SemanticSBT {
         tokenId = _join(msg.sender);
     }
 
-    function remove(address to) external returns (uint256 tokenId){
-        require(msg.sender == daoOwner || msg.sender == to, "Dao: permission denied");
-        tokenId = ownedTokenId[to];
-        require(ownedTokenId[to] != 0, "Dao: not the member of dao");
-        super._burn(to, ownedTokenId[to]);
-        delete ownedTokenId[to];
+    function remove(address addr) external returns (uint256 tokenId){
+        require(msg.sender == daoOwner || msg.sender == addr, "Dao: permission denied");
+        tokenId = ownedTokenId[addr];
+        require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
+        super._burn(addr, ownedTokenId[addr]);
+        delete ownedTokenId[addr];
+    }
+
+    function daoURI() external view returns (string memory){
+        return _daoURI;
+    }
+
+    function ownerOfDao() external view returns (address){
+        return daoOwner;
     }
 
     function isFreeJoin() external view returns (bool){

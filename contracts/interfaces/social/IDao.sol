@@ -18,15 +18,17 @@ interface IDao is ISemanticSBT {
         Predicate[] memory predicates_
     ) external;
 
-    function setDaoInfo(string memory daoHash) external;
+    function setDaoURI(string memory daoURI) external;
 
-    function addMember(address[] memory to) external;
+    function addMember(address[] memory addr) external;
 
     function join() external returns (uint256);
 
-    function remove(address to) external returns (uint256);
+    function remove(address addr) external returns (uint256);
 
     function ownerTransfer(address to) external;
+
+    function daoURI() external view returns (string memory);
 
     function ownerOfDao() external view returns (address);
 

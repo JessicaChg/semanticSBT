@@ -27,10 +27,10 @@ interface INameService is ISemanticSBT {
     function setNameForAddr(address owner, string calldata name) external;
 
     /**
-     * A profileHash set for the caller
-     * @param profileHash : The transaction hash from arweave.
+     * A profileURI set for the caller
+     * @param profileURI : The transaction hash from arweave.
      */
-    function setProfileHash(string memory profileHash) external;
+    function setProfileURI(string memory profileURI) external;
 
     /**
      * To resolve a domain name.
@@ -49,9 +49,9 @@ interface INameService is ISemanticSBT {
     /**
      * To query the profileHash of an address.
      * @param owner : The address.
-     * @return profileHash : The transaction hash from arweave.
+     * @return profileURI : The transaction hash from arweave.
      */
-    function profileHash(address owner) external view returns (string memory profileHash);
+    function profileURI(address owner) external view returns (string memory profileURI);
 
 
 }

@@ -36,6 +36,9 @@ library NameServiceLogic {
         mapping(uint256 => address) storage _ownerOfResolvedDomain, mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) public {
         if (addr != address(0)) {
             require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
+            if(_ownedResolvedDomain[addr] != 0){
+                delete _ownerOfResolvedDomain[_ownedResolvedDomain[addr]];
+            }
         } else {
             require(_ownerOfResolvedDomain[dSIndex] != address(0), "NameService:not resolved");
             delete _ownedResolvedDomain[_ownerOfResolvedDomain[dSIndex]];

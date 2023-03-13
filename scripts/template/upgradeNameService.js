@@ -7,17 +7,6 @@
 const {ethers, upgrades} = require("hardhat");
 
 
-const name = 'Relation Name Service V1';
-const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://qqZhk8eOeqECKUcHWdZC6dMuaXzhukK8df5gMTSLXVk';
-const class_ = ["Domain"];
-const predicate_ = [["hold", 3], ["resolved", 3], ["profileHash", 1]];
-
-const minDomainLength_ = 3;
-const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
-const suffix = ".rel";
-
 async function main() {
     const [owner] = await ethers.getSigners();
 
@@ -44,24 +33,13 @@ async function main() {
             NameServiceLogic: nameServiceLogicLibrary.address,
         }
     });
-    const myContract = await upgrades.deployProxy(MyContract,
-        [owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_],
-        {unsafeAllowLinkedLibraries: true});
 
-    await myContract.deployed();
-    // const myContract = await MyContract.deploy();
-    await myContract.deployTransaction.wait();
-    console.log(
-        `${contractName} deployed ,contract address: ${myContract.address}`
-    );
-    await (await myContract.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
-    await (await myContract.setSuffix(suffix)).wait();
+    //upgrade
+    const proxyAddress = "0x6A22794A1e2aBdEC057a6dc24A6BFB53F9518016";
+    await upgrades.upgradeProxy(
+    proxyAddress,
+        MyContract,
+        {unsafeAllowLinkedLibraries: true});
 
 }
 
