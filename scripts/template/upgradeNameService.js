@@ -8,7 +8,6 @@ const {ethers, upgrades} = require("hardhat");
 
 
 async function main() {
-    const [owner] = await ethers.getSigners();
 
     const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
@@ -35,7 +34,7 @@ async function main() {
     });
 
     //upgrade
-    const proxyAddress = "0x6A22794A1e2aBdEC057a6dc24A6BFB53F9518016";
+    const proxyAddress = "";
     await upgrades.upgradeProxy(
     proxyAddress,
         MyContract,

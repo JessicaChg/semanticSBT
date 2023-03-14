@@ -42,12 +42,13 @@ async function main() {
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    await upgrades.upgradeProxy("0xa25243f934258F4267ed4C4bD37C03a0344414D0",
+    const proxyContract = "";
+    await upgrades.upgradeProxy(proxyContract,
         MyContract,
         {unsafeAllowLinkedLibraries: true});
 
     console.log(
-        `0xa25243f934258F4267ed4C4bD37C03a0344414D0  have upgraded!`
+        `The contract has upgraded!`
     );
 }
 

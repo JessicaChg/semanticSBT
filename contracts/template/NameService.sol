@@ -91,7 +91,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function nameOf(address addr_) external view returns (string memory){
-        if(addr_ == address(0)){
+        if (addr_ == address(0)) {
             return "";
         }
         uint256 sIndex = _ownedResolvedDomain[addr_];

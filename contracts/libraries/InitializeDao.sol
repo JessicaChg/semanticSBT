@@ -9,17 +9,15 @@ library InitializeDao {
 
     string constant  DAO_CLASS_NAME = "Dao";
     string constant  JOIN_PREDICATE = "join";
-    string constant NAME = "Dao";
     string constant SYMBOL = "DSBT";
-    string constant BASE_URI = "";
     string constant SCHEMA_URI = "ar://jCCCkgjG6Gxe46c8AfK_O7w32qylpFIvLd4_M1Zzy64";
 
-    function initDao(address contractAddress, address owner, address minter) external returns (bool) {
+    function initDao(address contractAddress, address owner, address minter, string memory name, string memory baseURI) external returns (bool) {
         string[] memory classNames_ = new string[](1);
         classNames_[0] = DAO_CLASS_NAME;
         Predicate[] memory predicates_ = new Predicate[](1);
         predicates_[0] = Predicate(JOIN_PREDICATE, FieldType.SUBJECT);
-        IDao(contractAddress).initialize(owner, minter, NAME, SYMBOL, BASE_URI, SCHEMA_URI, classNames_, predicates_);
+        IDao(contractAddress).initialize(owner, minter, name, SYMBOL, baseURI, SCHEMA_URI, classNames_, predicates_);
         return true;
     }
 

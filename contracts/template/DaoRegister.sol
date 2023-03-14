@@ -27,12 +27,18 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
     uint256 constant CONTRACT_CLASS_INDEX = 2;
 
     mapping(uint256 => DaoStruct) _daoOf;
+    string public daoBaseURI;
 
 
-    function deployDaoContract(address to) external returns (uint256){
+    function setDaoBaseURI(string memory daoBaseURI_) external onlyOwner {
+        daoBaseURI = daoBaseURI_;
+    }
+
+    function deployDaoContract(address to, string calldata name_) external returns (uint256){
+        require(to == msg.sender || _minters[msg.sender], "DaoRegister:Permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
         address daoContractAddress = DeployDao.deployDao();
-        InitializeDao.initDao(daoContractAddress, to, address(this));
+        InitializeDao.initDao(daoContractAddress, to, address(this), name_, daoBaseURI);
         _daoOf[tokenId] = DaoStruct(to, daoContractAddress);
         uint256 contractIndex = _addSubject(daoContractAddress.toHexString(), CONTRACT_CLASS_INDEX);
 
