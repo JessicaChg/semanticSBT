@@ -86,17 +86,13 @@ contract Follow is IFollow, SemanticSBT {
     function _follow(address addr) internal {
         require(!_isFollowing[addr], "Follow:Already followed!");
         _isFollowing[addr] = true;
-        uint256 sIndex = _subjectIndex[SOUL_CLASS_INDEX][addr.toHexString()];
-        if (sIndex == 0) {
-            sIndex = _addSubject(addr.toHexString(), SOUL_CLASS_INDEX);
-        }
-        uint256 tokenId = _addEmptyToken(addr, sIndex);
-        _mint(tokenId, msg.sender, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
+        uint256 tokenId = _addEmptyToken(addr, 0);
+        _mint(tokenId, addr, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
     }
 
     function _unfollow(address addr) internal {
         uint256 tokenId = tokenOfOwnerByIndex(addr, 0);
-        super._burn(msg.sender, tokenId);
+        super._burn(addr, tokenId);
         _isFollowing[addr] = false;
     }
 

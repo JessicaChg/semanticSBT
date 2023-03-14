@@ -77,10 +77,10 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         require(_ownedResolvedDomain[msg.sender] != 0, "NameService:not resolved the domain");
         _profileHash[msg.sender] = profileURI_;
         emit SetProfile(msg.sender, profileURI_);
-        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory o = string.concat('"', profileURI_, '"');
-        emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+//        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
+//        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
+//        string memory o = string.concat('"', profileURI_, '"');
+//        emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
     }
 
 
