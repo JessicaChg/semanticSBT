@@ -14,6 +14,8 @@ const predicate_ = [["privacyContent", 1]];
 const privacyPrefix = "[Privacy]";
 const content = "ar://the tx hash of content on arweave";
 
+const firstDAOName = "First DAO name";
+
 /*
 * Before Mint SBT, should initial the parameters of this contract. In this step, we prepare the element of semantic SBT
 * @param name The name for the Semantic SBT
@@ -265,7 +267,7 @@ describe("Privacy Content contract", function () {
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
 
             const daoRegister = await deployDaoRegister();
-            await daoRegister.deployDaoContract(owner.address);
+            await daoRegister.deployDaoContract(owner.address,firstDAOName);
             const daoContractAddress = await daoRegister.daoOf(1);
             const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress.contractAddress);
             await daoContract.setFreeJoin(true);

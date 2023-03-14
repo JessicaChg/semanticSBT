@@ -197,8 +197,8 @@ describe("Name Service contract", function () {
             const domain = "my-domain";
             
             await nameService.register(owner.address, domain, false);
-            const profileHash = String(Math.random())
-            expect(nameService.setProfileHash(profileHash)).to.be.revertedWith("NameService:not resolved the domain")
+            const profileURI = String(Math.random())
+            expect(nameService.setProfileURI(profileURI)).to.be.revertedWith("NameService:not resolved the domain")
         })
 
         it("User could setProfileHash when domain has resolved and get the right profileHash", async function () {
@@ -206,9 +206,9 @@ describe("Name Service contract", function () {
             const domain = "my-domain";
             
             await nameService.register(owner.address, domain, true);
-            const profileHash = String(Math.random())
-            await nameService.setProfileHash(profileHash)
-            expect(await nameService.profileHash(owner.address.toLowerCase())).to.be.equal(profileHash)
+            const profileURI = String(Math.random())
+            await nameService.setProfileURI(profileURI)
+            expect(await nameService.profileURI(owner.address.toLowerCase())).to.be.equal(profileURI)
         })
     })
 

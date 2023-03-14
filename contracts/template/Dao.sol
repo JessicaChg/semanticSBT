@@ -22,6 +22,8 @@ contract Dao is IDao, SemanticSBT {
     address public daoOwner;
     string public _daoURI;
     bool _isFreeJoin;
+    mapping(address => uint256) ownedTokenId;
+
 
     modifier onlyDaoOwner{
         require(msg.sender == daoOwner, "Dao: must be daoOwner");
@@ -71,9 +73,10 @@ contract Dao is IDao, SemanticSBT {
 
     function remove(address addr) external returns (uint256 tokenId){
         require(msg.sender == daoOwner || msg.sender == addr, "Dao: permission denied");
-        tokenId = tokenOfOwnerByIndex(addr, 0);
-        require(tokenId != 0, "Dao: not the member of dao");
-        super._burn(addr, tokenId);
+        tokenId = ownedTokenId[addr];
+        require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
+        super._burn(addr, ownedTokenId[addr]);
+        delete ownedTokenId[addr];
     }
 
     function daoURI() external view returns (string memory){
@@ -89,7 +92,7 @@ contract Dao is IDao, SemanticSBT {
     }
 
     function isMember(address addr) external view returns (bool){
-        return tokenOfOwnerByIndex(addr, 0) != 0;
+        return ownedTokenId[addr] != 0;
     }
 
 
@@ -107,8 +110,9 @@ contract Dao is IDao, SemanticSBT {
     }
 
     function _join(address addr) internal returns (uint256 tokenId){
-        require(tokenOfOwnerByIndex(addr, 0) == 0, string.concat("Dao:", addr.toHexString(), " already minted"));
+        require(ownedTokenId[addr] == 0, string.concat("Dao:", addr.toHexString(), " already minted"));
         tokenId = _addEmptyToken(addr, 0);
+        ownedTokenId[addr] = tokenId;
         _mint(tokenId, addr, new IntPO[](0), new StringPO[](0), new AddressPO[](0),
             joinDaoSubjectPO, new BlankNodePO[](0));
     }
