@@ -30,8 +30,8 @@ p:resolved a rdf:Property ;
     rdfs:domain :Soul ;
     rdfs:range :Domain .
 
-p:profileHash a rdf:Property ;
-    rdfs:label "profileHash" ;
-    rdfs:comment "The profileHash of a soul." ;
+p:profileURI a rdf:Property ;
+    rdfs:label "profileURI" ;
+    rdfs:comment "The profileURI of a soul." ;
     rdfs:domain :Soul ;
     rdfs:range xsd:string .
