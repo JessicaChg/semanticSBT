@@ -9,7 +9,7 @@ const name = 'DAO Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://MaXW2Db8G5EY2LNIR_JoiTqkIB9GUxWvAtN0vzYKl5w';
-const class_ = ["Dao"];
+const class_ = ["Contract"];
 const predicate_ = [["daoContract", 3]];
 
 const firstDAOName = 'First DAO';
@@ -181,7 +181,7 @@ describe("DaoRegister contract", function () {
             await expect(daoContract.connect(addr6).join()).to.be.revertedWith("Dao: permission denied");
         });
 
-        it("User should join the DAO when free join", async function () {
+        it("User should join the DAO when the DAO is free join", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address,firstDAOName);
 
@@ -197,7 +197,7 @@ describe("DaoRegister contract", function () {
             expect(await daoContract.isMember(owner.address)).equal(true);
         });
 
-        it("User should burn the sbt when remove from DAO", async function () {
+        it("User should burn the sbt when removed from DAO", async function () {
             const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address,firstDAOName);
 

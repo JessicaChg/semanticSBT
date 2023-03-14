@@ -11,7 +11,7 @@ const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://eV_a_cVZdbVcTEWzJjscg4cloGFnNyFu8tZuBBY0YaM';
 const class_ = [];
-const predicate_ = [["privacyContent", 3]];
+const predicate_ = [["publicContent", 1]];
 
 
 async function main() {
