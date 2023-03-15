@@ -18,11 +18,22 @@ interface IFollow is ISemanticSBT {
         Predicate[] memory predicates_
     ) external;
 
-
+    /**
+     * Follow the owner of the current contract.
+     * @return tokenId
+     */
     function follow() external returns (uint256);
 
+    /**
+     * Unfollow
+     * @return tokenId
+     */
     function unfollow() external returns (uint256);
 
-    function isFollowing(address addr) external view returns(bool);
+    /**
+     * Returns whether the `addr` is following the owner of the current contract
+     * @return isFollowing
+     */
+    function isFollowing(address addr) external view returns (bool);
 
 }
