@@ -16,7 +16,7 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
     using Strings for uint256;
     using Strings for address;
 
-    uint256 constant CONNECTION_CONTRACT_PREDICATE_INDEX = 1;
+    uint256 constant FOLLOW_CONTRACT_PREDICATE_INDEX = 1;
 
     uint256 constant SOUL_CLASS_INDEX = 1;
     uint256 constant CONTRACT_CLASS_INDEX = 2;
@@ -33,10 +33,10 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
         require(_ownedFollowContract[to] == address(0), "FollowRegister:Already deployed!");
         require(msg.sender == to || _minters[msg.sender], "FollowRegister:Permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
-        address connectionAddress = DeployFollow.deployFollow();
-        InitializeFollow.initFollow(connectionAddress, to, address(this));
-        _ownedFollowContract[to] = connectionAddress;
-        uint256 contractIndex = _addSubject(connectionAddress.toHexString(), CONTRACT_CLASS_INDEX);
+        address followContractAddress = DeployFollow.deployFollow();
+        InitializeFollow.initFollow(followContractAddress, to, address(this));
+        _ownedFollowContract[to] = followContractAddress;
+        uint256 contractIndex = _addSubject(followContractAddress.toHexString(), CONTRACT_CLASS_INDEX);
 
         SubjectPO[] memory subjectPOList = generateSubjectPOList(contractIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
@@ -53,7 +53,7 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
 
     function generateSubjectPOList(uint256 contractIndex) internal pure returns (SubjectPO[] memory) {
         SubjectPO[] memory subjectPOList = new SubjectPO[](1);
-        subjectPOList[0] = SubjectPO(CONNECTION_CONTRACT_PREDICATE_INDEX, contractIndex);
+        subjectPOList[0] = SubjectPO(FOLLOW_CONTRACT_PREDICATE_INDEX, contractIndex);
         return subjectPOList;
     }
 
