@@ -107,7 +107,7 @@ describe("DaoRegister contract", function () {
 
             const tokenId = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(1)).equal(rdf);
 
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
@@ -125,13 +125,13 @@ describe("DaoRegister contract", function () {
             const tokenId1 = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
             const tokenId2 = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
             var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId1);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(1)).equal(rdf1);
             const firstDaoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await firstDaoContract.name()).equal(firstDAOName)
 
             var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId2);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Dao_${contractAddress.toLowerCase()}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
             expect(await daoRegister.rdfOf(2)).equal(rdf2);
             const secondDaoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await secondDaoContract.name()).equal(secondDAOName)

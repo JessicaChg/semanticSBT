@@ -64,7 +64,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _shareDaoAddress[tokenId].push(daoAddress);
     }
 
-    function post(uint256 tokenId, string memory object) external returns (uint256) {
+    function post(uint256 tokenId, string memory object) external {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[msg.sender] == tokenId, "PrivacyContent:Permission denied");
@@ -72,7 +72,6 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         delete _prepareToken[msg.sender];
         _mintObject[msg.sender][object] = tokenId;
         _contentOf[tokenId] = object;
-        return tokenId;
     }
 
     function prepareToken() external returns (uint256) {

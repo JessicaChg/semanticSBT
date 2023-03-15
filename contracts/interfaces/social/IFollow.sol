@@ -20,19 +20,18 @@ interface IFollow is ISemanticSBT {
 
     /**
      * Follow the owner of the current contract.
-     * @return tokenId
+     * @return tokenId The tokenId.
      */
     function follow() external returns (uint256);
 
     /**
      * Unfollow
-     * @return tokenId
+     * @return tokenId The tokenId.
      */
     function unfollow() external returns (uint256);
 
     /**
      * Returns whether the `addr` is following the owner of the current contract
-     * @return isFollowing
      */
     function isFollowing(address addr) external view returns (bool);
 

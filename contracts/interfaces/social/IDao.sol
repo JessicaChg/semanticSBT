@@ -19,14 +19,13 @@ interface IDao is ISemanticSBT {
     ) external;
 
     /**
-      * Set the information for a DAO.
-      * @param daoURI  This should be a hash on Arweave.
+      * Set the URI for a dao.
+      * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
      */
     function setDaoURI(string memory daoURI) external;
 
     /**
      * Is this an open dao?
-     * @param isFreeJoin true--free to join;false--closed to the public.
      */
     function isFreeJoin() external view returns (bool);
 
@@ -44,13 +43,14 @@ interface IDao is ISemanticSBT {
 
     /**
      * Removed from a dao.
-     * @param addr
+     * @param addr The address.
+     * @return tokenId The tokenId.
      */
-    function remove(address addr) external;
+    function remove(address addr) external returns (uint256 tokenId);
 
     /**
      * The URI for a dao.
-     * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
+     * @return daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
      */
     function daoURI() external view returns (string memory daoURI);
 
@@ -62,9 +62,9 @@ interface IDao is ISemanticSBT {
 
     /**
       * Is a member of the dao?
-      * @param addr
-      * @return isMember: true--is a member of the dao;false--not a member of the dao.
+      * @param addr The address.
+      * @return result : true--is a member of the dao;false--not a member of the dao.
      */
-    function isMember(address addr) external view returns (bool isMember);
+    function isMember(address addr) external view returns (bool result);
 
 }

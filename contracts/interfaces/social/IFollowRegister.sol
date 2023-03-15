@@ -7,9 +7,9 @@ import "../ISemanticSBT.sol";
 interface IFollowRegister is ISemanticSBT {
 
     /**
-     * To deploy the "Follow" contract
-     * @param addr : The address to be passed to the "Follow" contract
-     * @return tokenId
+     * To deploy the "Follow" contract.
+     * @param addr : The address to be passed to the "Follow" contract.
+     * @return tokenId : The tokenId.
      */
     function deployFollowContract(address addr) external returns (uint256);
 

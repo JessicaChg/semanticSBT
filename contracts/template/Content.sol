@@ -23,7 +23,7 @@ contract Content is IContent, SemanticSBT {
     }
 
 
-    function post(uint256 tokenId, string memory content) external returns (uint256) {
+    function post(uint256 tokenId, string memory content) external {
         _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "Content:Token id not exist");
         require(_prepareToken[msg.sender] == tokenId, "Content:Permission denied");
@@ -31,7 +31,6 @@ contract Content is IContent, SemanticSBT {
         delete _prepareToken[msg.sender];
         _mintContent[msg.sender][content] = tokenId;
         _contentOf[tokenId] = content;
-        return tokenId;
     }
 
 
@@ -45,7 +44,6 @@ contract Content is IContent, SemanticSBT {
     function contentOf(uint256 tokenId) external view returns (string memory){
         return _contentOf[tokenId];
     }
-
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {

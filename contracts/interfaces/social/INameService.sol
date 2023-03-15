@@ -11,11 +11,11 @@ interface INameService is ISemanticSBT {
     );
 
     /**
-      * To register a domain name
-      * @param owner : The owner of a domain name
+     * To register a domain name
+     * @param owner : The owner of a domain name
      * @param name : The domain name to be registered.
      * @param reverseRecord : Whether to set a record for resolving the domain name.
-     * @return tokenId
+     * @return tokenId : The tokenId.
      */
     function register(address owner, string calldata name, bool reverseRecord) external returns (uint tokenId);
 
