@@ -18,7 +18,6 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
     string constant PRIVACY_PREFIX = "[Privacy]";
 
-    address public followRegister;
 
     mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
     mapping(address => uint256) internal _prepareToken;
@@ -26,8 +25,9 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     mapping(uint256 => string) _contentOf;
 
     mapping(uint256 => mapping(address => bool)) _shareToDao;
-    mapping(uint256 => bool) _shareToFollower;
+    mapping(uint256 => mapping(address => bool)) _shareToFollow;
     mapping(uint256 => address[]) _shareDaoAddress;
+    mapping(uint256 => address[]) _shareFollowAddress;
 
     /* ============ External Functions ============ */
 
@@ -48,18 +48,16 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         return _prepareToken[owner];
     }
 
-    function setRegisterAddress(address _followRegister) external onlyOwner {
-        followRegister = _followRegister;
-    }
-
-    function shareToFollower(uint256 tokenId) external {
+    function shareToFollower(uint256 tokenId, address followContractAddress) external {
         require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
-        _shareToFollower[tokenId] = true;
+        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
+        _shareToFollow[tokenId][followContractAddress] = true;
+        _shareFollowAddress[tokenId].push(followContractAddress);
     }
 
     function shareToDao(uint256 tokenId, address daoAddress) external {
         require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
-        require(_shareDaoAddress[tokenId].length < 100, "PrivacyContent: shared to too many DAOs");
+        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many DAOs");
         _shareToDao[tokenId][daoAddress] = true;
         _shareDaoAddress[tokenId].push(daoAddress);
     }
@@ -106,21 +104,19 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
 
     function _isFollowing(address viewer, uint256 tokenId, address owner) internal view returns (bool){
-        if (followRegister == address(0) || !_shareToFollower[tokenId]) {
-            return false;
+        address[] memory followContractAddress = _shareFollowAddress[tokenId];
+        for (uint256 i = 0; i < followContractAddress.length; i++) {
+            if (IFollow(followContractAddress[i]).isFollowing(viewer)) {
+                return true;
+            }
         }
-        address followContractAddress = IFollowRegister(followRegister).ownedFollowContract(owner);
-        if (followContractAddress == address(0)) {
-            return false;
-        }
-
-        return IFollow(followContractAddress).isFollowing(viewer);
+        return false;
     }
 
     function _isMemberOfDao(address viewer, uint256 tokenId) internal view returns (bool){
         address[] memory daoAddress = _shareDaoAddress[tokenId];
         for (uint256 i = 0; i < daoAddress.length; i++) {
-            if (_shareToDao[tokenId][daoAddress[i]] && IDao(daoAddress[i]).isMember(viewer)) {
+            if (IDao(daoAddress[i]).isMember(viewer)) {
                 return true;
             }
         }

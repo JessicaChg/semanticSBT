@@ -11,7 +11,7 @@ const name = 'Semantic SBT Upgrade V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
-const class_ = ["Domain"];
+const class_ = ["Name"];
 const predicate_ = [["hold", 3], ["resolved", 3]];
 
 async function main() {

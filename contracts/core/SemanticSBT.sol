@@ -103,7 +103,7 @@ contract SemanticSBT is Ownable, Initializable, ERC165, IERC721Enumerable, ISema
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer onlyOwner {
+    ) public initializer {
         require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schemaURI cannot be empty");
         require(predicates_.length > 0, "SemanticSBT: predicate can not be empty");
 

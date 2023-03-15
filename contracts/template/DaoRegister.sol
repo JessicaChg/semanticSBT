@@ -4,15 +4,13 @@ pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDaoRegister.sol";
 import "../interfaces/social/IDao.sol";
 import {SocialGraphData} from "../libraries/SocialGraphData.sol";
-import {DeployDao} from "../libraries/DeployDao.sol";
-import {InitializeDao} from "../libraries/InitializeDao.sol";
-import {SemanticSBTLogic} from "../libraries/SemanticSBTLogic.sol";
+import {DaoRegisterLogic} from "../libraries/DaoRegisterLogic.sol";
 
-contract DaoRegister is IDaoRegister, SemanticSBT {
+contract DaoRegister is IDaoRegister, SemanticSBTUpgradeable {
     using Strings for uint256;
     using Strings for address;
 
@@ -29,18 +27,24 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
     mapping(uint256 => DaoStruct) _daoOf;
     string public daoBaseURI;
 
+    address public daoImpl;
+
 
     function setDaoBaseURI(string memory daoBaseURI_) external onlyOwner {
         daoBaseURI = daoBaseURI_;
     }
 
+    function setDaoImpl(address _daoImpl) external onlyOwner {
+        daoImpl = _daoImpl;
+    }
+
     function deployDaoContract(address to, string calldata name_) external returns (uint256){
-        require(to == msg.sender || _minters[msg.sender], "DaoRegister:Permission Denied");
+        require(daoImpl != address(0), "DaoRegister:daoImpl not set");
+        require(to == msg.sender || _minters[msg.sender], "DaoRegister:permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
-        address daoContractAddress = DeployDao.deployDao();
-        InitializeDao.initDao(daoContractAddress, to, address(this), name_, daoBaseURI);
+        address daoContractAddress = DaoRegisterLogic.createDao(daoImpl, to, address(this), name_, daoBaseURI);
         _daoOf[tokenId] = DaoStruct(to, daoContractAddress);
-        uint256 contractIndex = _addSubject(daoContractAddress.toHexString(), CONTRACT_CLASS_INDEX);
+        uint256 contractIndex = SemanticSBTLogicUpgradeable.addSubject(daoContractAddress.toHexString(), _classNames[CONTRACT_CLASS_INDEX], _subjects, _subjectIndex, _classIndex);
 
         SubjectPO[] memory subjectPOList = generateSubjectPOList(contractIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
@@ -54,7 +58,7 @@ contract DaoRegister is IDaoRegister, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IDaoRegister).interfaceId ||
         super.supportsInterface(interfaceId);
     }

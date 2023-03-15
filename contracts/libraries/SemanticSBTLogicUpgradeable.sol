@@ -212,7 +212,7 @@ library SemanticSBTLogicUpgradeable {
             } else if (FieldType.ADDRESS == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                 _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
@@ -222,6 +222,11 @@ library SemanticSBTLogicUpgradeable {
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
     }
 
+    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external pure returns (string memory){
+        string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
+        string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
+        return string.concat(s, p, o, TURTLE_END_SUFFIX);
+    }
 
     function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");

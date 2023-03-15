@@ -11,9 +11,9 @@ prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     rdfs:label "Soul" ;
     rdfs:comment "A soul." .
 
-:Domain a rdfs:Class ;
-    rdfs:label "Domain" ;
-    rdfs:comment "A domain." .
+:Name a rdfs:Class ;
+    rdfs:label "Name" ;
+    rdfs:comment "A name." .
 
 ###################
 # predicate
@@ -22,13 +22,13 @@ p:hold a rdf:Property ;
     rdfs:label "hold" ;
     rdfs:comment "A Soul to own a domain." ;
     rdfs:domain :Soul ;
-    rdfs:range :Domain .
+    rdfs:range :Name .
 
 p:resolved a rdf:Property ;
     rdfs:label "resolved" ;
     rdfs:comment "The resolved domain of a soul." ;
     rdfs:domain :Soul ;
-    rdfs:range :Domain .
+    rdfs:range :Name .
 
 p:profileURI a rdf:Property ;
     rdfs:label "profileURI" ;

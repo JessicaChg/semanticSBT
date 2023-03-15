@@ -17,36 +17,37 @@ async function main() {
 
     const [owner] = await ethers.getSigners();
 
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(
-        `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
+        `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
-    const DeployFollow = await hre.ethers.getContractFactory("DeployFollow", {
+    const FollowRegisterLogic = await hre.ethers.getContractFactory("FollowRegisterLogic");
+    const followRegisterLogicLibrary = await FollowRegisterLogic.deploy();
+    console.log(
+        `FollowRegisterLogic deployed ,contract address: ${followRegisterLogicLibrary.address}`
+    );
+    const Follow = await hre.ethers.getContractFactory("Follow", {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
-    const deployFollowLibrary = await DeployFollow.deploy();
+    const follow = await Follow.deploy();
+    await follow.deployTransaction.wait();
     console.log(
-        `DeployFollow deployed ,contract address: ${deployFollowLibrary.address}`
+        `Follow deployed ,contract address: ${follow.address}`
     );
-
-    const InitializeFollow = await hre.ethers.getContractFactory("InitializeFollow");
-    const initializeFollowLibrary = await InitializeFollow.deploy();
-    console.log(`InitializeFollow deployed ,contract address: ${initializeFollowLibrary.address}`);
-
-
     const contractName = "FollowRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
-            DeployFollow: deployFollowLibrary.address,
-            InitializeFollow: initializeFollowLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            FollowRegisterLogic: followRegisterLogicLibrary.address,
         }
     });
     const followRegister = await MyContract.deploy();
-
+    console.log(
+        `${contractName} deployed ,contract address: ${followRegister.address}`
+    );
     await (await followRegister.initialize(
         owner.address,
         name,
@@ -56,9 +57,12 @@ async function main() {
         class_,
         predicate_)).wait();
     console.log(
-        `${contractName} deployed ,contract address: ${followRegister.address}`
+        `${contractName} initialized!`
     );
-
+    await (await followRegister.setFollowImpl(follow.address)).wait();
+    console.log(
+        `${contractName} setFollowImpl successfully!`
+    );
 
 }
 

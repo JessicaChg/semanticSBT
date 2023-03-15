@@ -11,11 +11,11 @@ const name = 'Relation Name Service V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://qqZhk8eOeqECKUcHWdZC6dMuaXzhukK8df5gMTSLXVk';
-const class_ = ["Domain"];
+const class_ = ["Name"];
 const predicate_ = [["hold", 3], ["resolved", 3], ["profileHash", 1]];
 
-const minDomainLength_ = 3;
-const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
+const minNameLength_ = 3;
+const nameLengthControl = {"_nameLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
 const suffix = ".rel";
 
 async function main() {
@@ -60,7 +60,7 @@ async function main() {
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    await (await myContract.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
+    await (await myContract.setNameLengthControl(minNameLength_, nameLengthControl._nameLength, nameLengthControl._maxCount)).wait();
     await (await myContract.setSuffix(suffix)).wait();
 
 }

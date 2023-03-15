@@ -54,10 +54,10 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     string public schemaURI;
 
 
-    mapping(string => uint256) private _classIndex;
+    mapping(string => uint256) internal _classIndex;
     string[] internal _classNames;
 
-    mapping(string => uint256) private _predicateIndex;
+    mapping(string => uint256) internal _predicateIndex;
     Predicate[] internal _predicates;
 
 
@@ -94,6 +94,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
         _classNames.push("");
         _classNames.push(SOUL_CLASS_NAME);
+        _classIndex[SOUL_CLASS_NAME] = 1;
         _predicates.push(Predicate("", FieldType.INT));
     }
 
@@ -443,6 +444,17 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         emit CreateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
+    function _burn(address account, uint256 tokenId) internal {
+        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+
+        _approve(address(0), tokenId);
+        _burnCount++;
+        _balances[account] -= 1;
+        _tokens[tokenId].owner = 0;
+
+        emit Transfer(account, address(0), tokenId);
+        emit RemoveRDF(tokenId, _rdf);
+    }
 
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
         _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
@@ -474,15 +486,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
-
-        _approve(address(0), id);
-        _burnCount++;
-        _balances[account] -= 1;
-        _tokens[id].owner = 0;
-
-        emit Transfer(account, address(0), id);
-        emit RemoveRDF(id, _rdf);
+        _burn(account, id);
     }
 
 

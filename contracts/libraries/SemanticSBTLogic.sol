@@ -12,17 +12,17 @@ library SemanticSBTLogic {
     using Strings for uint160;
     using Strings for address;
 
-    string  constant TURTLE_LINE_SUFFIX = " ;";
-    string  constant TURTLE_END_SUFFIX = " . ";
-    string  constant SOUL_CLASS_NAME = "Soul";
+    string  public constant TURTLE_LINE_SUFFIX = " ;";
+    string  public constant TURTLE_END_SUFFIX = " . ";
+    string  public constant SOUL_CLASS_NAME = "Soul";
 
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
+    string  public constant ENTITY_PREFIX = ":";
+    string  public constant PROPERTY_PREFIX = "p:";
 
-    string  constant CONCATENATION_CHARACTER = "_";
-    string  constant BLANK_NODE_START_CHARACTER = "[";
-    string  constant BLANK_NODE_END_CHARACTER = "]";
-    string  constant BLANK_SPACE = " ";
+    string  public constant CONCATENATION_CHARACTER = "_";
+    string  public constant BLANK_NODE_START_CHARACTER = "[";
+    string  public constant BLANK_NODE_END_CHARACTER = "]";
+    string  public constant BLANK_SPACE = " ";
 
 
     function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
@@ -202,7 +202,7 @@ library SemanticSBTLogic {
             } else if (FieldType.ADDRESS == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                // _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
@@ -212,6 +212,12 @@ library SemanticSBTLogic {
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
     }
 
+
+    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external returns (string memory){
+        string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
+        string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
+        return string.concat(s, p, o, SemanticSBTLogic.TURTLE_END_SUFFIX);
+    }
 
     function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");

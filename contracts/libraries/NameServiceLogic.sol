@@ -12,17 +12,17 @@ library NameServiceLogic {
     uint256 constant resolvePredicateIndex = 2;
 
     function register(uint256 tokenId, address owner, uint256 sIndex, bool resolve,
-        mapping(uint256 => uint256) storage _tokenIdOfDomain,
-        mapping(uint256 => uint256) storage _domainOf,
-        mapping(address => uint256) storage _ownedResolvedDomain,
-        mapping(uint256 => address) storage _ownerOfResolvedDomain,
-        mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) external returns (SubjectPO[] memory) {
-        _tokenIdOfDomain[sIndex] = tokenId;
-        _domainOf[tokenId] = sIndex;
+        mapping(uint256 => uint256) storage _tokenIdOfName,
+        mapping(uint256 => uint256) storage _nameOf,
+        mapping(address => uint256) storage _ownedResolvedName,
+        mapping(uint256 => address) storage _ownerOfResolvedName,
+        mapping(uint256 => uint256) storage _tokenIdOfResolvedName) external returns (SubjectPO[] memory) {
+        _tokenIdOfName[sIndex] = tokenId;
+        _nameOf[tokenId] = sIndex;
         SubjectPO[] memory subjectPOList = new SubjectPO[](1);
         if (resolve) {
-            setNameForAddr(owner, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
-                _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
+            setNameForAddr(owner, sIndex, _tokenIdOfName, _ownedResolvedName,
+                _ownerOfResolvedName, _tokenIdOfResolvedName);
             subjectPOList[0] = SubjectPO(resolvePredicateIndex, sIndex);
         } else {
             subjectPOList[0] = SubjectPO(holdPredicateIndex, sIndex);
@@ -32,20 +32,20 @@ library NameServiceLogic {
 
 
     function setNameForAddr(address addr, uint256 dSIndex,
-        mapping(uint256 => uint256) storage _tokenIdOfDomain, mapping(address => uint256) storage _ownedResolvedDomain,
-        mapping(uint256 => address) storage _ownerOfResolvedDomain, mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) public {
+        mapping(uint256 => uint256) storage _tokenIdOfName, mapping(address => uint256) storage _ownedResolvedName,
+        mapping(uint256 => address) storage _ownerOfResolvedName, mapping(uint256 => uint256) storage _tokenIdOfResolvedName) public {
         if (addr != address(0)) {
-            require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
-            if(_ownedResolvedDomain[addr] != 0){
-                delete _ownerOfResolvedDomain[_ownedResolvedDomain[addr]];
+            require(_ownerOfResolvedName[dSIndex] == address(0), "NameService:already resolved");
+            if(_ownedResolvedName[addr] != 0){
+                delete _ownerOfResolvedName[_ownedResolvedName[addr]];
             }
         } else {
-            require(_ownerOfResolvedDomain[dSIndex] != address(0), "NameService:not resolved");
-            delete _ownedResolvedDomain[_ownerOfResolvedDomain[dSIndex]];
+            require(_ownerOfResolvedName[dSIndex] != address(0), "NameService:not resolved");
+            delete _ownedResolvedName[_ownerOfResolvedName[dSIndex]];
         }
-        _ownedResolvedDomain[addr] = dSIndex;
-        _ownerOfResolvedDomain[dSIndex] = addr;
-        _tokenIdOfResolvedDomain[dSIndex] = _tokenIdOfDomain[dSIndex];
+        _ownedResolvedName[addr] = dSIndex;
+        _ownerOfResolvedName[dSIndex] = addr;
+        _tokenIdOfResolvedName[dSIndex] = _tokenIdOfName[dSIndex];
     }
 
     function updatePIndexOfToken(address addr, SPO storage spo) public {
@@ -58,16 +58,16 @@ library NameServiceLogic {
 
 
     function checkValidLength(string memory name,
-        uint256 _minDomainLength,
-        mapping(uint256 => uint256) storage _domainLengthControl,
-        mapping(uint256 => uint256) storage _countOfDomainLength) external view returns (bool){
+        uint256 _minNameLength,
+        mapping(uint256 => uint256) storage _nameLengthControl,
+        mapping(uint256 => uint256) storage _countOfNameLength) external view returns (bool){
         uint256 len = name.strlen();
-        if (len < _minDomainLength) {
+        if (len < _minNameLength) {
             return false;
         }
-        if (_domainLengthControl[len] == 0) {
+        if (_nameLengthControl[len] == 0) {
             return true;
-        } else if (_domainLengthControl[len] - _countOfDomainLength[len] > 0) {
+        } else if (_nameLengthControl[len] - _countOfNameLength[len] > 0) {
             return true;
         }
         return false;

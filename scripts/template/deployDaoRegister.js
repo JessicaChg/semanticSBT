@@ -17,48 +17,53 @@ async function main() {
 
     const [owner] = await ethers.getSigners();
 
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(
-        `SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`
+        `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
-    const DeployDao = await hre.ethers.getContractFactory("DeployDao", {
+    const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
+    const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
+    console.log(
+        `DaoRegisterLogic deployed ,contract address: ${daoRegisterLogicLibrary.address}`
+    );
+    const Dao = await hre.ethers.getContractFactory("Dao", {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
-    const deployDaoLibrary = await DeployDao.deploy();
+    const dao = await Dao.deploy();
+    await dao.deployTransaction.wait();
     console.log(
-        `DeployDao deployed ,contract address: ${deployDaoLibrary.address}`
+        `Dao deployed ,contract address: ${dao.address}`
     );
-
-    const InitializeDao = await hre.ethers.getContractFactory("InitializeDao");
-    const initializeDaoLibrary = await InitializeDao.deploy();
-    console.log(`InitializeDao deployed ,contract address: ${initializeDaoLibrary.address}`);
-
-
     const contractName = "DaoRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
-            DeployDao: deployDaoLibrary.address,
-            InitializeDao: initializeDaoLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            DaoRegisterLogic: daoRegisterLogicLibrary.address,
         }
     });
     const daoRegister = await MyContract.deploy();
-
-    await daoRegister.initialize(
+    console.log(
+        `${contractName} deployed ,contract address: ${daoRegister.address}`
+    );
+    await (await daoRegister.initialize(
         owner.address,
         name,
         symbol,
         baseURI,
         schemaURI,
         class_,
-        predicate_);
+        predicate_)).wait();
     console.log(
-        `${contractName} deployed ,contract address: ${daoRegister.address}`
+        `${contractName} initialized!`
     );
 
+    await (await daoRegister.setDaoImpl(dao.address)).wait();
+    console.log(
+        `${contractName} setDaoImpl successfully!`
+    );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

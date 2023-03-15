@@ -23,39 +23,40 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     uint256 constant DOMAIN_CLASS_INDEX = 2;
 
 
-    uint256 _minDomainLength;
-    mapping(uint256 => uint256) _domainLengthControl;
-    mapping(uint256 => uint256) _countOfDomainLength;
+    uint256 _minNameLength;
+    mapping(uint256 => uint256) _nameLengthControl;
+    mapping(uint256 => uint256) _countOfNameLength;
     string public suffix;
 
-    mapping(uint256 => uint256) _tokenIdOfDomain;
-    mapping(uint256 => uint256) _domainOf;
+    mapping(uint256 => uint256) _tokenIdOfName;
+    mapping(uint256 => uint256) _nameOf;
 
-    mapping(address => uint256) _ownedResolvedDomain;
-    mapping(uint256 => address) _ownerOfResolvedDomain;
-    mapping(uint256 => uint256) _tokenIdOfResolvedDomain;
+    mapping(address => uint256) _ownedResolvedName;
+    mapping(uint256 => address) _ownerOfResolvedName;
+    mapping(uint256 => uint256) _tokenIdOfResolvedName;
 
-    mapping(address => string) _profileHash;
+    mapping(address => string) _profileURI;
+    mapping(address => bool) _ownedProfileURI;
 
     function setSuffix(string calldata suffix_) external onlyMinter {
         suffix = suffix_;
     }
 
-    function setDomainLengthControl(uint256 minDomainLength_, uint256 _domainLength, uint256 _maxCount) external onlyMinter {
-        _minDomainLength = minDomainLength_;
-        _domainLengthControl[_domainLength] = _maxCount;
+    function setNameLengthControl(uint256 minNameLength_, uint256 _nameLength, uint256 _maxCount) external onlyMinter {
+        _minNameLength = minNameLength_;
+        _nameLengthControl[_nameLength] = _maxCount;
     }
 
 
     function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
-        require(NameServiceLogic.checkValidLength(name, _minDomainLength, _domainLengthControl, _countOfDomainLength), "NameService: invalid length of name");
+        require(NameServiceLogic.checkValidLength(name, _minNameLength, _nameLengthControl, _countOfNameLength), "NameService: invalid length of name");
         string memory fullName = string.concat(name, suffix);
         require(_subjectIndex[DOMAIN_CLASS_INDEX][fullName] == 0, "NameService: already added");
         tokenId = _addEmptyToken(owner, 0);
         uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, DOMAIN_CLASS_INDEX, _subjects, _subjectIndex);
         SubjectPO[] memory subjectPOList = NameServiceLogic.register(tokenId, owner, sIndex, resolve,
-            _tokenIdOfDomain, _domainOf,
-            _ownedResolvedDomain, _ownerOfResolvedDomain, _tokenIdOfResolvedDomain
+            _tokenIdOfName, _nameOf,
+            _ownedResolvedName, _ownerOfResolvedName, _tokenIdOfResolvedName
         );
         _mint(tokenId, owner, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
     }
@@ -64,29 +65,33 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     function setNameForAddr(address addr_, string memory name) external override {
         require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
         uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
-        uint256 tokenId = _tokenIdOfDomain[sIndex];
+        uint256 tokenId = _tokenIdOfName[sIndex];
         require(ownerOf(tokenId) == msg.sender, "NameService:not the owner");
         SPO storage spo = _tokens[tokenId];
-        NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
-            _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
+        NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfName, _ownedResolvedName,
+            _ownerOfResolvedName, _tokenIdOfResolvedName);
         NameServiceLogic.updatePIndexOfToken(addr_, spo);
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
     function setProfileURI(string memory profileURI_) external {
-        require(_ownedResolvedDomain[msg.sender] != 0, "NameService:not resolved the domain");
-        _profileHash[msg.sender] = profileURI_;
-        emit SetProfile(msg.sender, profileURI_);
-//        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
-//        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
-//        string memory o = string.concat('"', profileURI_, '"');
-//        emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+        require(_ownedResolvedName[msg.sender] != 0, "NameService:not resolved the name");
+        _profileURI[msg.sender] = profileURI_;
+        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
+        string memory o = string.concat('"', profileURI_, '"');
+        if (!_ownedProfileURI[msg.sender]) {
+            _ownedProfileURI[msg.sender] = true;
+            emit CreateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+        } else {
+            emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+        }
     }
 
 
     function addr(string calldata name) virtual override external view returns (address){
         uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
-        return _ownerOfResolvedDomain[sIndex];
+        return _ownerOfResolvedName[sIndex];
     }
 
 
@@ -94,18 +99,18 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         if (addr_ == address(0)) {
             return "";
         }
-        uint256 sIndex = _ownedResolvedDomain[addr_];
+        uint256 sIndex = _ownedResolvedName[addr_];
         return _subjects[sIndex].value;
     }
 
     function profileURI(address addr_) external view returns (string memory){
-        return _profileHash[addr_];
+        return _profileURI[addr_];
     }
 
 
     function ownerOfName(string calldata name) external view returns (address){
         uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
-        uint256 tokenId = _tokenIdOfDomain[sIndex];
+        uint256 tokenId = _tokenIdOfName[sIndex];
         return ownerOf(tokenId);
     }
 
@@ -121,7 +126,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         address to,
         uint256 tokenId
     ) internal override(SemanticSBTUpgradeable) virtual {
-        require(_ownerOfResolvedDomain[_domainOf[tokenId]] == address(0), "NameService:can not transfer when resolved");
+        require(_ownerOfResolvedName[_nameOf[tokenId]] == address(0), "NameService:can not transfer when resolved");
     }
 
     function _afterTokenTransfer(

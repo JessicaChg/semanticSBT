@@ -23,3 +23,9 @@ p:join a rdf:Property ;
     rdfs:comment "Join a dao." ;
     rdfs:domain :Soul ;
     rdfs:range :Dao .
+
+p:daoURI a rdf:Property ;
+    rdfs:label "daoURI" ;
+    rdfs:comment "The daoURI of a dao." ;
+    rdfs:domain :Dao ;
+    rdfs:range xsd:string .

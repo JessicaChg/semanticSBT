@@ -3,10 +3,10 @@
 pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IFollow.sol";
 
-contract Follow is IFollow, SemanticSBT {
+contract Follow is IFollow, SemanticSBTUpgradeable {
 
     using Strings for uint256;
     using Strings for address;
@@ -26,6 +26,8 @@ contract Follow is IFollow, SemanticSBT {
     uint256 constant SOUL_CLASS_INDEX = 1;
 
     mapping(address => bool) _isFollowing;
+    address public representedAddress;
+
 
     bytes32 internal constant FOLLOW_WITH_SIG_TYPE_HASH = keccak256('followWithSign()');
     bytes32 internal constant UNFOLLOW_WITH_SIG_TYPE_HASH = keccak256('unfollowWithSign()');
@@ -71,7 +73,7 @@ contract Follow is IFollow, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IFollow).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -79,8 +81,9 @@ contract Follow is IFollow, SemanticSBT {
     /* ============ Internal Functions ============ */
 
     function _setOwner(address owner) internal {
-        uint256 sIndex = _addSubject(owner.toHexString(), SOUL_CLASS_INDEX);
+        uint256 sIndex = SemanticSBTLogicUpgradeable.addSubject(owner.toHexString(), SOUL_CLASS_NAME, _subjects, _subjectIndex, _classIndex);
         ownerSubjectPO.push(SubjectPO(FOLLOWING_PREDICATE_INDEX, sIndex));
+        representedAddress = owner;
     }
 
     function _follow(address addr) internal returns (uint256){

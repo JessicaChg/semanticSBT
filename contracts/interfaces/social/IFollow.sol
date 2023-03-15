@@ -35,4 +35,9 @@ interface IFollow is ISemanticSBT {
      */
     function isFollowing(address addr) external view returns (bool);
 
+    /**
+     * Returns the address represented by the current Follow contract
+     * @return addr The address.
+     */
+    function representedAddress() external view returns (address addr);
 }

@@ -29,26 +29,25 @@ describe("DaoRegister contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2, addr3, addr4, addr5, addr6] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const DeployDao = await hre.ethers.getContractFactory("DeployDao", {
+        const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
+        const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
+
+        const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const deployDaoLibrary = await DeployDao.deploy();
-
-
-        const InitializeDao = await hre.ethers.getContractFactory("InitializeDao");
-        const initializeDaoLibrary = await InitializeDao.deploy();
+        const dao = await Dao.deploy();
+        await dao.deployTransaction.wait();
 
         const contractName = "DaoRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
-                DeployDao: deployDaoLibrary.address,
-                InitializeDao: initializeDaoLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                DaoRegisterLogic: daoRegisterLogicLibrary.address,
             }
         });
         const daoRegister = await MyContract.deploy();
@@ -61,6 +60,7 @@ describe("DaoRegister contract", function () {
             schemaURI,
             class_,
             predicate_);
+        await daoRegister.setDaoImpl(dao.address);
         return {daoRegister, owner, addr1, addr2, addr3, addr4, addr5, addr6};
     }
 

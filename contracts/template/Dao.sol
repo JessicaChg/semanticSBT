@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDao.sol";
 
-contract Dao is IDao, SemanticSBT {
+contract Dao is IDao, SemanticSBTUpgradeable {
 
     using Strings for uint256;
     using Strings for address;
@@ -15,18 +14,22 @@ contract Dao is IDao, SemanticSBT {
     SubjectPO[] private joinDaoSubjectPO;
 
     uint256 constant JOIN_PREDICATE_INDEX = 1;
+    uint256 constant DAO_URI_PREDICATE_INDEX = 2;
 
     uint256 constant SOUL_CLASS_INDEX = 1;
     uint256 constant DAO_CLASS_INDEX = 2;
 
-    address public daoOwner;
-    string public _daoURI;
+    string  constant DAO_CLASS_NAME = "Dao";
+
+    address public ownerOfDao;
+    string public daoURI;
+    bool _setDaoURI;
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
 
 
     modifier onlyDaoOwner{
-        require(msg.sender == daoOwner, "Dao: must be daoOwner");
+        require(msg.sender == ownerOfDao, "Dao: must be daoOwner");
         _;
     }
 
@@ -48,7 +51,14 @@ contract Dao is IDao, SemanticSBT {
     }
 
     function setDaoURI(string memory daoURI_) external onlyDaoOwner {
-        _daoURI = daoURI_;
+        daoURI = daoURI_;
+        string memory rdf = SemanticSBTLogicUpgradeable.buildStringRDFCustom(DAO_CLASS_NAME,address(this).toHexString(),_predicates[DAO_URI_PREDICATE_INDEX].name,string.concat('"', daoURI_, '"'));
+        if (!_setDaoURI) {
+            _setDaoURI = true;
+            emit CreateRDF(0, rdf);
+        } else {
+            emit UpdateRDF(0, rdf);
+        }
     }
 
     function setFreeJoin(bool isFreeJoin_) external onlyDaoOwner {
@@ -57,7 +67,7 @@ contract Dao is IDao, SemanticSBT {
 
 
     function ownerTransfer(address to) external onlyDaoOwner {
-        daoOwner = to;
+        ownerOfDao = to;
     }
 
     function addMember(address[] memory addr) external onlyDaoOwner {
@@ -72,20 +82,13 @@ contract Dao is IDao, SemanticSBT {
     }
 
     function remove(address addr) external returns (uint256 tokenId){
-        require(msg.sender == daoOwner || msg.sender == addr, "Dao: permission denied");
+        require(msg.sender == ownerOfDao || msg.sender == addr, "Dao: permission denied");
         tokenId = ownedTokenId[addr];
         require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
         super._burn(addr, ownedTokenId[addr]);
         delete ownedTokenId[addr];
     }
 
-    function daoURI() external view returns (string memory){
-        return _daoURI;
-    }
-
-    function ownerOfDao() external view returns (address){
-        return daoOwner;
-    }
 
     function isFreeJoin() external view returns (bool){
         return _isFreeJoin;
@@ -96,7 +99,7 @@ contract Dao is IDao, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IDao).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -104,8 +107,8 @@ contract Dao is IDao, SemanticSBT {
     /* ============ Internal Functions ============ */
 
     function _setOwner(address owner) internal {
-        daoOwner = owner;
-        uint256 sIndex = _addSubject(address(this).toHexString(), DAO_CLASS_INDEX);
+        ownerOfDao = owner;
+        uint256 sIndex = SemanticSBTLogicUpgradeable.addSubject(address(this).toHexString(), DAO_CLASS_NAME, _subjects, _subjectIndex, _classIndex);
         joinDaoSubjectPO.push(SubjectPO(JOIN_PREDICATE_INDEX, sIndex));
     }
 

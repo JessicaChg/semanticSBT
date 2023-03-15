@@ -26,26 +26,25 @@ describe("FollowRegister contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const DeployFollow = await hre.ethers.getContractFactory("DeployFollow", {
+        const FollowRegisterLogic = await hre.ethers.getContractFactory("FollowRegisterLogic");
+        const followRegisterLogicLibrary = await FollowRegisterLogic.deploy();
+
+        const Follow = await hre.ethers.getContractFactory("Follow", {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const deployFollowLibrary = await DeployFollow.deploy();
-
-
-        const InitializeFollow = await hre.ethers.getContractFactory("InitializeFollow");
-        const initializeFollowLibrary = await InitializeFollow.deploy();
+        const follow = await Follow.deploy();
+        await follow.deployTransaction.wait();
 
         const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
-                DeployFollow: deployFollowLibrary.address,
-                InitializeFollow: initializeFollowLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                FollowRegisterLogic: followRegisterLogicLibrary.address,
             }
         });
         const followRegister = await MyContract.deploy();
@@ -58,6 +57,7 @@ describe("FollowRegister contract", function () {
             schemaURI,
             class_,
             predicate_);
+        await followRegister.setFollowImpl(follow.address);
         return {followRegister, owner, addr1, addr2};
     }
 
