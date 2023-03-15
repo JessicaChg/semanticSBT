@@ -47,12 +47,12 @@ contract Follow is IFollow, SemanticSBT {
     }
 
 
-    function follow() external {
-        _follow(msg.sender);
+    function follow() external returns (uint256){
+        return _follow(msg.sender);
     }
 
-    function unfollow() external {
-        _unfollow(msg.sender);
+    function unfollow() external returns (uint256){
+        return _unfollow(msg.sender);
     }
 
     function followWithSign(Signature calldata sig) external {
@@ -83,17 +83,19 @@ contract Follow is IFollow, SemanticSBT {
         ownerSubjectPO.push(SubjectPO(FOLLOWING_PREDICATE_INDEX, sIndex));
     }
 
-    function _follow(address addr) internal {
+    function _follow(address addr) internal returns (uint256){
         require(!_isFollowing[addr], "Follow:Already followed!");
         _isFollowing[addr] = true;
         uint256 tokenId = _addEmptyToken(addr, 0);
         _mint(tokenId, addr, new IntPO[](0), new StringPO[](0), new AddressPO[](0), ownerSubjectPO, new BlankNodePO[](0));
+        return tokenId;
     }
 
-    function _unfollow(address addr) internal {
+    function _unfollow(address addr) internal returns (uint256){
         uint256 tokenId = tokenOfOwnerByIndex(addr, 0);
         super._burn(addr, tokenId);
         _isFollowing[addr] = false;
+        return tokenId;
     }
 
 
