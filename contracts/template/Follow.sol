@@ -32,7 +32,7 @@ contract Follow is IFollow, SemanticSBT {
     bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(uint256 chainId,address verifyingContract)');
     /* ============ External Functions ============ */
 
-    function init(
+    function initialize(
         address owner,
         address minter,
         string memory name_,

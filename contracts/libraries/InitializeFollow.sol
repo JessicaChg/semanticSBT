@@ -16,7 +16,7 @@ library InitializeFollow {
     function initFollow(address connection, address owner, address minter) external returns (bool) {
         Predicate[] memory predicates_ = new Predicate[](1);
         predicates_[0] = Predicate(FOLLOWING, FieldType.SUBJECT);
-        IFollow(connection).init(owner, minter, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
+        IFollow(connection).initialize(owner, minter, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
         return true;
     }
 
