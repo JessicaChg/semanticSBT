@@ -10,12 +10,13 @@ const {ethers, upgrades} = require("hardhat");
 const name = 'Relation Name Service V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
-const class_ = ["Domain"];
-const predicate_ = [["hold", 3], ["resolved", 3]];
+const schemaURI = 'ar://2UB5aUc5lfUuOArp4i565IfT3Z_ik6kCMGn3eVZB5ww';
+const class_ = ["Name"];
+const predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
-const minDomainLength_ = 3;
-const domainLengthControl = {"_domainLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
+const minNameLength_ = 3;
+const nameLengthControl = {"_nameLength": 3, "_maxCount": 1000};//means the maxCount of 4 characters is 1000
+const suffix = ".rel";
 
 async function main() {
     const [owner] = await ethers.getSigners();
@@ -25,11 +26,24 @@ async function main() {
     console.log(
         `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
+    await semanticSBTLogicLibrary.deployTransaction.wait();
+
+    const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
+    const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
+    console.log(
+        `NameServiceLogicLibrary deployed ,contract address: ${nameServiceLogicLibrary.address}`
+    );
+    await nameServiceLogicLibrary.deployTransaction.wait();
 
     const contractName = "NameService";
     console.log(contractName)
 
-    const MyContract = await ethers.getContractFactory(contractName);
+    const MyContract = await ethers.getContractFactory(contractName, {
+        libraries: {
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            NameServiceLogic: nameServiceLogicLibrary.address,
+        }
+    });
     const myContract = await upgrades.deployProxy(MyContract,
         [owner.address,
             name,
@@ -41,18 +55,13 @@ async function main() {
         {unsafeAllowLinkedLibraries: true});
 
     await myContract.deployed();
+    // const myContract = await MyContract.deploy();
+    await myContract.deployTransaction.wait();
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    await (await myContract.setDomainLengthControl(minDomainLength_, domainLengthControl._domainLength, domainLengthControl._maxCount)).wait();
-
-
-    //upgrade
-    // const proxyAddress = "0xa25243f934258F4267ed4C4bD37C03a0344414D0";
-    // await upgrades.upgradeProxy(
-    // proxyAddress,
-    //     MyContract,
-    //     {unsafeAllowLinkedLibraries: true});
+    await (await myContract.setNameLengthControl(minNameLength_, nameLengthControl._nameLength, nameLengthControl._maxCount)).wait();
+    await (await myContract.setSuffix(suffix)).wait();
 
 }
 

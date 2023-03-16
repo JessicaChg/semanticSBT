@@ -6,12 +6,12 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 
-const name = 'Relation Follow Register';
+const name = 'Dao Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
+const schemaURI = 'ar://MaXW2Db8G5EY2LNIR_JoiTqkIB9GUxWvAtN0vzYKl5w';
 const class_ = ["Contract"];
-const predicate_ = [["followContract", 3]];
+const predicate_ = [["daoContract", 3]];
 
 async function main() {
 
@@ -22,33 +22,33 @@ async function main() {
     console.log(
         `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
-    const FollowRegisterLogic = await hre.ethers.getContractFactory("FollowRegisterLogic");
-    const followRegisterLogicLibrary = await FollowRegisterLogic.deploy();
+    const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
+    const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
     console.log(
-        `FollowRegisterLogic deployed ,contract address: ${followRegisterLogicLibrary.address}`
+        `DaoRegisterLogic deployed ,contract address: ${daoRegisterLogicLibrary.address}`
     );
-    const Follow = await hre.ethers.getContractFactory("Follow", {
+    const Dao = await hre.ethers.getContractFactory("Dao", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
-    const follow = await Follow.deploy();
-    await follow.deployTransaction.wait();
+    const dao = await Dao.deploy();
+    await dao.deployTransaction.wait();
     console.log(
-        `Follow deployed ,contract address: ${follow.address}`
+        `Dao deployed ,contract address: ${dao.address}`
     );
-    const contractName = "FollowRegister";
+    const contractName = "DaoRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-            FollowRegisterLogic: followRegisterLogicLibrary.address,
+            DaoRegisterLogic: daoRegisterLogicLibrary.address,
         }
     });
-    const followRegister = await MyContract.deploy();
+    const daoRegister = await MyContract.deploy();
     console.log(
-        `${contractName} deployed ,contract address: ${followRegister.address}`
+        `${contractName} deployed ,contract address: ${daoRegister.address}`
     );
-    await (await followRegister.initialize(
+    await (await daoRegister.initialize(
         owner.address,
         name,
         symbol,
@@ -59,11 +59,11 @@ async function main() {
     console.log(
         `${contractName} initialized!`
     );
-    await (await followRegister.setFollowImpl(follow.address)).wait();
-    console.log(
-        `${contractName} setFollowImpl successfully!`
-    );
 
+    await (await daoRegister.setDaoImpl(dao.address)).wait();
+    console.log(
+        `${contractName} setDaoImpl successfully!`
+    );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

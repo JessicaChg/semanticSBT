@@ -25,10 +25,7 @@ module.exports = {
 
   },
   networks: {
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${INFURA_PROJECT_ID}`,
-      accounts: [`${PRIVATE_KEY}`]
-    }
+
   },
   etherscan: {
     // Your API key for Etherscan

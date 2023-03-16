@@ -12,17 +12,27 @@ library SemanticSBTLogic {
     using Strings for uint160;
     using Strings for address;
 
-    string  constant TURTLE_LINE_SUFFIX = " ;";
-    string  constant TURTLE_END_SUFFIX = " . ";
-    string  constant SOUL_CLASS_NAME = "Soul";
+    struct Signature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 deadline;
+    }
 
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
+    bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
+    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
-    string  constant CONCATENATION_CHARACTER = "_";
-    string  constant BLANK_NODE_START_CHARACTER = "[";
-    string  constant BLANK_NODE_END_CHARACTER = "]";
-    string  constant BLANK_SPACE = " ";
+    string  public constant TURTLE_LINE_SUFFIX = " ;";
+    string  public constant TURTLE_END_SUFFIX = " . ";
+    string  public constant SOUL_CLASS_NAME = "Soul";
+
+    string  public constant ENTITY_PREFIX = ":";
+    string  public constant PROPERTY_PREFIX = "p:";
+
+    string  public constant CONCATENATION_CHARACTER = "_";
+    string  public constant BLANK_NODE_START_CHARACTER = "[";
+    string  public constant BLANK_NODE_END_CHARACTER = "]";
+    string  public constant BLANK_SPACE = " ";
 
 
     function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
@@ -210,6 +220,48 @@ library SemanticSBTLogic {
         }
 
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
+    }
+
+
+    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external pure returns (string memory){
+        string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
+        string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
+        return string.concat(s, p, o, SemanticSBTLogic.TURTLE_END_SUFFIX);
+    }
+
+
+    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress, Signature memory sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBTLogic: signature expired");
+        address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
+            sig.v,
+            sig.r,
+            sig.s);
+        require(expectedAddress == signer, "SemanticSBTLogic: signature invalid");
+        return signer;
+    }
+
+
+    function _calculateDigest(string memory name, address contractAddress, bytes32 hashedMessage) internal view returns (bytes32) {
+        bytes32 digest;
+        unchecked {
+            digest = keccak256(
+                abi.encodePacked('\x19\x01', _calculateDomainSeparator(name, contractAddress), hashedMessage)
+            );
+        }
+        return digest;
+    }
+
+    function _calculateDomainSeparator(string memory name, address contractAddress) internal view returns (bytes32){
+        return
+        keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPE_HASH,
+                keccak256(bytes(name)),
+                EIP712_REVISION_HASH,
+                block.chainid,
+                contractAddress
+            )
+        );
     }
 
 

@@ -12,20 +12,30 @@ library SemanticSBTLogicUpgradeable {
     using StringsUpgradeable for uint160;
     using StringsUpgradeable for address;
 
+    struct Signature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 deadline;
+    }
+
     string  constant TURTLE_LINE_SUFFIX = " ;";
     string  constant TURTLE_END_SUFFIX = " . ";
     string  constant SOUL_CLASS_NAME = "Soul";
 
-    string  constant ENTITY_PREFIX = ":";
-    string  constant PROPERTY_PREFIX = "p:";
+    string  constant public ENTITY_PREFIX = ":";
+    string  constant public PROPERTY_PREFIX = "p:";
 
     string  constant CONCATENATION_CHARACTER = "_";
     string  constant BLANK_NODE_START_CHARACTER = "[";
     string  constant BLANK_NODE_END_CHARACTER = "]";
     string  constant BLANK_SPACE = " ";
 
+    bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
+    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
-    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) internal {
+
+    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
         for (uint256 i = 0; i < classList.length; i++) {
             string memory className_ = classList[i];
             require(
@@ -39,7 +49,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) internal {
+    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
         for (uint256 i = 0; i < predicates.length; i++) {
             Predicate memory predicate_ = predicates[i];
             require(
@@ -57,7 +67,7 @@ library SemanticSBTLogicUpgradeable {
     function addSubject(string memory value, string memory className_,
         Subject[] storage _subjects,
         mapping(uint256 => mapping(string => uint256)) storage _subjectIndex,
-        mapping(string => uint256) storage _classIndex) internal returns (uint256 sIndex) {
+        mapping(string => uint256) storage _classIndex) external returns (uint256 sIndex) {
         uint256 cIndex = _classIndex[className_];
         require(cIndex > 0, "SemanticSBT: param error");
         require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
@@ -66,7 +76,7 @@ library SemanticSBTLogicUpgradeable {
 
     function mint(uint256[] storage pIndex, uint256[] storage oIndex,
         IntPO[] memory intPOList, StringPO[] memory stringPOList, AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
+        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external {
 
         addIntPO(pIndex, oIndex, intPOList, _predicates);
         addStringPO(pIndex, oIndex, stringPOList, _predicates, _stringO);
@@ -137,7 +147,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal view returns (string memory _rdf){
+    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
         for (uint256 i = 0; i < spo.pIndex.length; i++) {
@@ -158,7 +168,7 @@ library SemanticSBTLogicUpgradeable {
         }
     }
 
-    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) internal view returns (string memory){
+    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) public view returns (string memory){
         string memory _className = spo.sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[spo.sIndex].cIndex];
         string memory subjectValue = spo.sIndex == 0 ? address(spo.owner).toHexString() : _subjects[spo.sIndex].value;
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);
@@ -222,6 +232,47 @@ library SemanticSBTLogicUpgradeable {
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
     }
 
+    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external pure returns (string memory){
+        string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
+        string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
+        return string.concat(s, p, o, TURTLE_END_SUFFIX);
+    }
+
+
+    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress,Signature memory sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
+        address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
+            sig.v,
+            sig.r,
+            sig.s);
+        require(expectedAddress == signer,"SemanticSBTLogicUpgradeable: signature invalid");
+        return signer;
+    }
+
+
+    function _calculateDigest(string memory name, address contractAddress, bytes32 hashedMessage) internal view returns (bytes32) {
+        bytes32 digest;
+        unchecked {
+            digest = keccak256(
+                abi.encodePacked('\x19\x01', _calculateDomainSeparator(name, contractAddress), hashedMessage)
+            );
+        }
+        return digest;
+    }
+
+    function _calculateDomainSeparator(string memory name, address contractAddress) internal view returns (bytes32){
+        return
+        keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPE_HASH,
+                keccak256(bytes(name)),
+                EIP712_REVISION_HASH,
+                block.chainid,
+                contractAddress
+            )
+        );
+    }
+
 
     function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
@@ -231,7 +282,7 @@ library SemanticSBTLogicUpgradeable {
 
     function _addSubject(string memory value, uint256 cIndex,
         Subject[] storage _subjects,
-        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) internal returns (uint256 sIndex){
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) public returns (uint256 sIndex){
         sIndex = _subjects.length;
         _subjectIndex[cIndex][value] = sIndex;
         _subjects.push(Subject(value, cIndex));

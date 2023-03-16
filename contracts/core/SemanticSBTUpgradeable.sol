@@ -19,7 +19,7 @@ import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 
 
-contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema, IERC721MetadataUpgradeable {
+contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, IERC721MetadataUpgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for uint160;
@@ -54,10 +54,10 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     string public schemaURI;
 
 
-    mapping(string => uint256) private _classIndex;
+    mapping(string => uint256) internal _classIndex;
     string[] internal _classNames;
 
-    mapping(string => uint256) private _predicateIndex;
+    mapping(string => uint256) internal _predicateIndex;
     Predicate[] internal _predicates;
 
 
@@ -94,6 +94,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
         _classNames.push("");
         _classNames.push(SOUL_CLASS_NAME);
+        _classIndex[SOUL_CLASS_NAME] = 1;
         _predicates.push(Predicate("", FieldType.INT));
     }
 
@@ -443,6 +444,17 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         emit CreateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
+    function _burn(address account, uint256 tokenId) internal {
+        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+
+        _approve(address(0), tokenId);
+        _burnCount++;
+        _balances[account] -= 1;
+        _tokens[tokenId].owner = 0;
+
+        emit Transfer(account, address(0), tokenId);
+        emit RemoveRDF(tokenId, _rdf);
+    }
 
     function _addEmptyToken(address account, uint256 sIndex) internal returns (uint256){
         _tokens.push(SPO(uint160(account), sIndex, new uint256[](0), new uint256[](0)));
@@ -474,15 +486,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[id], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
-
-        _approve(address(0), id);
-        _burnCount++;
-        _balances[account] -= 1;
-        _tokens[id].owner = 0;
-
-        emit Transfer(account, address(0), id);
-        emit RemoveRDF(id, _rdf);
+        _burn(account, id);
     }
 
 
@@ -497,10 +501,14 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         );
         require(to != address(0), "ERC721: transfer to the zero address");
 
+        _beforeTokenTransfer(from, to, tokenId);
+
         _approve(address(0), tokenId);
         _balances[from] -= 1;
         _balances[to] += 1;
         _tokens[tokenId].owner = uint160(to);
+
+        _afterTokenTransfer(from, to, tokenId);
 
         emit Transfer(from, to, tokenId);
     }
@@ -538,6 +546,21 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         }
         return true;
     }
+
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
+
+
 
     /* ============ Util Functions ============ */
 

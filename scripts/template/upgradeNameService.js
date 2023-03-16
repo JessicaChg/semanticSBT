@@ -7,49 +7,39 @@
 const {ethers, upgrades} = require("hardhat");
 
 
-const name = 'Semantic SBT Upgrade V1';
-const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://Za2Zvs8bYMKqqS0dfvA1M5g_qkQzyM1nkKG32RWv_9Q';
-const class_ = ["Name"];
-const predicate_ = [["hold", 3], ["resolved", 3]];
-
 async function main() {
-    const [owner] = await ethers.getSigners();
 
     const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(
         `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
     );
+    await semanticSBTLogicLibrary.deployTransaction.wait();
 
-    const contractName = "SemanticSBTUpgradeable";
+    const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
+    const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
+    console.log(
+        `NameServiceLogicLibrary deployed ,contract address: ${nameServiceLogicLibrary.address}`
+    );
+    await nameServiceLogicLibrary.deployTransaction.wait();
+
+    const contractName = "NameService";
     console.log(contractName)
 
-    const MyContract = await ethers.getContractFactory(contractName);
-    const myContract = await upgrades.deployProxy(MyContract,
-        [owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_],
-        {unsafeAllowLinkedLibraries: true});
+    const MyContract = await ethers.getContractFactory(contractName, {
+        libraries: {
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            NameServiceLogic: nameServiceLogicLibrary.address,
+        }
+    });
 
-    await myContract.deployed();
-
-    console.log(
-        `${contractName} deployed ,contract address: ${myContract.address}`
-    );
-    const proxyContract = "";
-    await upgrades.upgradeProxy(proxyContract,
+    //upgrade
+    const proxyAddress = "";
+    await upgrades.upgradeProxy(
+    proxyAddress,
         MyContract,
         {unsafeAllowLinkedLibraries: true});
 
-    console.log(
-        `The contract has upgraded!`
-    );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

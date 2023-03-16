@@ -4,25 +4,28 @@ pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IFollowRegister.sol";
 import "../interfaces/social/IFollow.sol";
 import {SocialGraphData} from "../libraries/SocialGraphData.sol";
-import {DeployFollow} from "../libraries/DeployFollow.sol";
-import {InitializeFollow} from "../libraries/InitializeFollow.sol";
-import {SemanticSBTLogic} from "../libraries/SemanticSBTLogic.sol";
+import {FollowRegisterLogic} from "../libraries/FollowRegisterLogic.sol";
 
-contract FollowRegister is IFollowRegister, SemanticSBT {
+contract FollowRegister is IFollowRegister, SemanticSBTUpgradeable {
     using Strings for uint256;
     using Strings for address;
 
-    uint256 constant CONNECTION_CONTRACT_PREDICATE_INDEX = 1;
+    uint256 constant FOLLOW_CONTRACT_PREDICATE_INDEX = 1;
 
-    uint256 constant soulCIndex = 1;
-    uint256 constant contractCIndex = 2;
+    uint256 constant SOUL_CLASS_INDEX = 1;
+    uint256 constant CONTRACT_CLASS_INDEX = 2;
 
     mapping(address => address) _ownedFollowContract;
 
+    address public followImpl;
+
+    function setFollowImpl(address _followImpl) external {
+        followImpl = _followImpl;
+    }
 
     function ownedFollowContract(address owner) external view returns (address){
         return _ownedFollowContract[owner];
@@ -33,10 +36,9 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
         require(_ownedFollowContract[to] == address(0), "FollowRegister:Already deployed!");
         require(msg.sender == to || _minters[msg.sender], "FollowRegister:Permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
-        address connectionAddress = DeployFollow.deployFollow();
-        InitializeFollow.initFollow(connectionAddress, to, address(this));
-        _ownedFollowContract[to] = connectionAddress;
-        uint256 contractIndex = _addSubject(connectionAddress.toHexString(), contractCIndex);
+        address followContractAddress = FollowRegisterLogic.createFollow(followImpl, to, address(this));
+        _ownedFollowContract[to] = followContractAddress;
+        uint256 contractIndex = SemanticSBTLogicUpgradeable.addSubject(followContractAddress.toHexString(), _classNames[CONTRACT_CLASS_INDEX], _subjects, _subjectIndex, _classIndex);
 
         SubjectPO[] memory subjectPOList = generateSubjectPOList(contractIndex);
         _mint(tokenId, to, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
@@ -44,7 +46,7 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IFollowRegister).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -52,7 +54,7 @@ contract FollowRegister is IFollowRegister, SemanticSBT {
 
     function generateSubjectPOList(uint256 contractIndex) internal pure returns (SubjectPO[] memory) {
         SubjectPO[] memory subjectPOList = new SubjectPO[](1);
-        subjectPOList[0] = SubjectPO(CONNECTION_CONTRACT_PREDICATE_INDEX, contractIndex);
+        subjectPOList[0] = SubjectPO(FOLLOW_CONTRACT_PREDICATE_INDEX, contractIndex);
         return subjectPOList;
     }
 

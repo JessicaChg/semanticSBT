@@ -11,35 +11,45 @@ library NameServiceLogic {
     uint256 constant holdPredicateIndex = 1;
     uint256 constant resolvePredicateIndex = 2;
 
-    function checkValidLength(string memory name,
-        uint256 _minDomainLength,
-        mapping(uint256 => uint256) storage _domainLengthControl,
-        mapping(uint256 => uint256) storage _countOfDomainLength) internal view returns (bool){
-        uint256 len = name.strlen();
-        if (len < _minDomainLength) {
-            return false;
+    function register(uint256 tokenId, address owner, uint256 sIndex, bool resolve,
+        mapping(uint256 => uint256) storage _tokenIdOfName,
+        mapping(uint256 => uint256) storage _nameOf,
+        mapping(address => uint256) storage _ownedResolvedName,
+        mapping(uint256 => address) storage _ownerOfResolvedName,
+        mapping(uint256 => uint256) storage _tokenIdOfResolvedName) external returns (SubjectPO[] memory) {
+        _tokenIdOfName[sIndex] = tokenId;
+        _nameOf[tokenId] = sIndex;
+        SubjectPO[] memory subjectPOList = new SubjectPO[](1);
+        if (resolve) {
+            setNameForAddr(owner, sIndex, _tokenIdOfName, _ownedResolvedName,
+                _ownerOfResolvedName, _tokenIdOfResolvedName);
+            subjectPOList[0] = SubjectPO(resolvePredicateIndex, sIndex);
+        } else {
+            subjectPOList[0] = SubjectPO(holdPredicateIndex, sIndex);
         }
-        if (_domainLengthControl[len] == 0) {
-            return true;
-        } else if (_domainLengthControl[len] - _countOfDomainLength[len] > 0) {
-            return true;
-        }
-        return false;
+        return subjectPOList;
     }
 
 
-    function setNameForAddr(address addr,uint256 dSIndex,
-        mapping(uint256 => uint256) storage _tokenIdOfDomain, mapping(address => uint256) storage _ownedResolvedDomain,
-        mapping(uint256 => address) storage _ownerOfResolvedDomain, mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain) internal {
-        require(_ownerOfResolvedDomain[dSIndex] == address(0), "NameService:already resolved");
-        _ownedResolvedDomain[addr] = dSIndex;
-        _ownerOfResolvedDomain[dSIndex] = addr;
-        _tokenIdOfResolvedDomain[dSIndex] = _tokenIdOfDomain[dSIndex];
+    function setNameForAddr(address addr, uint256 dSIndex,
+        mapping(uint256 => uint256) storage _tokenIdOfName, mapping(address => uint256) storage _ownedResolvedName,
+        mapping(uint256 => address) storage _ownerOfResolvedName, mapping(uint256 => uint256) storage _tokenIdOfResolvedName) public {
+        if (addr != address(0)) {
+            require(_ownerOfResolvedName[dSIndex] == address(0), "NameService:already resolved");
+            if(_ownedResolvedName[addr] != 0){
+                delete _ownerOfResolvedName[_ownedResolvedName[addr]];
+            }
+        } else {
+            require(_ownerOfResolvedName[dSIndex] != address(0), "NameService:not resolved");
+            delete _ownedResolvedName[_ownerOfResolvedName[dSIndex]];
+        }
+        _ownedResolvedName[addr] = dSIndex;
+        _ownerOfResolvedName[dSIndex] = addr;
+        _tokenIdOfResolvedName[dSIndex] = _tokenIdOfName[dSIndex];
     }
 
-    function updatePIndexOfToken(address addr, uint256 tokenId, SPO storage spo, mapping(uint256 => string) storage _profileHash) internal {
+    function updatePIndexOfToken(address addr, SPO storage spo) public {
         if (addr == address(0)) {
-            delete _profileHash[tokenId];
             spo.pIndex[0] = holdPredicateIndex;
         } else {
             spo.pIndex[0] = resolvePredicateIndex;
@@ -47,27 +57,20 @@ library NameServiceLogic {
     }
 
 
-    function register(uint256 tokenId, address owner, uint256 sIndex, bool resolve,
-        mapping(uint256 => uint256) storage _tokenIdOfDomain,
-        mapping(uint256 => uint256) storage _domainOf,
-        mapping(address => uint256) storage _ownedResolvedDomain,
-        mapping(uint256 => address) storage _ownerOfResolvedDomain,
-        mapping(uint256 => uint256) storage _tokenIdOfResolvedDomain,
-        string memory name,
-        uint256 _minDomainLength,
-        mapping(uint256 => uint256) storage _domainLengthControl,
-        mapping(uint256 => uint256) storage _countOfDomainLength) internal returns (SubjectPO[] memory) {
-        require(checkValidLength(name, _minDomainLength, _domainLengthControl, _countOfDomainLength), "NameService: invalid length of name");
-        _tokenIdOfDomain[sIndex] = tokenId;
-        _domainOf[tokenId] = sIndex;
-        SubjectPO[] memory subjectPOList = new SubjectPO[](1);
-        if (resolve) {
-            setNameForAddr(owner, sIndex, _tokenIdOfDomain, _ownedResolvedDomain,
-                _ownerOfResolvedDomain, _tokenIdOfResolvedDomain);
-            subjectPOList[0] = SubjectPO(resolvePredicateIndex, sIndex);
-        } else {
-            subjectPOList[0] = SubjectPO(holdPredicateIndex, sIndex);
+    function checkValidLength(string memory name,
+        uint256 _minNameLength,
+        mapping(uint256 => uint256) storage _nameLengthControl,
+        mapping(uint256 => uint256) storage _countOfNameLength) external view returns (bool){
+        uint256 len = name.strlen();
+        if (len < _minNameLength) {
+            return false;
         }
-        return subjectPOList;
+        if (_nameLengthControl[len] == 0) {
+            return true;
+        } else if (_nameLengthControl[len] - _countOfNameLength[len] > 0) {
+            return true;
+        }
+        return false;
     }
+
 }
