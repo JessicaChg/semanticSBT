@@ -22,7 +22,7 @@ npm install ethers@5
 
 
 - 引入 abi
-  在src目录下创建一个abi.json文件，内容可访问[Relation Protocol资源列表](../resource.md)获得。
+  在src目录下创建一个abi.json文件，内容可访问[Relation Protocol资源列表](./resource.md)获得。
 
 并在App.jsx引入
 ```javascript
