@@ -1,6 +1,6 @@
 # NameService 使用说明
 
-我们使用Relation Protocol部署好的Relation NameService合约，可以实现用户身份数据的存储与查询。Relation NameService合约是对Contract Standard里Name Service的实现。
+使用Relation Protocol部署好的Relation NameService合约，可以实现用户身份数据的存储与查询。Relation NameService合约是对Contract Standard里Name Service的实现。
 
 ## 构建Contract对象
 

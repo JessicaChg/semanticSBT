@@ -1,6 +1,6 @@
 # Follow 使用说明
 
-我们使用Relation Protocol部署好的FollowRegister合约，可以实现为用户创建Follow合约。Follow合约可以进行关注与取消关注。FollowRegister与Follow合约均实现了Contract Standard定义的合约接口。
+使用Relation Protocol部署好的FollowRegister合约，可以实现为用户创建Follow合约。Follow合约可以进行关注与取消关注。FollowRegister与Follow合约均实现了Contract Standard定义的合约接口。
 
 ## 构建Contract对象
 
