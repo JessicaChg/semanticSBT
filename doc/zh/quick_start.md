@@ -2,7 +2,7 @@
 
 我们使用Relation Protocol 的 NameService合约作为示例，演示如何快速接入
 
-- 环境搭建
+1. 环境搭建
 
 To complete this tutorial successfully, you must have [Node.js](https://nodejs.org/en/) and [MetaMask](https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn) installed on your machine.
 
@@ -21,16 +21,18 @@ npm install ethers@5
 ```
 
 
-- 引入 abi
-  在src目录下创建一个abi.json文件，内容可访问[Relation Protocol资源列表](./resource.md)获得。
+2. 引入 abi
+
+在src目录下创建一个abi.json文件，内容可访问[Relation Protocol资源列表](./resource.md)获得。
 
 并在App.jsx引入
 ```javascript
 import abi from './abi.json'
 ```
 
-- 合约调用
-  引入ethers，并创建getContractInstance方法获取contract实例以便后续调用合约的方法，需要注意的是本示例中使用的合约是部署在mumbai网络的，请确保metamask切换到mumbai网络
+3. 合约调用
+
+引入ethers，并创建getContractInstance方法获取contract实例以便后续调用合约的方法，需要注意的是本示例中使用的合约是部署在mumbai网络的，请确保metamask切换到mumbai网络
 ```javascript
 import { ethers, providers } from 'ethers'
 
@@ -121,7 +123,7 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
+      <h1>Name Service</h1>
       <div className="card">
         <button onClick={register}>Register</button>
       </div>
@@ -135,7 +137,10 @@ function App() {
 export default App
 ```
 
-运行项目，然后在浏览器中打开[http://localhost:5173/](http://localhost:5173/)即可体验
+4. 运行项目
+
 ```bash
 npm run dev
 ```
+
+然后在浏览器中打开[http://localhost:5173/](http://localhost:5173/)即可体验

@@ -11,6 +11,36 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     using Strings for uint256;
     using Strings for address;
 
+    struct SetDaoURIWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+        string daoURI;
+    }
+
+    struct SetFreeJoinWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+        bool isFreeJoin;
+    }
+
+    struct AddMemberWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+        address[] members;
+    }
+
+    struct JoinWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+    }
+
+    struct RemoveWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+        address member;
+    }
+
+
     SubjectPO[] private joinDaoSubjectPO;
 
     uint256 constant JOIN_PREDICATE_INDEX = 1;
@@ -27,6 +57,12 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
 
+    bytes32 internal constant SET_DAO_URI_WITH_SIGN_TYPE_HASH = keccak256('SetDaoURIWithSign(string daoURI,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant SET_FREE_JOIN_WITH_SIGN_TYPE_HASH = keccak256('SetDaoURIWithSign(bool isFreeJoin,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant ADD_MEMBER_WITH_SIGN_TYPE_HASH = keccak256('AddMemberWithSign(address[] members,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant JOIN_WITH_SIGN_TYPE_HASH = keccak256('JoinWithSign(uint256 nonce,uint256 deadline)');
+    bytes32 internal constant REMOVE_WITH_SIGN_TYPE_HASH = keccak256('RemoveWithSign(address member,uint256 nonce,uint256 deadline)');
+    mapping(address => uint256) public nonces;
 
     modifier onlyDaoOwner{
         require(msg.sender == ownerOfDao, "Dao: must be daoOwner");
@@ -80,6 +116,79 @@ contract Dao is IDao, SemanticSBTUpgradeable {
 
     function remove(address addr) external returns (uint256 tokenId){
         return _remove(msg.sender, addr);
+    }
+
+
+
+    function addMemberWithSign(AddMemberWithSign calldata vars) external {
+        address addr;
+
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        ADD_MEMBER_WITH_SIGN_TYPE_HASH,
+                        keccak256(abi.encodePacked(vars.members)),
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        require(addr == ownerOfDao, "Dao: permission denied");
+
+        for (uint256 i = 0; i < vars.members.length;) {
+            _join(vars.members[i]);
+            unchecked{
+                i++;
+            }
+        }
+    }
+
+    function joinWithSign(JoinWithSign calldata vars) external returns (uint256 tokenId){
+        require(_isFreeJoin, "Dao: permission denied");
+        address addr;
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        JOIN_WITH_SIGN_TYPE_HASH,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        tokenId = _join(addr);
+    }
+
+    function removeWithSign(RemoveWithSign calldata vars) external returns (uint256 tokenId){
+        address addr;
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        REMOVE_WITH_SIGN_TYPE_HASH,
+                        vars.member,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        return _remove(vars.member, addr);
     }
 
 

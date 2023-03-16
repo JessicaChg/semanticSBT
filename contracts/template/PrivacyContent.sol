@@ -12,7 +12,6 @@ import "../interfaces/social/IDao.sol";
 
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
-import "hardhat/console.sol";
 
 contract PrivacyContent is IPrivacyContent, SemanticSBT {
     struct PrepareTokenWithSign {
@@ -25,6 +24,20 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         address addr;
         uint256 tokenId;
         string content;
+    }
+
+    struct ShareToFollowerWithSign {
+        SemanticSBTLogic.Signature sig;
+        address addr;
+        uint256 tokenId;
+        address followContractAddress;
+    }
+
+    struct ShareToDaoWithSign {
+        SemanticSBTLogic.Signature sig;
+        address addr;
+        uint256 tokenId;
+        address daoContractAddress;
     }
 
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
@@ -43,6 +56,8 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
     bytes32 internal constant PREPARE_TOKEN_WITH_SIGN_TYPE_HASH = keccak256('PrepareTokenWithSign(uint256 nonce,uint256 deadline)');
     bytes32 internal constant POST_WITH_SIGN_TYPE_HASH = keccak256('PostWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant SHARE_TO_FOLLOW_WITH_SIGN_TYPE_HASH = keccak256('ShareToFollowerWithSign(uint256 tokenId,address followContractAddress,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant SHARE_TO_DAO_WITH_SIGN_TYPE_HASH = keccak256('ShareToDaoWithSign(uint256 tokenId,address daoContractAddress,uint256 nonce,uint256 deadline)');
     mapping(address => uint256) public nonces;
     /* ============ External Functions ============ */
 
@@ -73,7 +88,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     }
 
     function shareToFollower(uint256 tokenId, address followContractAddress) external {
-        _shareToFollowInternal(msg.sender, tokenId, followContractAddress);
+        _shareToFollowerInternal(msg.sender, tokenId, followContractAddress);
     }
 
     function shareToDao(uint256 tokenId, address daoAddress) external {
@@ -102,7 +117,6 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     }
 
     function postWithSign(PostWithSign calldata vars) external {
-        console.log('content:%s', vars.content);
         address addr;
         unchecked {
             addr = SemanticSBTLogic.recoverSignerFromSignature(
@@ -122,6 +136,52 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
             );
         }
         _post(addr, vars.tokenId, vars.content);
+    }
+
+
+    function shareToFollowerWithSign(ShareToFollowerWithSign calldata vars) external {
+        address addr;
+        unchecked {
+            addr = SemanticSBTLogic.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        SHARE_TO_FOLLOW_WITH_SIGN_TYPE_HASH,
+                        vars.tokenId,
+                        vars.followContractAddress,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        _shareToFollowerInternal(addr, vars.tokenId, vars.followContractAddress);
+    }
+
+
+    function shareToDaoWithSign(ShareToDaoWithSign calldata vars) external {
+        address addr;
+        unchecked {
+            addr = SemanticSBTLogic.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        SHARE_TO_DAO_WITH_SIGN_TYPE_HASH,
+                        vars.tokenId,
+                        vars.daoContractAddress,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        _shareToDaoInternal(addr, vars.tokenId, vars.daoContractAddress);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
@@ -163,7 +223,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _contentOf[tokenId] = content;
     }
 
-    function _shareToFollowInternal(address addr, uint256 tokenId, address followContractAddress) internal {
+    function _shareToFollowerInternal(address addr, uint256 tokenId, address followContractAddress) internal {
         require(isOwnerOf(addr, tokenId), "PrivacyContent: caller is not owner");
         require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
         _shareToFollow[tokenId][followContractAddress] = true;

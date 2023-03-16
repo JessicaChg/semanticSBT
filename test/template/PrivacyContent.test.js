@@ -327,7 +327,137 @@ describe("Privacy Content contract", function () {
             }
             await privacyContent.connect(addr1).postWithSign(param);
             expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
+        });
 
+
+        it("Share to follow with signData", async function () {
+            const {privacyContent, followRegister,owner, addr1} = await loadFixture(deployTokenFixture);
+            const subject = ':Soul_' + owner.address.toLowerCase();
+            const predicate = "p:privacyContent";
+            const object = `"${privacyPrefix}${content}"`;
+            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+
+            let name = await privacyContent.name();
+            let nonce = await privacyContent.nonces(owner.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+
+
+            nonce = await privacyContent.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            const tokenId = await privacyContent.ownedPrepareToken(owner.address);
+            sign = await getSign(buildPostParams(
+                    name,
+                    privacyContent.address.toLowerCase(),
+                    parseInt(tokenId),
+                    content,
+                    parseInt(nonce),
+                    deadline),
+                owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": owner.address,
+                "tokenId": parseInt(tokenId),
+                "content": content
+            }
+            await privacyContent.connect(addr1).postWithSign(param);
+            expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
+
+
+            await followRegister.deployFollowContract(owner.address);
+            const followContractAddress = await followRegister.ownedFollowContract(owner.address);
+            const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
+            await followContract.connect(addr1).follow();
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
+
+            nonce = await privacyContent.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            sign = await getSign(buildShareToFollowerParams(
+                    name,
+                    privacyContent.address.toLowerCase(),
+                    parseInt(tokenId),
+                    followContractAddress,
+                    parseInt(nonce),
+                    deadline),
+                owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": owner.address,
+                "tokenId": parseInt(tokenId),
+                "followContractAddress": followContractAddress
+            }
+            await privacyContent.connect(addr1).shareToFollowerWithSign(param);
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
+
+        });
+
+
+        it("Share to dao with signData", async function () {
+            const {privacyContent,owner, addr1} = await loadFixture(deployTokenFixture);
+            const subject = ':Soul_' + owner.address.toLowerCase();
+            const predicate = "p:privacyContent";
+            const object = `"${privacyPrefix}${content}"`;
+            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+
+            let name = await privacyContent.name();
+            let nonce = await privacyContent.nonces(owner.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+
+
+            nonce = await privacyContent.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            const tokenId = await privacyContent.ownedPrepareToken(owner.address);
+            sign = await getSign(buildPostParams(
+                    name,
+                    privacyContent.address.toLowerCase(),
+                    parseInt(tokenId),
+                    content,
+                    parseInt(nonce),
+                    deadline),
+                owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": owner.address,
+                "tokenId": parseInt(tokenId),
+                "content": content
+            }
+            await privacyContent.connect(addr1).postWithSign(param);
+            expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
+
+
+            const daoRegister = await deployDaoRegister();
+            await daoRegister.deployDaoContract(owner.address, firstDAOName);
+            const daoContractAddress = await daoRegister.daoOf(1);
+            const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress.contractAddress);
+            await daoContract.setFreeJoin(true);
+            await daoContract.connect(addr1).join();
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
+
+            nonce = await privacyContent.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            sign = await getSign(buildShareToDaoParams(
+                    name,
+                    privacyContent.address.toLowerCase(),
+                    parseInt(tokenId),
+                    daoContractAddress.contractAddress,
+                    parseInt(nonce),
+                    deadline),
+                owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": owner.address,
+                "tokenId": parseInt(tokenId),
+                "daoContractAddress": daoContractAddress.contractAddress
+            }
+            await privacyContent.connect(addr1).shareToDaoWithSign(param);
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
 
         });
 
@@ -404,6 +534,76 @@ describe("Privacy Content contract", function () {
                 PostWithSign: [
                     {name: 'tokenId', type: 'uint256'},
                     {name: 'content', type: 'string'},
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+    function buildShareToFollowerParams(name, contractAddress, tokenId, followContractAddress, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                tokenId: tokenId,
+                followContractAddress: followContractAddress,
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'ShareToFollowerWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                ShareToFollowerWithSign: [
+                    {name: 'tokenId', type: 'uint256'},
+                    {name: 'followContractAddress', type: 'address'},
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+    function buildShareToDaoParams(name, contractAddress, tokenId, daoContractAddress, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                tokenId: tokenId,
+                daoContractAddress: daoContractAddress,
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'ShareToDaoWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                ShareToDaoWithSign: [
+                    {name: 'tokenId', type: 'uint256'},
+                    {name: 'daoContractAddress', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],
