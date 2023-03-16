@@ -11,12 +11,12 @@ FollowRegister的合约地址以及abi文件可以查询[Relation Protocol资源
 import { ethers, providers } from 'ethers'
 
 const getFollowRegisterContractInstance = () => {
-  // FollowRegister合约地址
-  const contractAddress = '0xef865Ed50447c253EFb9Ac9a9deDe3b4CBaaA9cE'
-  const provider = new providers.Web3Provider(window.ethereum)
-  const signer = provider.getSigner()
-  const contract = new ethers.Contract(contractAddress, followRegisterAbi, signer)
-  return contract
+    // FollowRegister合约地址
+    const contractAddress = '0xef865Ed50447c253EFb9Ac9a9deDe3b4CBaaA9cE'
+    const provider = new providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const contract = new ethers.Contract(contractAddress, followRegisterAbi, signer)
+    return contract
 }
 ```
 
@@ -56,7 +56,7 @@ const getFollowContractInstance = (followContractAddress) => {
 
 1. 关注
 
-用户关注某个地址，需要调用对方的Follow合约   
+用户关注某个地址，需要调用对方的Follow合约
 
 ```javascript
 const addr = '0x000...';
@@ -104,4 +104,131 @@ for(var i = 0; i < numOfFollower;i++){
 }
 ```
 
+4. 关注（代支付Gas费）
 
+用户对数据进行签名，打包成上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+
+```javascript
+const addr = '0x000...';
+const addr1 = '0x001...';
+const followRegisterContract = getFollowRegisterContractInstance()
+const followContractAddress = await followRegisterContract.ownedFollowContract(addr);
+const followContract = getFollowContractInstance(followContractAddress)
+
+const name = await followContract.name();
+const nonce = await followContract.nonces(owner.address);
+const deadline = Date.parse(new Date()) / 1000 + 100;
+const sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), addr);
+//该参数为调用followWithSign方法的入参
+var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": addr}
+//实际场景中，这个方法由实际支付Gas的账户来调用
+await followContract.connect(addr1).followWithSign(param);
+
+
+async function getSign(msgParams, signerAddress) {
+    const params = [signerAddress, msgParams];
+    const trace = await hre.network.provider.send(
+        "eth_signTypedData_v4", params);
+    return Bytes.splitSignature(trace);
+}
+
+function getChainId() {
+    return hre.network.config.chainId;
+}
+
+function buildFollowParams(name, contractAddress, nonce, deadline) {
+    return {
+        domain: {
+            chainId: getChainId(),
+            name: name,
+            verifyingContract: contractAddress,
+            version: '1',
+        },
+
+        // Defining the message signing data content.
+        message: {
+            nonce: nonce,
+            deadline: deadline,
+        },
+        // Refers to the keys of the *types* object below.
+        primaryType: 'Follow',
+        types: {
+            EIP712Domain: [
+                {name: 'name', type: 'string'},
+                {name: 'version', type: 'string'},
+                {name: 'chainId', type: 'uint256'},
+                {name: 'verifyingContract', type: 'address'},
+            ],
+            Follow: [
+                {name: 'nonce', type: 'uint256'},
+                {name: 'deadline', type: 'uint256'},
+            ],
+        },
+    };
+}
+```
+
+5. 取消关注（代支付Gas费）
+
+用户对数据进行签名，打包成上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+
+
+```javascript
+const addr = '0x000...';
+const addr1 = '0x001...';
+const followRegisterContract = getFollowRegisterContractInstance()
+const followContractAddress = await followRegisterContract.ownedFollowContract(addr);
+const followContract = getFollowContractInstance(followContractAddress)
+
+const name = await followContract.name();
+const nonce = await followContract.nonces(owner.address);
+const deadline = Date.parse(new Date()) / 1000 + 100;
+const sign = await getSign(buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+//该参数为调用followWithSign方法的入参
+var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+//实际场景中，这个方法由实际支付Gas的账户来调用
+await followContract.connect(addr1).unfollowWithSign(param);
+
+
+async function getSign(msgParams, signerAddress) {
+    const params = [signerAddress, msgParams];
+    const trace = await hre.network.provider.send(
+        "eth_signTypedData_v4", params);
+    return Bytes.splitSignature(trace);
+}
+
+function getChainId() {
+    return hre.network.config.chainId;
+}
+
+function buildUnFollowParams(name, contractAddress, nonce, deadline) {
+    return {
+        domain: {
+            chainId: getChainId(),
+            name: name,
+            verifyingContract: contractAddress,
+            version: '1',
+        },
+
+        // Defining the message signing data content.
+        message: {
+            nonce: nonce,
+            deadline: deadline,
+        },
+        // Refers to the keys of the *types* object below.
+        primaryType: 'UnFollow',
+        types: {
+            EIP712Domain: [
+                {name: 'name', type: 'string'},
+                {name: 'version', type: 'string'},
+                {name: 'chainId', type: 'uint256'},
+                {name: 'verifyingContract', type: 'address'},
+            ],
+            UnFollow: [
+                {name: 'nonce', type: 'uint256'},
+                {name: 'deadline', type: 'uint256'},
+            ],
+        },
+    };
+}
+```
