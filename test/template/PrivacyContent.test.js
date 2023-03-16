@@ -35,25 +35,25 @@ describe("Privacy Content contract", function () {
         const predicate_ = [["followContract", 3]];
         const [owner] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-        const DeployFollow = await hre.ethers.getContractFactory("DeployFollow", {
+
+        const FollowRegisterLogic = await hre.ethers.getContractFactory("FollowRegisterLogic");
+        const followRegisterLogicLibrary = await FollowRegisterLogic.deploy();
+
+        const Follow = await hre.ethers.getContractFactory("Follow", {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const deployFollowLibrary = await DeployFollow.deploy();
-
-
-        const InitializeFollow = await hre.ethers.getContractFactory("InitializeFollow");
-        const initializeFollowLibrary = await InitializeFollow.deploy();
+        const follow = await Follow.deploy();
+        await follow.deployTransaction.wait();
 
         const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
-                DeployFollow: deployFollowLibrary.address,
-                InitializeFollow: initializeFollowLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                FollowRegisterLogic: followRegisterLogicLibrary.address,
             }
         });
         const followRegister = await MyContract.deploy();
@@ -66,6 +66,7 @@ describe("Privacy Content contract", function () {
             schemaURI,
             class_,
             predicate_);
+        await followRegister.setFollowImpl(follow.address);
         return followRegister;
     }
 
@@ -78,26 +79,25 @@ describe("Privacy Content contract", function () {
         const predicate_ = [["daoContract", 3]];
         const [owner] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const DeployDao = await hre.ethers.getContractFactory("DeployDao", {
+        const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
+        const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
+
+        const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const deployDaoLibrary = await DeployDao.deploy();
-
-
-        const InitializeDao = await hre.ethers.getContractFactory("InitializeDao");
-        const initializeDaoLibrary = await InitializeDao.deploy();
+        const dao = await Dao.deploy();
+        await dao.deployTransaction.wait();
 
         const contractName = "DaoRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
-                DeployDao: deployDaoLibrary.address,
-                InitializeDao: initializeDaoLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                DaoRegisterLogic: daoRegisterLogicLibrary.address,
             }
         });
         const daoRegister = await MyContract.deploy();
@@ -110,6 +110,7 @@ describe("Privacy Content contract", function () {
             schemaURI,
             class_,
             predicate_);
+        await daoRegister.setDaoImpl(dao.address);
         return daoRegister;
     }
 
@@ -136,7 +137,6 @@ describe("Privacy Content contract", function () {
             class_,
             predicate_);
         const followRegister = await deployFollowRegister();
-        await privacyContent.setRegisterAddress(followRegister.address);
         return {privacyContent: privacyContent, followRegister, owner, addr1};
     }
 
@@ -243,7 +243,7 @@ describe("Privacy Content contract", function () {
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
             await followContract.connect(addr1).follow();
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
-            await privacyContent.connect(owner).shareToFollower(1);
+            await privacyContent.connect(owner).shareToFollower(1, followContractAddress);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
         });
 
@@ -267,7 +267,7 @@ describe("Privacy Content contract", function () {
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
 
             const daoRegister = await deployDaoRegister();
-            await daoRegister.deployDaoContract(owner.address,firstDAOName);
+            await daoRegister.deployDaoContract(owner.address, firstDAOName);
             const daoContractAddress = await daoRegister.daoOf(1);
             const daoContract = await hre.ethers.getContractAt("Dao", daoContractAddress.contractAddress);
             await daoContract.setFreeJoin(true);

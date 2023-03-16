@@ -14,6 +14,17 @@ import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
 
 contract PrivacyContent is IPrivacyContent, SemanticSBT {
+    struct PrepareTokenWithSign {
+        SemanticSBTLogic.Signature sig;
+        address addr;
+    }
+
+    struct PostWithSign {
+        SemanticSBTLogic.Signature sig;
+        address addr;
+        uint256 tokenId;
+        string content;
+    }
 
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
     string constant PRIVACY_PREFIX = "[Privacy]";
@@ -28,6 +39,10 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     mapping(uint256 => mapping(address => bool)) _shareToFollow;
     mapping(uint256 => address[]) _shareDaoAddress;
     mapping(uint256 => address[]) _shareFollowAddress;
+
+    bytes32 internal constant PREPARE_TOKEN_WITH_SIG_TYPE_HASH = keccak256('prepareToken(uint256 nonce,uint256 deadline)');
+    bytes32 internal constant POST_WITH_SIG_TYPE_HASH = keccak256('postWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
+    mapping(address => uint256) public nonces;
 
     /* ============ External Functions ============ */
 
@@ -48,37 +63,64 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         return _prepareToken[owner];
     }
 
+    function prepareToken() external returns (uint256) {
+        return _prepareTokenInternal(msg.sender);
+    }
+
+
+    function post(uint256 tokenId, string memory content) external {
+        _post(msg.sender, tokenId, content);
+    }
+
     function shareToFollower(uint256 tokenId, address followContractAddress) external {
-        require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
-        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
-        _shareToFollow[tokenId][followContractAddress] = true;
-        _shareFollowAddress[tokenId].push(followContractAddress);
+        _shareToFollowInternal(msg.sender, tokenId, followContractAddress);
     }
 
     function shareToDao(uint256 tokenId, address daoAddress) external {
-        require(isOwnerOf(msg.sender, tokenId), "PrivacyContent: caller is not owner");
-        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many DAOs");
-        _shareToDao[tokenId][daoAddress] = true;
-        _shareDaoAddress[tokenId].push(daoAddress);
+        _shareToDaoInternal(msg.sender, tokenId, daoAddress);
     }
 
-    function post(uint256 tokenId, string memory object) external {
-        _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
-        require(tokenId > 0, "PrivacyContent:Token id not exist");
-        require(_prepareToken[msg.sender] == tokenId, "PrivacyContent:Permission denied");
-        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, object));
-        delete _prepareToken[msg.sender];
-        _mintObject[msg.sender][object] = tokenId;
-        _contentOf[tokenId] = object;
+
+
+    function prepareTokenWithSign(PrepareTokenWithSign calldata vars) external returns (uint256) {
+        address addr;
+    unchecked {
+        addr = SemanticSBTLogic.recoverSignerFromSignature(
+            name(),
+            address(this),
+            keccak256(
+                abi.encode(
+                    PREPARE_TOKEN_WITH_SIG_TYPE_HASH,
+                    nonces[vars.addr]++,
+                    vars.sig.deadline
+                )
+            ),
+            vars.sig
+        );
+    }
+        return _prepareTokenInternal(addr);
     }
 
-    function prepareToken() external returns (uint256) {
-        require(_prepareToken[msg.sender] == 0, "PrivacyContent:Already prepared");
-        uint256 tokenId = _addEmptyToken(msg.sender, 0);
-        _prepareToken[msg.sender] = tokenId;
-        return tokenId;
+    function postWithSign(PostWithSign calldata vars) external {
+        address addr;
+    unchecked {
+        addr = SemanticSBTLogic.recoverSignerFromSignature(
+            name(),
+            address(this),
+            keccak256(
+                abi.encode(
+                    POST_WITH_SIG_TYPE_HASH,
+                    vars.tokenId,
+                    vars.content,
+                    nonces[vars.addr]++,
+                    vars.sig.deadline
+                )
+            ),
+            vars.sig
+        );
     }
-
+        _post(addr, vars.tokenId, vars.content);
+    }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
         return interfaceId == type(IPrivacyContent).interfaceId ||
@@ -102,6 +144,36 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         );
     }
 
+    function _prepareTokenInternal(address addr) internal returns (uint256){
+        require(_prepareToken[addr] == 0, "PrivacyContent:Already prepared");
+        uint256 tokenId = _addEmptyToken(addr, 0);
+        _prepareToken[addr] = tokenId;
+        return tokenId;
+    }
+
+    function _post(address addr, uint256 tokenId, string memory content) internal {
+        _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
+        require(tokenId > 0, "PrivacyContent:Token id not exist");
+        require(_prepareToken[addr] == tokenId, "PrivacyContent:Permission denied");
+        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, content));
+        delete _prepareToken[addr];
+        _mintObject[addr][content] = tokenId;
+        _contentOf[tokenId] = content;
+    }
+
+    function _shareToFollowInternal(address addr, uint256 tokenId, address followContractAddress) internal {
+        require(isOwnerOf(addr, tokenId), "PrivacyContent: caller is not owner");
+        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
+        _shareToFollow[tokenId][followContractAddress] = true;
+        _shareFollowAddress[tokenId].push(followContractAddress);
+    }
+
+    function _shareToDaoInternal(address addr, uint256 tokenId, address daoAddress) internal {
+        require(isOwnerOf(addr, tokenId), "PrivacyContent: caller is not owner");
+        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many DAOs");
+        _shareToDao[tokenId][daoAddress] = true;
+        _shareDaoAddress[tokenId].push(daoAddress);
+    }
 
     function _isFollowing(address viewer, uint256 tokenId, address owner) internal view returns (bool){
         address[] memory followContractAddress = _shareFollowAddress[tokenId];

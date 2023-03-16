@@ -48,31 +48,28 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     ) external override {
         super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
         _setOwner(owner);
+        _join(owner);
     }
 
-    function setDaoURI(string memory daoURI_) external onlyDaoOwner {
-        daoURI = daoURI_;
-        string memory rdf = SemanticSBTLogicUpgradeable.buildStringRDFCustom(DAO_CLASS_NAME,address(this).toHexString(),_predicates[DAO_URI_PREDICATE_INDEX].name,string.concat('"', daoURI_, '"'));
-        if (!_setDaoURI) {
-            _setDaoURI = true;
-            emit CreateRDF(0, rdf);
-        } else {
-            emit UpdateRDF(0, rdf);
-        }
+    function setDaoURI(string memory daoURI_) external {
+        _setDaoURIInternal(msg.sender, daoURI_);
     }
 
-    function setFreeJoin(bool isFreeJoin_) external onlyDaoOwner {
-        _isFreeJoin = isFreeJoin_;
+    function setFreeJoin(bool isFreeJoin_) external {
+        _setFreeJoin(msg.sender, isFreeJoin_);
     }
 
 
-    function ownerTransfer(address to) external onlyDaoOwner {
-        ownerOfDao = to;
+    function ownerTransfer(address to) external {
+        _ownerTransfer(msg.sender, to);
     }
 
     function addMember(address[] memory addr) external onlyDaoOwner {
-        for (uint256 i = 0; i < addr.length; i++) {
+        for (uint256 i = 0; i < addr.length;) {
             _join(addr[i]);
+            unchecked{
+                i++;
+            }
         }
     }
 
@@ -82,11 +79,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     }
 
     function remove(address addr) external returns (uint256 tokenId){
-        require(msg.sender == ownerOfDao || msg.sender == addr, "Dao: permission denied");
-        tokenId = ownedTokenId[addr];
-        require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
-        super._burn(addr, ownedTokenId[addr]);
-        delete ownedTokenId[addr];
+        return _remove(msg.sender, addr);
     }
 
 
@@ -112,6 +105,28 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         joinDaoSubjectPO.push(SubjectPO(JOIN_PREDICATE_INDEX, sIndex));
     }
 
+    function _setDaoURIInternal(address addr, string memory daoURI_) internal {
+        require(addr == ownerOfDao, "Dao: must be daoOwner");
+        daoURI = daoURI_;
+        string memory rdf = SemanticSBTLogicUpgradeable.buildStringRDFCustom(DAO_CLASS_NAME, address(this).toHexString(), _predicates[DAO_URI_PREDICATE_INDEX].name, string.concat('"', daoURI_, '"'));
+        if (!_setDaoURI) {
+            _setDaoURI = true;
+            emit CreateRDF(0, rdf);
+        } else {
+            emit UpdateRDF(0, rdf);
+        }
+    }
+
+    function _setFreeJoin(address addr, bool isFreeJoin_) internal {
+        require(addr == ownerOfDao, "Dao: must be daoOwner");
+        _isFreeJoin = isFreeJoin_;
+    }
+
+    function _ownerTransfer(address addr, address to) internal {
+        require(addr == ownerOfDao, "Dao: must be daoOwner");
+        ownerOfDao = to;
+    }
+
     function _join(address addr) internal returns (uint256 tokenId){
         require(ownedTokenId[addr] == 0, string.concat("Dao:", addr.toHexString(), " already minted"));
         tokenId = _addEmptyToken(addr, 0);
@@ -120,5 +135,13 @@ contract Dao is IDao, SemanticSBTUpgradeable {
             joinDaoSubjectPO, new BlankNodePO[](0));
     }
 
+    function _remove(address caller, address addr) internal returns (uint256 tokenId){
+        require(caller == ownerOfDao || caller == addr, "Dao: permission denied");
+        tokenId = ownedTokenId[addr];
+        require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
+        super._burn(addr, ownedTokenId[addr]);
+        delete ownedTokenId[addr];
+        return tokenId;
+    }
 
 }

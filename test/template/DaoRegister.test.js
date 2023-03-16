@@ -112,6 +112,8 @@ describe("DaoRegister contract", function () {
 
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await daoContract.name()).equal(firstDAOName)
+            const rdfInDao = `:Soul_${owner.address.toLowerCase()} p:join :Dao_${contractAddress.toLowerCase()}.`;
+            expect(await daoContract.rdfOf(1)).equal(rdfInDao);
         });
 
         it("Deploy two DAO contracts for two users", async function () {
@@ -176,7 +178,7 @@ describe("DaoRegister contract", function () {
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
             await expect(daoContract.connect(addr1).addMember(member))
                 .to.emit(daoContract, "CreateRDF")
-                .withArgs(1, rdf)
+                .withArgs(2, rdf)
 
             await expect(daoContract.connect(addr6).join()).to.be.revertedWith("Dao: permission denied");
         });
@@ -192,8 +194,8 @@ describe("DaoRegister contract", function () {
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
-                .withArgs(1, rdf);
-            expect(await daoContract.rdfOf(1)).equal(rdf);
+                .withArgs(2, rdf);
+            expect(await daoContract.rdfOf(2)).equal(rdf);
             expect(await daoContract.isMember(owner.address)).equal(true);
         });
 
@@ -208,10 +210,10 @@ describe("DaoRegister contract", function () {
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
-                .withArgs(1, rdf);
+                .withArgs(2, rdf);
             await expect(daoContract.connect(owner).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
-                .withArgs(1, rdf);
+                .withArgs(2, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
         });
 
@@ -226,10 +228,10 @@ describe("DaoRegister contract", function () {
             const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
-                .withArgs(1, rdf);
+                .withArgs(2, rdf);
             await expect(daoContract.connect(addr1).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
-                .withArgs(1, rdf);
+                .withArgs(2, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
         });
     })

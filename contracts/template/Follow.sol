@@ -11,13 +11,6 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
     using Strings for uint256;
     using Strings for address;
 
-    struct Signature {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        uint256 deadline;
-    }
-
 
     SubjectPO[] private ownerSubjectPO;
 
@@ -31,7 +24,6 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
 
     bytes32 internal constant FOLLOW_WITH_SIG_TYPE_HASH = keccak256('followWithSign()');
     bytes32 internal constant UNFOLLOW_WITH_SIG_TYPE_HASH = keccak256('unfollowWithSign()');
-    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(uint256 chainId,address verifyingContract)');
     /* ============ External Functions ============ */
 
     function initialize(
@@ -57,13 +49,40 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
         return _unfollow(msg.sender);
     }
 
-    function followWithSign(Signature calldata sig) external {
-        address addr = _recoverSignerFromSignature(sig, FOLLOW_WITH_SIG_TYPE_HASH);
+    function followWithSign(SemanticSBTLogicUpgradeable.Signature calldata sig) external {
+        address addr;
+        unchecked {
+
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        FOLLOW_WITH_SIG_TYPE_HASH,
+                        sig.deadline
+                    )
+                ),
+                sig
+            );
+    }
         _follow(addr);
     }
 
-    function unfollowWithSign(Signature calldata sig) external {
-        address addr = _recoverSignerFromSignature(sig, UNFOLLOW_WITH_SIG_TYPE_HASH);
+    function unfollowWithSign(SemanticSBTLogicUpgradeable.Signature calldata sig) external {
+        address addr;
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        UNFOLLOW_WITH_SIG_TYPE_HASH,
+                        sig.deadline
+                    )
+                ),
+                sig
+            );
+        }
         _unfollow(addr);
     }
 
@@ -99,53 +118,6 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
         super._burn(addr, tokenId);
         _isFollowing[addr] = false;
         return tokenId;
-    }
-
-
-    function _recoverSignerFromSignature(Signature memory sig, bytes32 typeHash) internal view returns (address){
-        require(sig.deadline < block.timestamp, "Follow: permission denied");
-        address signer = _recoverSigner(_calculateHashMessage(typeHash, sig.deadline),
-            sig.v,
-            sig.r,
-            sig.s);
-        return signer;
-    }
-
-
-    function _calculateHashMessage(bytes32 typeHash, uint256 deadline) internal view returns (bytes32) {
-        return
-        keccak256(
-            abi.encode(
-                _calculateDomainSeparator(),
-                typeHash,
-                deadline
-            )
-        );
-    }
-
-    function _calculateDomainSeparator() internal view returns (bytes32){
-        return
-        keccak256(
-            abi.encode(
-                EIP712_DOMAIN_TYPE_HASH,
-                address(this),
-                block.chainid
-            )
-        );
-    }
-
-    function _recoverSigner(
-        bytes32 _hashedMessage,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    ) internal pure returns (address) {
-        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-        bytes32 prefixedHashMessage = keccak256(
-            abi.encodePacked(prefix, _hashedMessage)
-        );
-        address signer = ecrecover(prefixedHashMessage, _v, _r, _s);
-        return signer;
     }
 
 }

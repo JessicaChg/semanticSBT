@@ -4,6 +4,8 @@
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const hre = require("hardhat");
+const Wallet = require('@ethersproject/wallet');
+const Bytes = require('@ethersproject/bytes');
 
 const name = 'Dao Register';
 const symbol = 'SBT';
@@ -89,6 +91,7 @@ describe("FollowRegister contract", function () {
         const {followRegister} = await loadFixture(deployTokenFixture);
         expect(await followRegister.schemaURI()).to.equal(schemaURI);
     });
+
 
 
     /*

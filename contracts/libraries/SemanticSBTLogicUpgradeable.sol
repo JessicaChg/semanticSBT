@@ -12,6 +12,13 @@ library SemanticSBTLogicUpgradeable {
     using StringsUpgradeable for uint160;
     using StringsUpgradeable for address;
 
+    struct Signature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 deadline;
+    }
+
     string  constant TURTLE_LINE_SUFFIX = " ;";
     string  constant TURTLE_END_SUFFIX = " . ";
     string  constant SOUL_CLASS_NAME = "Soul";
@@ -23,6 +30,8 @@ library SemanticSBTLogicUpgradeable {
     string  constant BLANK_NODE_START_CHARACTER = "[";
     string  constant BLANK_NODE_END_CHARACTER = "]";
     string  constant BLANK_SPACE = " ";
+
+    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
 
 
     function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
@@ -227,6 +236,40 @@ library SemanticSBTLogicUpgradeable {
         string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
         return string.concat(s, p, o, TURTLE_END_SUFFIX);
     }
+
+
+    function recoverSignerFromSignature(string memory name, address contractAddress,bytes32 hashedMessage, Signature memory sig) external view returns (address){
+        require(sig.deadline < block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
+        address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
+            sig.v,
+            sig.r,
+            sig.s);
+        return signer;
+    }
+
+
+    function _calculateDigest(string memory name, address contractAddress, bytes32 hashedMessage) internal view returns (bytes32) {
+        bytes32 digest;
+        unchecked {
+            digest = keccak256(
+                abi.encodePacked('\x19\x01', _calculateDomainSeparator(name, contractAddress), hashedMessage)
+            );
+        }
+        return digest;
+    }
+
+    function _calculateDomainSeparator(string memory name, address contractAddress) internal view returns (bytes32){
+        return
+        keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPE_HASH,
+                keccak256(bytes(name)),
+                block.chainid,
+                contractAddress
+            )
+        );
+    }
+
 
     function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");

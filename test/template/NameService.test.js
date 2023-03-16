@@ -185,7 +185,7 @@ describe("Name Service contract", function () {
                 .to.be.emit(nameService, "CreateRDF")
                 .withArgs(1, rdf1);
 
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Name_${fullDomain}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Name_${fullName}.`;
             await expect(nameService.transferFrom(owner.address, addr1.address, 1))
                 .to.be.emit(nameService, "UpdateRDF")
                 .withArgs(1, rdf2);

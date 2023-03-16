@@ -17,7 +17,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     uint256 constant HOLD_PREDICATE_INDEX = 1;
     uint256 constant RESOLVED_PREDICATE_INDEX = 2;
-    uint256 constant PROFILE_HASH_PREDICATE_INDEX = 3;
+    uint256 constant PROFILE_URI_PREDICATE_INDEX = 3;
 
     uint256 constant SOUL_CLASS_INDEX = 1;
     uint256 constant DOMAIN_CLASS_INDEX = 2;
@@ -75,16 +75,13 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
     function setProfileURI(string memory profileURI_) external {
-        require(_ownedResolvedName[msg.sender] != 0, "NameService:not resolved the name");
         _profileURI[msg.sender] = profileURI_;
-        string memory s = string.concat(SemanticSBTLogicUpgradeable.ENTITY_PREFIX, SOUL_CLASS_NAME, SemanticSBTLogicUpgradeable.CONCATENATION_CHARACTER, msg.sender.toHexString(), SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory p = string.concat(SemanticSBTLogicUpgradeable.PROPERTY_PREFIX, _predicates[PROFILE_HASH_PREDICATE_INDEX].name, SemanticSBTLogicUpgradeable.BLANK_SPACE);
-        string memory o = string.concat('"', profileURI_, '"');
+        string memory rdf = SemanticSBTLogicUpgradeable.buildStringRDFCustom(SOUL_CLASS_NAME, msg.sender.toHexString(), _predicates[PROFILE_URI_PREDICATE_INDEX].name, string.concat('"', profileURI_, '"'));
         if (!_ownedProfileURI[msg.sender]) {
             _ownedProfileURI[msg.sender] = true;
-            emit CreateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+            emit CreateRDF(0, rdf);
         } else {
-            emit UpdateRDF(0, string.concat(s, p, o, SemanticSBTLogicUpgradeable.TURTLE_END_SUFFIX));
+            emit UpdateRDF(0, rdf);
         }
     }
 
@@ -101,6 +98,10 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         }
         uint256 sIndex = _ownedResolvedName[addr_];
         return _subjects[sIndex].value;
+    }
+
+    function nameOfTokenId(uint256 tokenId) external view returns (string memory){
+        return _subjects[_nameOf[tokenId]].value;
     }
 
     function profileURI(address addr_) external view returns (string memory){
