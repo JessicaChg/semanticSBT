@@ -20,11 +20,11 @@
 | Name                                   | abi文件链接                                           |
 |----------------------------------------|---------------------------------------------------|
 | <h1><strong>Identity</strong></h1>     |                                                   |
-| Name Service                           | [NameService.json](doc/abi/NameService.json)      |
+| Name Service                           | [NameService.json](../abi/NameService.json)      |
 | <h1><strong>Relationship</strong></h1> |                                                   |
 | <h4>Follow</h4>                        |                                                   |
-| FollowRegister                         | [FollowRegister.abi](doc/abi/FollowRegister.json) |
-| Follow                                 | [Follow.abi](doc/abi/Follow.json)                 |
+| FollowRegister                         | [FollowRegister.abi](../abi/FollowRegister.json) |
+| Follow                                 | [Follow.abi](../abi/Follow.json)                 |
 
 
 
