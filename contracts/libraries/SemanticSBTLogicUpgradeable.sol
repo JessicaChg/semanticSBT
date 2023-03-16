@@ -31,7 +31,8 @@ library SemanticSBTLogicUpgradeable {
     string  constant BLANK_NODE_END_CHARACTER = "]";
     string  constant BLANK_SPACE = " ";
 
-    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,uint256 chainId,address verifyingContract)');
+    bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
+    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
 
     function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
@@ -238,12 +239,13 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function recoverSignerFromSignature(string memory name, address contractAddress,bytes32 hashedMessage, Signature memory sig) external view returns (address){
-        require(sig.deadline < block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
+    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress,Signature memory sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
         address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
             sig.v,
             sig.r,
             sig.s);
+        require(expectedAddress == signer,"SemanticSBTLogicUpgradeable: signature invalid");
         return signer;
     }
 
@@ -264,6 +266,7 @@ library SemanticSBTLogicUpgradeable {
             abi.encode(
                 EIP712_DOMAIN_TYPE_HASH,
                 keccak256(bytes(name)),
+                EIP712_REVISION_HASH,
                 block.chainid,
                 contractAddress
             )

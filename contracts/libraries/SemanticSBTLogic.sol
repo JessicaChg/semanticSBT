@@ -19,7 +19,8 @@ library SemanticSBTLogic {
         uint256 deadline;
     }
 
-    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(uint256 chainId,address verifyingContract)');
+    bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
+    bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
     string  public constant TURTLE_LINE_SUFFIX = " ;";
     string  public constant TURTLE_END_SUFFIX = " . ";
@@ -211,7 +212,7 @@ library SemanticSBTLogic {
             } else if (FieldType.ADDRESS == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                 _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
@@ -229,12 +230,13 @@ library SemanticSBTLogic {
     }
 
 
-    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, Signature memory sig) external view returns (address){
-        require(sig.deadline < block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
+    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress, Signature memory sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBTLogic: signature expired");
         address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
             sig.v,
             sig.r,
             sig.s);
+        require(expectedAddress == signer, "SemanticSBTLogic: signature invalid");
         return signer;
     }
 
@@ -255,6 +257,7 @@ library SemanticSBTLogic {
             abi.encode(
                 EIP712_DOMAIN_TYPE_HASH,
                 keccak256(bytes(name)),
+                EIP712_REVISION_HASH,
                 block.chainid,
                 contractAddress
             )

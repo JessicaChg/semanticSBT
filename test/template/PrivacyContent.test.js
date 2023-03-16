@@ -4,6 +4,7 @@
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const hre = require("hardhat");
+const Bytes = require("@ethersproject/bytes");
 
 const name = 'Privacy Content';
 const symbol = 'SBT';
@@ -278,6 +279,137 @@ describe("Privacy Content contract", function () {
         });
 
     })
+
+    describe("Call privacyContent with signData", function () {
+        it("Prepare token with signData", async function () {
+            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const name = await privacyContent.name();
+            const nonce = await privacyContent.nonces(owner.address);
+            const deadline = Date.parse(new Date()) / 1000 + 100;
+            const sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+        });
+
+        it("Post with signData", async function () {
+            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const subject = ':Soul_' + owner.address.toLowerCase();
+            const predicate = "p:privacyContent";
+            const object = `"${privacyPrefix}${content}"`;
+            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+
+            let name = await privacyContent.name();
+            let nonce = await privacyContent.nonces(owner.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+
+
+            nonce = await privacyContent.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            const tokenId = await privacyContent.ownedPrepareToken(owner.address);
+            sign = await getSign(buildPostParams(
+                    name,
+                    privacyContent.address.toLowerCase(),
+                    parseInt(tokenId),
+                    content,
+                    parseInt(nonce),
+                    deadline),
+                owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": owner.address,
+                "tokenId": parseInt(tokenId),
+                "content": content
+            }
+            await privacyContent.connect(addr1).postWithSign(param);
+            expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
+
+
+        });
+
+    })
+
+
+    async function getSign(msgParams, signerAddress) {
+        const params = [signerAddress, msgParams];
+        const trace = await hre.network.provider.send(
+            "eth_signTypedData_v4", params);
+        return Bytes.splitSignature(trace);
+    }
+
+    function getChainId() {
+        return hre.network.config.chainId;
+    }
+
+    function buildPrepareParams(name, contractAddress, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'PrepareTokenWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                PrepareTokenWithSign: [
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+    function buildPostParams(name, contractAddress, tokenId, content, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                tokenId: tokenId,
+                content: content,
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'PostWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                PostWithSign: [
+                    {name: 'tokenId', type: 'uint256'},
+                    {name: 'content', type: 'string'},
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
 
 })
 

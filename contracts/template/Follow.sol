@@ -11,6 +11,11 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
     using Strings for uint256;
     using Strings for address;
 
+    struct OperateWithSign {
+        SemanticSBTLogicUpgradeable.Signature sig;
+        address addr;
+    }
+
 
     SubjectPO[] private ownerSubjectPO;
 
@@ -22,8 +27,10 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
     address public representedAddress;
 
 
-    bytes32 internal constant FOLLOW_WITH_SIG_TYPE_HASH = keccak256('followWithSign()');
-    bytes32 internal constant UNFOLLOW_WITH_SIG_TYPE_HASH = keccak256('unfollowWithSign()');
+    bytes32 internal constant FOLLOW_TYPE_HASH = keccak256('Follow(uint256 nonce,uint256 deadline)');
+    bytes32 internal constant UNFOLLOW_TYPE_HASH = keccak256('UnFollow(uint256 nonce,uint256 deadline)');
+    mapping(address => uint256) public nonces;
+
     /* ============ External Functions ============ */
 
     function initialize(
@@ -49,26 +56,27 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
         return _unfollow(msg.sender);
     }
 
-    function followWithSign(SemanticSBTLogicUpgradeable.Signature calldata sig) external {
+    function followWithSign(OperateWithSign calldata vars) external {
         address addr;
         unchecked {
-
             addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
                     abi.encode(
-                        FOLLOW_WITH_SIG_TYPE_HASH,
-                        sig.deadline
+                        FOLLOW_TYPE_HASH,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
                     )
                 ),
-                sig
+                vars.addr,
+                vars.sig
             );
-    }
+        }
         _follow(addr);
     }
 
-    function unfollowWithSign(SemanticSBTLogicUpgradeable.Signature calldata sig) external {
+    function unfollowWithSign(OperateWithSign calldata vars) external {
         address addr;
         unchecked {
             addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
@@ -76,11 +84,13 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
                 address(this),
                 keccak256(
                     abi.encode(
-                        UNFOLLOW_WITH_SIG_TYPE_HASH,
-                        sig.deadline
+                        UNFOLLOW_TYPE_HASH,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
                     )
                 ),
-                sig
+                vars.addr,
+                vars.sig
             );
         }
         _unfollow(addr);

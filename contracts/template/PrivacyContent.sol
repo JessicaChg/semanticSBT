@@ -12,6 +12,7 @@ import "../interfaces/social/IDao.sol";
 
 import "../core/SemanticSBT.sol";
 import "../core/SemanticBaseStruct.sol";
+import "hardhat/console.sol";
 
 contract PrivacyContent is IPrivacyContent, SemanticSBT {
     struct PrepareTokenWithSign {
@@ -40,10 +41,9 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     mapping(uint256 => address[]) _shareDaoAddress;
     mapping(uint256 => address[]) _shareFollowAddress;
 
-    bytes32 internal constant PREPARE_TOKEN_WITH_SIG_TYPE_HASH = keccak256('prepareToken(uint256 nonce,uint256 deadline)');
-    bytes32 internal constant POST_WITH_SIG_TYPE_HASH = keccak256('postWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
+    bytes32 internal constant PREPARE_TOKEN_WITH_SIGN_TYPE_HASH = keccak256('PrepareTokenWithSign(uint256 nonce,uint256 deadline)');
+    bytes32 internal constant POST_WITH_SIGN_TYPE_HASH = keccak256('PostWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
     mapping(address => uint256) public nonces;
-
     /* ============ External Functions ============ */
 
 
@@ -81,44 +81,46 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     }
 
 
-
     function prepareTokenWithSign(PrepareTokenWithSign calldata vars) external returns (uint256) {
         address addr;
-    unchecked {
-        addr = SemanticSBTLogic.recoverSignerFromSignature(
-            name(),
-            address(this),
-            keccak256(
-                abi.encode(
-                    PREPARE_TOKEN_WITH_SIG_TYPE_HASH,
-                    nonces[vars.addr]++,
-                    vars.sig.deadline
-                )
-            ),
-            vars.sig
-        );
-    }
+        unchecked {
+            addr = SemanticSBTLogic.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        PREPARE_TOKEN_WITH_SIGN_TYPE_HASH,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
         return _prepareTokenInternal(addr);
     }
 
     function postWithSign(PostWithSign calldata vars) external {
+        console.log('content:%s', vars.content);
         address addr;
-    unchecked {
-        addr = SemanticSBTLogic.recoverSignerFromSignature(
-            name(),
-            address(this),
-            keccak256(
-                abi.encode(
-                    POST_WITH_SIG_TYPE_HASH,
-                    vars.tokenId,
-                    vars.content,
-                    nonces[vars.addr]++,
-                    vars.sig.deadline
-                )
-            ),
-            vars.sig
-        );
-    }
+        unchecked {
+            addr = SemanticSBTLogic.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        POST_WITH_SIGN_TYPE_HASH,
+                        vars.tokenId,
+                        keccak256(bytes(vars.content)),
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
         _post(addr, vars.tokenId, vars.content);
     }
 

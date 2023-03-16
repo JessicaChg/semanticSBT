@@ -10,12 +10,12 @@ const {ethers, upgrades} = require("hardhat");
 const name = 'Relation Name Service V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://qqZhk8eOeqECKUcHWdZC6dMuaXzhukK8df5gMTSLXVk';
+const schemaURI = 'ar://2UB5aUc5lfUuOArp4i565IfT3Z_ik6kCMGn3eVZB5ww';
 const class_ = ["Name"];
-const predicate_ = [["hold", 3], ["resolved", 3], ["profileHash", 1]];
+const predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
 const minNameLength_ = 3;
-const nameLengthControl = {"_nameLength": 4, "_maxCount": 1};//means the maxCount of 4 characters is 1
+const nameLengthControl = {"_nameLength": 3, "_maxCount": 1000};//means the maxCount of 4 characters is 1000
 const suffix = ".rel";
 
 async function main() {

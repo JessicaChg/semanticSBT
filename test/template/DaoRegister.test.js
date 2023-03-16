@@ -64,7 +64,8 @@ describe("DaoRegister contract", function () {
         return {daoRegister, owner, addr1, addr2, addr3, addr4, addr5, addr6};
     }
 
-    // check semanticSBT belong this contract owner
+
+        // check semanticSBT belong this contract owner
     it("owner", async function () {
         const {daoRegister, owner} = await loadFixture(deployTokenFixture);
         expect(await daoRegister.owner()).to.equal(owner.address);
@@ -233,6 +234,16 @@ describe("DaoRegister contract", function () {
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
+        });
+
+        it("The owner of dao could set daoURI", async function () {
+            const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            await daoRegister.deployDaoContract(addr1.address,firstDAOName);
+
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
+            await daoContract.connect(addr1).setDaoURI("");
         });
     })
 

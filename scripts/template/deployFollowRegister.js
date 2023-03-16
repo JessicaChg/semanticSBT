@@ -6,10 +6,10 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 
-const name = 'Follow Register Template';
+const name = 'Relation Follow Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://pvP6VX-gLwgdeeR5SOsctAkIp8WtO2BhqEZ1SYdUJtU';
+const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
 const class_ = ["Contract"];
 const predicate_ = [["followContract", 3]];
 

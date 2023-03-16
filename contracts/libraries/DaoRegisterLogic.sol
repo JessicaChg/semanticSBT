@@ -10,6 +10,7 @@ library DaoRegisterLogic {
 
     string constant  DAO_CLASS_NAME = "Dao";
     string constant  JOIN_PREDICATE = "join";
+    string constant  DAO_URI_PREDICATE = "daoURI";
     string constant SYMBOL = "DSBT";
     string constant SCHEMA_URI = "ar://jCCCkgjG6Gxe46c8AfK_O7w32qylpFIvLd4_M1Zzy64";
 
@@ -22,8 +23,9 @@ library DaoRegisterLogic {
     function _initDao(address contractAddress, address owner, address minter, string memory name, string memory baseURI) internal {
         string[] memory classNames_ = new string[](1);
         classNames_[0] = DAO_CLASS_NAME;
-        Predicate[] memory predicates_ = new Predicate[](1);
+        Predicate[] memory predicates_ = new Predicate[](2);
         predicates_[0] = Predicate(JOIN_PREDICATE, FieldType.SUBJECT);
+        predicates_[1] = Predicate(DAO_URI_PREDICATE, FieldType.STRING);
         IDao(contractAddress).initialize(
             owner,
             minter,

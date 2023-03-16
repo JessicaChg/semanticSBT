@@ -93,7 +93,6 @@ describe("FollowRegister contract", function () {
     });
 
 
-
     /*
     * Below are the test cases for mint and burn semantic SBT.
     * Due to predicate in contract has five data types: int, string, address, subject and blankNode
@@ -144,18 +143,136 @@ describe("FollowRegister contract", function () {
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
             const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
             await expect(followContract.connect(owner).follow())
-                .to.emit(followContract,"CreateRDF")
-                .withArgs(1,rdf);
+                .to.emit(followContract, "CreateRDF")
+                .withArgs(1, rdf);
             expect(await followContract.rdfOf(1)).to.be.equal(rdf);
 
             await expect(followContract.connect(owner).unfollow())
-                .to.emit(followContract,"RemoveRDF")
-                .withArgs(1,rdf);
+                .to.emit(followContract, "RemoveRDF")
+                .withArgs(1, rdf);
 
         });
 
 
     })
+
+    describe("Call follow contracts with signData", function () {
+        it("Follow with signData", async function () {
+            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            await followRegister.deployFollowContract(addr1.address);
+
+            const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
+            const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
+
+            const name = await followContract.name();
+            const nonce = await followContract.nonces(owner.address);
+            const deadline = Date.parse(new Date()) / 1000 + 100;
+            const sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await followContract.connect(addr1).followWithSign(param);
+            expect(await followContract.ownerOf(1)).equal(owner.address)
+        });
+
+        it("Unfollow with signData", async function () {
+            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            await followRegister.deployFollowContract(addr1.address);
+
+            const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
+            const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
+
+            const name = await followContract.name();
+            let nonce = await followContract.nonces(owner.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await followContract.connect(addr1).followWithSign(param);
+            expect(await followContract.ownerOf(1)).equal(owner.address)
+
+            nonce = await followContract.nonces(owner.address);
+            deadline = Date.parse(new Date()) / 1000 + 100;
+            sign = await getSign(buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+            await followContract.connect(addr1).unfollowWithSign(param);
+            expect(await followContract.totalSupply()).equal(0)
+        });
+
+
+    })
+
+
+    async function getSign(msgParams, signerAddress) {
+        const params = [signerAddress, msgParams];
+        const trace = await hre.network.provider.send(
+            "eth_signTypedData_v4", params);
+        return Bytes.splitSignature(trace);
+    }
+
+    function getChainId() {
+        return hre.network.config.chainId;
+    }
+
+    function buildFollowParams(name, contractAddress, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'Follow',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                Follow: [
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+    function buildUnFollowParams(name, contractAddress, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'UnFollow',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                UnFollow: [
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
 
 })
 

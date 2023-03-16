@@ -12,7 +12,7 @@ library FollowRegisterLogic {
     string constant NAME = "Follow SBT";
     string constant SYMBOL = "SBT";
     string constant BASE_URI = "";
-    string constant SCHEMA_URI = "ar://kA_KrrXX3vNQOz4CoBsjQdk9e3m5Epshvv3WvGFCe1w";
+    string constant SCHEMA_URI = "ar://-2hCuTMqo1fz2iyzf7dbEbzoyceod5KFOyGGqNiEQWY";
 
 
     function createFollow(address daoImpl, address owner, address minter) external returns (address){
