@@ -4,7 +4,7 @@
 
 ## 构建Contract对象
 
-NameService的合约地址以及abi文件可以查询[Relation Protocol资源列表](doc/zh/resource.md)获得，通过ethers构建Contract对象：
+NameService的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，通过ethers构建Contract对象：
 
 ```javascript
 import { ethers, providers } from 'ethers'
