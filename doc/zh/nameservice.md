@@ -45,7 +45,7 @@ const contract = getContractInstance()
 const addr = '0x00000...';
     
 await (
-    await contract.register(accounts[0], registerName, false)
+    await contract.register(addr, registerName, false)
 ).wait()
 ```
 

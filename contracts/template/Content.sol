@@ -10,10 +10,6 @@ import "../core/SemanticBaseStruct.sol";
 
 contract Content is IContent, SemanticSBT {
 
-    struct PrepareTokenWithSign {
-        SemanticSBTLogic.Signature sig;
-        address addr;
-    }
 
     struct PostWithSign {
         SemanticSBTLogic.Signature sig;
