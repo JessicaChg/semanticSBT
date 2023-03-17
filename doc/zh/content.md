@@ -1,4 +1,4 @@
-# NameService 使用说明
+# Content 使用说明
 
 我们使用Relation Protocol部署好的Relation Content合约，可以实现用户身份数据的存储与查询。Relation Content合约是对Contract Standard里Content的实现。
 

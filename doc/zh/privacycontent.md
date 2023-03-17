@@ -1,4 +1,4 @@
-# NameService 使用说明
+# PrivacyContent 使用说明
 
 我们使用Relation Protocol部署好的Relation PrivacyContent合约，可以实现用户身份数据的存储与查询。Relation PrivacyContent合约是对Contract Standard里PrivacyContent的实现。
 
