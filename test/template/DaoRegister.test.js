@@ -9,7 +9,7 @@ const Bytes = require("@ethersproject/bytes");
 const name = 'DAO Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://MaXW2Db8G5EY2LNIR_JoiTqkIB9GUxWvAtN0vzYKl5w';
+const schemaURI = 'ar://7mRfawDArdDEcoHpiFkmrURYlMSkREwDnK3wYzZ7-x4';
 const class_ = ["Contract"];
 const predicate_ = [["daoContract", 3]];
 

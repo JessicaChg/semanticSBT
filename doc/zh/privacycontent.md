@@ -92,7 +92,7 @@ const tokenId = '1';
 const contract = getContractInstance()
 
 await (
-    await contract.shareToFollow(addr,tokenId,myFollowContractAddress)
+    await contract.shareToFollower(tokenId,myFollowContractAddress)
 ).wait()
 ```
 

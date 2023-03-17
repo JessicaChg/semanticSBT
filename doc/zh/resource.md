@@ -7,7 +7,7 @@
 | Name                                   | Contract Address                           |
 |----------------------------------------|--------------------------------------------|
 | <h1><strong>Identity</strong></h1>     |                                            |
-| Name Service                           | 0x98B646d80482fC38A40627c4770307529EE594E0 |
+| Name Service                           | 0x0D195ab46a9C9C4f97666A76AADb35d93965Cac8 |
 | <h1><strong>Relationship</strong></h1> |                                            |
 | FollowRegister                         | 0xab8Dde275F3d2508c578C5bbDf43E81964BF18A4 |
 | DaoRegister                            | 0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7 |

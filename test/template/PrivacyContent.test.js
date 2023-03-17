@@ -9,7 +9,7 @@ const Bytes = require("@ethersproject/bytes");
 const name = 'Privacy Content';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://z6jJwWRBzy2_Ecu_P0E9fXfxKgnkb2SCiZbGlod5G40';
+const schemaURI = 'ar://DeM6LRONjAUYr3qixkguLuFvYSHkykN7ZRKHn2HR5Gs';
 const class_ = [];
 const predicate_ = [["privacyContent", 1]];
 const content = "ar://the tx hash of content on arweave";
@@ -27,10 +27,10 @@ const firstDAOName = "First DAO name";
 */
 describe("Privacy Content contract", function () {
     async function deployFollowRegister() {
-        const name = 'Dao Register';
+        const name = 'Follow Register';
         const symbol = 'SBT';
         const baseURI = 'https://api.example.com/v1/';
-        const schemaURI = 'ar://tuVCNycNQHa0adejBcnTYqzgeUPmhOznmGcUKbUKzE8';
+        const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
         const class_ = ["Contract"];
         const predicate_ = [["followContract", 3]];
         const [owner] = await ethers.getSigners();
@@ -74,7 +74,7 @@ describe("Privacy Content contract", function () {
         const name = 'Dao Register';
         const symbol = 'SBT';
         const baseURI = 'https://api.example.com/v1/';
-        const schemaURI = 'ar://MaXW2Db8G5EY2LNIR_JoiTqkIB9GUxWvAtN0vzYKl5w';
+        const schemaURI = 'ar://7mRfawDArdDEcoHpiFkmrURYlMSkREwDnK3wYzZ7-x4';
         const class_ = ["Dao"];
         const predicate_ = [["daoContract", 3]];
         const [owner] = await ethers.getSigners();

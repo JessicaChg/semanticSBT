@@ -10,7 +10,7 @@ const {ethers, upgrades} = require("hardhat");
 const name = 'Relation Name Service V1';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://2UB5aUc5lfUuOArp4i565IfT3Z_ik6kCMGn3eVZB5ww';
+const schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
 const class_ = ["Name"];
 const predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
