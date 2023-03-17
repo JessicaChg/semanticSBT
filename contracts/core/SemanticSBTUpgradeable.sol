@@ -27,7 +27,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     using StringsUpgradeable for address;
 
 
-    string private _name;
+    string internal _name;
 
     string private _symbol;
 
@@ -574,7 +574,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     }
 
 
-    function setName(string calldata newName) external onlyOwner {
+    function setName(string calldata newName) external virtual onlyOwner {
         _name = newName;
     }
 

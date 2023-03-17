@@ -5,40 +5,12 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDao.sol";
+import "../libraries/DaoLogic.sol";
 
 contract Dao is IDao, SemanticSBTUpgradeable {
 
     using Strings for uint256;
     using Strings for address;
-
-    struct SetDaoURIWithSign {
-        SemanticSBTLogicUpgradeable.Signature sig;
-        address addr;
-        string daoURI;
-    }
-
-    struct SetFreeJoinWithSign {
-        SemanticSBTLogicUpgradeable.Signature sig;
-        address addr;
-        bool isFreeJoin;
-    }
-
-    struct AddMemberWithSign {
-        SemanticSBTLogicUpgradeable.Signature sig;
-        address addr;
-        address[] members;
-    }
-
-    struct JoinWithSign {
-        SemanticSBTLogicUpgradeable.Signature sig;
-        address addr;
-    }
-
-    struct RemoveWithSign {
-        SemanticSBTLogicUpgradeable.Signature sig;
-        address addr;
-        address member;
-    }
 
 
     SubjectPO[] private joinDaoSubjectPO;
@@ -57,11 +29,6 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
 
-    bytes32 internal constant SET_DAO_URI_WITH_SIGN_TYPE_HASH = keccak256('SetDaoURIWithSign(string daoURI,uint256 nonce,uint256 deadline)');
-    bytes32 internal constant SET_FREE_JOIN_WITH_SIGN_TYPE_HASH = keccak256('SetDaoURIWithSign(bool isFreeJoin,uint256 nonce,uint256 deadline)');
-    bytes32 internal constant ADD_MEMBER_WITH_SIGN_TYPE_HASH = keccak256('AddMemberWithSign(address[] members,uint256 nonce,uint256 deadline)');
-    bytes32 internal constant JOIN_WITH_SIGN_TYPE_HASH = keccak256('JoinWithSign(uint256 nonce,uint256 deadline)');
-    bytes32 internal constant REMOVE_WITH_SIGN_TYPE_HASH = keccak256('RemoveWithSign(address member,uint256 nonce,uint256 deadline)');
     mapping(address => uint256) public nonces;
 
     modifier onlyDaoOwner{
@@ -91,6 +58,10 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         _setDaoURIInternal(msg.sender, daoURI_);
     }
 
+    function setName(string calldata newName) external override {
+        _setName(msg.sender, newName);
+    }
+
     function setFreeJoin(bool isFreeJoin_) external {
         _setFreeJoin(msg.sender, isFreeJoin_);
     }
@@ -103,9 +74,9 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     function addMember(address[] memory addr) external onlyDaoOwner {
         for (uint256 i = 0; i < addr.length;) {
             _join(addr[i]);
-            unchecked{
-                i++;
-            }
+        unchecked{
+            i++;
+        }
         }
     }
 
@@ -119,26 +90,20 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     }
 
 
+    function setDaoURIWithSign(DaoLogic.SetDaoURIWithSign calldata vars) external {
+        address addr = DaoLogic.setDaoURIWithSign(vars, name(), address(this), nonces[vars.addr]++);
+        _setDaoURIInternal(addr, vars.daoURI);
+    }
 
-    function addMemberWithSign(AddMemberWithSign calldata vars) external {
-        address addr;
+    function setFreeJoinWithSign(DaoLogic.SetFreeJoinWithSign calldata vars) external {
+        address addr = DaoLogic.setFreeJoinWithSign(vars, name(), address(this), nonces[vars.addr]++);
+        _setFreeJoin(addr, vars.isFreeJoin);
+    }
 
-        unchecked {
-            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-                name(),
-                address(this),
-                keccak256(
-                    abi.encode(
-                        ADD_MEMBER_WITH_SIGN_TYPE_HASH,
-                        keccak256(abi.encodePacked(vars.members)),
-                        nonces[vars.addr]++,
-                        vars.sig.deadline
-                    )
-                ),
-                vars.addr,
-                vars.sig
-            );
-        }
+
+    function addMemberWithSign(DaoLogic.AddMemberWithSign calldata vars) external {
+
+        address addr = DaoLogic.addMemberWithSign(vars, name(), address(this), nonces[vars.addr]++);
         require(addr == ownerOfDao, "Dao: permission denied");
 
         for (uint256 i = 0; i < vars.members.length;) {
@@ -149,45 +114,14 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         }
     }
 
-    function joinWithSign(JoinWithSign calldata vars) external returns (uint256 tokenId){
+    function joinWithSign(DaoLogic.JoinWithSign calldata vars) external returns (uint256 tokenId){
         require(_isFreeJoin, "Dao: permission denied");
-        address addr;
-        unchecked {
-            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-                name(),
-                address(this),
-                keccak256(
-                    abi.encode(
-                        JOIN_WITH_SIGN_TYPE_HASH,
-                        nonces[vars.addr]++,
-                        vars.sig.deadline
-                    )
-                ),
-                vars.addr,
-                vars.sig
-            );
-        }
+        address addr = DaoLogic.joinWithSign(vars, name(), address(this), nonces[vars.addr]++);
         tokenId = _join(addr);
     }
 
-    function removeWithSign(RemoveWithSign calldata vars) external returns (uint256 tokenId){
-        address addr;
-        unchecked {
-            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-                name(),
-                address(this),
-                keccak256(
-                    abi.encode(
-                        REMOVE_WITH_SIGN_TYPE_HASH,
-                        vars.member,
-                        nonces[vars.addr]++,
-                        vars.sig.deadline
-                    )
-                ),
-                vars.addr,
-                vars.sig
-            );
-        }
+    function removeWithSign(DaoLogic.RemoveWithSign calldata vars) external returns (uint256 tokenId){
+        address addr = DaoLogic.removeWithSign(vars, name(), address(this), nonces[vars.addr]++);
         return _remove(vars.member, addr);
     }
 
@@ -224,6 +158,11 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         } else {
             emit UpdateRDF(0, rdf);
         }
+    }
+
+    function _setName(address addr, string memory newName) internal {
+        require(addr == ownerOfDao, "Dao: must be daoOwner");
+        _name = newName;
     }
 
     function _setFreeJoin(address addr, bool isFreeJoin_) internal {

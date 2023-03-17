@@ -5,14 +5,14 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "../interfaces/social/IContent.sol";
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract Content is IContent, SemanticSBT {
+contract Content is IContent, SemanticSBTUpgradeable {
 
 
     struct PostWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         string content;
     }
@@ -36,7 +36,7 @@ contract Content is IContent, SemanticSBT {
     function postWithSign(PostWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -60,7 +60,7 @@ contract Content is IContent, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }

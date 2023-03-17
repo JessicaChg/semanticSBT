@@ -85,10 +85,15 @@ describe("Privacy Content contract", function () {
 
         const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
         const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
-
+        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic",{
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });        const daoLogicLibrary = await DaoLogic.deploy();
         const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                DaoLogic: daoLogicLibrary.address,
             }
         });
         const dao = await Dao.deploy();

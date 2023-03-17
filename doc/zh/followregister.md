@@ -4,7 +4,7 @@
 
 ## 构建Contract对象
 
-FollowRegister的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Follow合约的地址需要通过FollowRegister查到，每个地址拥有自己的Follow合约。
+FollowRegister的合约地址、abi文件以及Follow合约的abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Follow合约的地址需要通过FollowRegister查到，每个地址拥有自己的Follow合约。
 通过ethers构建FollowRegisterContract对象：
 
 ```javascript

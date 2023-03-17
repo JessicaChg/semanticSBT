@@ -35,10 +35,16 @@ describe("DaoRegister contract", function () {
 
         const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
         const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
-
+        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic", {
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });
+        const daoLogicLibrary = await DaoLogic.deploy();
         const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+                DaoLogic: daoLogicLibrary.address,
             }
         });
         const dao = await Dao.deploy();
@@ -248,11 +254,11 @@ describe("DaoRegister contract", function () {
             const daoURI = "test-dao-URI";
             const rdf = `:Dao_${contractAddress.toLowerCase()} p:daoURI "${daoURI}" . `
             await expect(daoContract.connect(addr1).setDaoURI(daoURI))
-                .to.emit(daoContract,'CreateRDF')
-                .withArgs(0,rdf);
+                .to.emit(daoContract, 'CreateRDF')
+                .withArgs(0, rdf);
             await expect(daoContract.connect(addr1).setDaoURI(daoURI))
-                .to.emit(daoContract,'UpdateRDF')
-                .withArgs(0,rdf);
+                .to.emit(daoContract, 'UpdateRDF')
+                .withArgs(0, rdf);
         });
     })
 
@@ -391,8 +397,72 @@ describe("DaoRegister contract", function () {
             await expect(daoContract.connect(owner).removeWithSign(param))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf)
+        });
 
+        it("Set daoURI with signData", async function () {
+            const {
+                daoRegister,
+                owner,
+                addr1,
+                addr2
+            } = await loadFixture(deployTokenFixture);
+            await daoRegister.deployDaoContract(addr1.address, firstDAOName);
 
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
+
+            const daoURI = 'test-dao-URI';
+            let name = await daoContract.name();
+            let nonce = await daoContract.nonces(addr2.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildSetDaoURIParam(
+                    name,
+                    daoContract.address.toLowerCase(),
+                    daoURI,
+                    parseInt(nonce),
+                    deadline),
+                addr1.address);
+            let param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": addr1.address,
+                "daoURI": daoURI
+            }
+            await daoContract.connect(owner).setDaoURIWithSign(param);
+            expect(await daoContract.daoURI()).equal(daoURI);
+        });
+
+        it("Set freeJoin signData", async function () {
+            const {
+                daoRegister,
+                owner,
+                addr1,
+                addr2
+            } = await loadFixture(deployTokenFixture);
+            await daoRegister.deployDaoContract(addr1.address, firstDAOName);
+
+            const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
+            var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
+            const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
+
+            const isFreeJoin = true;
+            let name = await daoContract.name();
+            let nonce = await daoContract.nonces(addr2.address);
+            let deadline = Date.parse(new Date()) / 1000 + 100;
+            let sign = await getSign(buildSetFreeJoinParam(
+                    name,
+                    daoContract.address.toLowerCase(),
+                    isFreeJoin,
+                    parseInt(nonce),
+                    deadline),
+                addr1.address);
+            let param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "addr": addr1.address,
+                "isFreeJoin": isFreeJoin
+            }
+            await daoContract.connect(owner).setFreeJoinWithSign(param);
+            expect(await daoContract.isFreeJoin()).equal(true);
         });
     })
 
@@ -497,6 +567,73 @@ describe("DaoRegister contract", function () {
                 ],
                 RemoveWithSign: [
                     {name: 'member', type: 'address'},
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+
+    function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                daoURI: daoURI,
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'SetDaoURIWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                SetDaoURIWithSign: [
+                    {name: 'daoURI', type: 'string'},
+                    {name: 'nonce', type: 'uint256'},
+                    {name: 'deadline', type: 'uint256'},
+                ],
+            },
+        };
+    }
+
+    function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, deadline) {
+        return {
+            domain: {
+                chainId: getChainId(),
+                name: name,
+                verifyingContract: contractAddress,
+                version: '1',
+            },
+
+            // Defining the message signing data content.
+            message: {
+                isFreeJoin: isFreeJoin,
+                nonce: nonce,
+                deadline: deadline,
+            },
+            // Refers to the keys of the *types* object below.
+            primaryType: 'SetFreeJoinWithSign',
+            types: {
+                EIP712Domain: [
+                    {name: 'name', type: 'string'},
+                    {name: 'version', type: 'string'},
+                    {name: 'chainId', type: 'uint256'},
+                    {name: 'verifyingContract', type: 'address'},
+                ],
+                SetFreeJoinWithSign: [
+                    {name: 'isFreeJoin', type: 'bool'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],

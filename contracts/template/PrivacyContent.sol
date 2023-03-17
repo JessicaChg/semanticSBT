@@ -10,38 +10,37 @@ import "../interfaces/social/IFollow.sol";
 import "../interfaces/social/IDaoRegister.sol";
 import "../interfaces/social/IDao.sol";
 
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract PrivacyContent is IPrivacyContent, SemanticSBT {
+contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
     struct PrepareTokenWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
     }
 
     struct PostWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         string content;
     }
 
     struct ShareToFollowerWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         address followContractAddress;
     }
 
     struct ShareToDaoWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         address daoContractAddress;
     }
 
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
-    string constant PRIVACY_PREFIX = "[Privacy]";
 
 
     mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
@@ -99,7 +98,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function prepareTokenWithSign(PrepareTokenWithSign calldata vars) external returns (uint256) {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -119,7 +118,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function postWithSign(PostWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -142,7 +141,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function shareToFollowerWithSign(ShareToFollowerWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -165,7 +164,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function shareToDaoWithSign(ShareToDaoWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -184,7 +183,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _shareToDaoInternal(addr, vars.tokenId, vars.daoContractAddress);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IPrivacyContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -217,7 +216,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[addr] == tokenId, "PrivacyContent:Permission denied");
-        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, content));
+        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, content);
         delete _prepareToken[addr];
         _mintObject[addr][content] = tokenId;
         _contentOf[tokenId] = content;
