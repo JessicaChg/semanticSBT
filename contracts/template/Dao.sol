@@ -122,7 +122,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
 
     function removeWithSign(DaoLogic.RemoveWithSign calldata vars) external returns (uint256 tokenId){
         address addr = DaoLogic.removeWithSign(vars, name(), address(this), nonces[vars.addr]++);
-        return _remove(vars.member, addr);
+        return _remove(addr,vars.member);
     }
 
 
