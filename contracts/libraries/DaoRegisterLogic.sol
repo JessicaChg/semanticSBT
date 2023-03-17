@@ -12,7 +12,7 @@ library DaoRegisterLogic {
     string constant  JOIN_PREDICATE = "join";
     string constant  DAO_URI_PREDICATE = "daoURI";
     string constant SYMBOL = "DSBT";
-    string constant SCHEMA_URI = "ar://jCCCkgjG6Gxe46c8AfK_O7w32qylpFIvLd4_M1Zzy64";
+    string constant SCHEMA_URI = "ar://UTbYdbPy5Ov2bZ1ikWm_4RhMT5GJPvasE57qtSfL1oQ";
 
     function createDao(address daoImpl,address owner, address minter, string memory name, string memory baseURI) external returns (address){
         address daoContract = Clones.clone(daoImpl);

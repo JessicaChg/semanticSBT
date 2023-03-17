@@ -12,7 +12,7 @@ import { ethers, providers } from 'ethers'
 
 const getFollowRegisterContractInstance = () => {
     // FollowRegister合约地址
-    const contractAddress = '0xef865Ed50447c253EFb9Ac9a9deDe3b4CBaaA9cE'
+    const contractAddress = '0xab8Dde275F3d2508c578C5bbDf43E81964BF18A4'
     const provider = new providers.Web3Provider(window.ethereum)
     const signer = provider.getSigner()
     const contract = new ethers.Contract(contractAddress, followRegisterAbi, signer)

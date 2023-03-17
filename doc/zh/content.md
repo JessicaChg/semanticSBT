@@ -11,7 +11,7 @@ import { ethers, providers } from 'ethers'
 
 const getContractInstance = () => {
   // 合约地址
-  const contractAddress = '0x6A22794A1e2aBdEC057a6dc24A6BFB53F9518016'
+  const contractAddress = '0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7'
   const provider = new providers.Web3Provider(window.ethereum)
   const signer = provider.getSigner()
   const contract = new ethers.Contract(contractAddress, abi, signer)

@@ -7,10 +7,10 @@
 const hre = require("hardhat");
 const {ethers, upgrades} = require("hardhat");
 
-const name = 'Content';
+const name = 'Relation Content';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://eV_a_cVZdbVcTEWzJjscg4cloGFnNyFu8tZuBBY0YaM';
+const schemaURI = 'ar://HENWTh3esXyAeLe1Yg_BrBOHhW-CcDQoU5inaAx-yNs';
 const class_ = [];
 const predicate_ = [["publicContent", 1]];
 

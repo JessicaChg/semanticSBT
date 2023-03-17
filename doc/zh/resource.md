@@ -10,10 +10,10 @@
 | Name Service                           | 0x98B646d80482fC38A40627c4770307529EE594E0 |
 | <h1><strong>Relationship</strong></h1> |                                            |
 | FollowRegister                         | 0xab8Dde275F3d2508c578C5bbDf43E81964BF18A4 |
-| DaoRegister                            | 0x064E3dDC81f186bF32C3EE2d7B1356014eCA1F72 |
+| DaoRegister                            | 0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7 |
 | <h4>Publication</h4>                   |                                            |
-| Content                                | 0xB4cF83Be1800Add6d981aB031D4Cb017B7494286 |
-| PrivacyContent                         | 0x18335C9BE16e3AF341E354e6537b9fc8773ACBF9 |
+| Content                                | 0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7 |
+| PrivacyContent                         | 0x1A4231bedA090c6903c4731518C616F8FAEc5dc7 |
 
 
 
@@ -29,11 +29,11 @@
 | FollowRegister                         | [FollowRegister.abi](../abi/FollowRegister.json) |
 | Follow                                 | [Follow.abi](../abi/Follow.json)                 |
 | <h4>Dao</h4>                           |                                                  |
-| DaoRegister                            | [DaoRegister.abi](../abi/DaoRegister.json)            |
-| Dao                                    | [Dao.abi](../abi/Dao.json)                    |
+| DaoRegister                            | [DaoRegister.abi](../abi/DaoRegister.json)       |
+| Dao                                    | [Dao.abi](../abi/Dao.json)                       |
 | <h4>Publication</h4>                   |                                                  |
-| Content                                | [Content.abi](../abi/Content.json)                |
-| PrivacyContent                         | [PrivacyContent.abi](../abi/PrivacyContent.json)         |
+| Content                                | [Content.abi](../abi/Content.json)               |
+| PrivacyContent                         | [PrivacyContent.abi](../abi/PrivacyContent.json) |
 
 
 
