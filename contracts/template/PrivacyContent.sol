@@ -63,7 +63,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
 
     function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
         return isOwnerOf(viewer, tokenId) ||
-        _isFollowing(viewer, tokenId, ownerOf(tokenId)) ||
+        _isFollowing(viewer, tokenId) ||
         _isMemberOfDao(viewer, tokenId);
     }
 
@@ -224,7 +224,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
 
     function _shareToFollowerInternal(address addr, uint256 tokenId, address followContractAddress) internal {
         require(isOwnerOf(addr, tokenId), "PrivacyContent: caller is not owner");
-        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
+        require(_shareFollowAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
         _shareToFollow[tokenId][followContractAddress] = true;
         _shareFollowAddress[tokenId].push(followContractAddress);
     }
@@ -236,7 +236,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
         _shareDaoAddress[tokenId].push(daoAddress);
     }
 
-    function _isFollowing(address viewer, uint256 tokenId, address owner) internal view returns (bool){
+    function _isFollowing(address viewer, uint256 tokenId) internal view returns (bool){
         address[] memory followContractAddress = _shareFollowAddress[tokenId];
         for (uint256 i = 0; i < followContractAddress.length; i++) {
             if (IFollow(followContractAddress[i]).isFollowing(viewer)) {
