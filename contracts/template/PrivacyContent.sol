@@ -191,12 +191,12 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
 
     /* ============ Internal Functions ============ */
 
-    function _mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) internal {
+    function _mintPrivacy(address addr, uint256 tokenId, uint256 pIndex, string memory object) internal {
         StringPO[] memory stringPOList = new StringPO[](1);
         stringPOList[0] = StringPO(pIndex, object);
         _mint(
             tokenId,
-            msg.sender,
+            addr,
             new IntPO[](0),
             stringPOList,
             new AddressPO[](0),
@@ -216,7 +216,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[addr] == tokenId, "PrivacyContent:Permission denied");
-        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, content);
+        _mintPrivacy(addr, tokenId, PRIVACY_DATA_PREDICATE, content);
         delete _prepareToken[addr];
         _mintObject[addr][content] = tokenId;
         _contentOf[tokenId] = content;

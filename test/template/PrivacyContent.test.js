@@ -12,7 +12,6 @@ const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://z6jJwWRBzy2_Ecu_P0E9fXfxKgnkb2SCiZbGlod5G40';
 const class_ = [];
 const predicate_ = [["privacyContent", 1]];
-const privacyPrefix = "[Privacy]";
 const content = "ar://the tx hash of content on arweave";
 
 const firstDAOName = "First DAO name";
@@ -123,13 +122,13 @@ describe("Privacy Content contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
         const contractName = "PrivacyContent";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
         const privacyContent = await MyContract.deploy();
@@ -194,7 +193,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent, owner} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             await privacyContent.prepareToken();
@@ -205,13 +204,14 @@ describe("Privacy Content contract", function () {
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
             expect(await privacyContent.contentOf(1)).to.equal(content);
+            expect(await privacyContent.ownerOf(1)).to.equal(owner.address);
         });
 
         it("Should return false when the address is not the viewer", async function () {
             const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             await privacyContent.prepareToken();
@@ -230,7 +230,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent, followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             await privacyContent.prepareToken();
@@ -258,7 +258,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             await privacyContent.prepareToken();
@@ -301,7 +301,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             let name = await privacyContent.name();
@@ -332,6 +332,7 @@ describe("Privacy Content contract", function () {
             }
             await privacyContent.connect(addr1).postWithSign(param);
             expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
+            expect(await privacyContent.ownerOf(parseInt(tokenId))).to.equal(owner.address);
         });
 
 
@@ -339,7 +340,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent, followRegister,owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             let name = await privacyContent.name();
@@ -404,7 +405,7 @@ describe("Privacy Content contract", function () {
             const {privacyContent,owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
-            const object = `"${privacyPrefix}${content}"`;
+            const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
             let name = await privacyContent.name();
