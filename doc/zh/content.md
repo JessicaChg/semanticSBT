@@ -77,7 +77,7 @@ const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 let name = await content.name();
 let nonce = await content.nonces(accounts[0]);
 let deadline = Date.parse(new Date()) / 1000 + 100;
-let sign = await getSign(buildPostParams(
+let sign = await getSign(await buildPostParams(
         name,
         content.address.toLowerCase(),
         postContent,
@@ -91,7 +91,7 @@ let param = {
     "content": postContent
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await content.connect(addr1).postWithSign(param);
+await content.connect(accounts[1]).postWithSign(param);
 
 
 
@@ -109,10 +109,10 @@ async function getChainId() {
 }
 
 
-function buildPostParams(name, contractAddress, content, nonce, deadline) {
+async function buildPostParams(name, contractAddress, content, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',

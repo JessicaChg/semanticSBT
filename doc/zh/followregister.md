@@ -109,20 +109,20 @@ for(var i = 0; i < numOfFollower;i++){
 用户对数据进行签名，打包成上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
-const addr = '0x000...';
-const addr1 = '0x001...';
+const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+
 const followRegisterContract = getFollowRegisterContractInstance()
-const followContractAddress = await followRegisterContract.ownedFollowContract(addr);
+const followContractAddress = await followRegisterContract.ownedFollowContract(accounts[0]);
 const followContract = getFollowContractInstance(followContractAddress)
 
 const name = await followContract.name();
-const nonce = await followContract.nonces(owner.address);
+const nonce = await followContract.nonces(accounts[0]);
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), addr);
+const sign = await getSign(await buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
 //该参数为调用followWithSign方法的入参
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": addr}
+var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await followContract.connect(addr1).followWithSign(param);
+await followContract.connect(accounts[1]).followWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -132,14 +132,15 @@ async function getSign(msgParams, signerAddress) {
     return Bytes.splitSignature(trace);
 }
 
-function getChainId() {
-    return hre.network.config.chainId;
+async function getChainId() {
+    return await ethereum.request({
+        method: 'eth_chainId',
+    });
 }
-
-function buildFollowParams(name, contractAddress, nonce, deadline) {
+async function buildFollowParams(name, contractAddress, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
@@ -174,20 +175,20 @@ function buildFollowParams(name, contractAddress, nonce, deadline) {
 
 
 ```javascript
-const addr = '0x000...';
-const addr1 = '0x001...';
+const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+
 const followRegisterContract = getFollowRegisterContractInstance()
-const followContractAddress = await followRegisterContract.ownedFollowContract(addr);
+const followContractAddress = await followRegisterContract.ownedFollowContract(accounts[0]);
 const followContract = getFollowContractInstance(followContractAddress)
 
 const name = await followContract.name();
-const nonce = await followContract.nonces(owner.address);
+const nonce = await followContract.nonces(accounts[0]);
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+const sign = await getSign(await buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
 //该参数为调用followWithSign方法的入参
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await followContract.connect(addr1).unfollowWithSign(param);
+await followContract.connect(accounts[1]).unfollowWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -197,14 +198,16 @@ async function getSign(msgParams, signerAddress) {
     return Bytes.splitSignature(trace);
 }
 
-function getChainId() {
-    return hre.network.config.chainId;
+async function getChainId() {
+    return await ethereum.request({
+        method: 'eth_chainId',
+    });
 }
 
-function buildUnFollowParams(name, contractAddress, nonce, deadline) {
+async function buildUnFollowParams(name, contractAddress, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',

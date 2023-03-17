@@ -137,7 +137,7 @@ for(var i = 0; i < balance;i++){
 const name = await privacyContent.name();
 const nonce = await privacyContent.nonces(owner.address);
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+const sign = await getSign(await buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
 var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
 //实际场景中，这个方法由实际支付Gas的账户来调用
 await privacyContent.connect(addr1).prepareTokenWithSign(param);
@@ -155,10 +155,10 @@ async function getChainId() {
       });
 }
 
-function buildPrepareParams(name, contractAddress, nonce, deadline) {
+async function buildPrepareParams(name, contractAddress, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
@@ -199,7 +199,7 @@ let name = await privacyContent.name();
 let nonce = await privacyContent.nonces(accounts[0]);
 let deadline = Date.parse(new Date()) / 1000 + 100;
 const tokenId = await privacyContent.ownedPrepareToken(accounts[0]);
-let sign = await getSign(buildPostParams(
+let sign = await getSign(await buildPostParams(
         name,
         privacyContent.address.toLowerCase(),
         parseInt(tokenId),
@@ -230,10 +230,10 @@ async function getChainId() {
       });
 }
 
-function buildPostParams(name, contractAddress, tokenId, content, nonce, deadline) {
+async function buildPostParams(name, contractAddress, tokenId, content, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
@@ -280,7 +280,7 @@ const privacyContent = getContractInstance()
  let name = await privacyContent.name();
 let nonce = await privacyContent.nonces(owner.address);
 let deadline = Date.parse(new Date()) / 1000 + 100;
-let sign = await getSign(buildShareToFollowerParams(
+let sign = await getSign(await buildShareToFollowerParams(
         name,
         privacyContent.address.toLowerCase(),
         tokenId,
@@ -311,10 +311,10 @@ async function getChainId() {
       });
 }
 
-function buildShareToFollowerParams(name, contractAddress, tokenId, followContractAddress, nonce, deadline) {
+async function buildShareToFollowerParams(name, contractAddress, tokenId, followContractAddress, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
@@ -362,7 +362,7 @@ const privacyContent = getContractInstance()
 let name = await privacyContent.name();
 let nonce = await privacyContent.nonces(owner.address);
 let deadline = Date.parse(new Date()) / 1000 + 100;
-let sign = await getSign(buildShareToDaoParams(
+let sign = await getSign(await buildShareToDaoParams(
         name,
         privacyContent.address.toLowerCase(),
         tokenId,
@@ -393,10 +393,10 @@ async function getChainId() {
       });
 }
 
-function buildShareToDaoParams(name, contractAddress, tokenId, daoContractAddress, nonce, deadline) {
+async function buildShareToDaoParams(name, contractAddress, tokenId, daoContractAddress, nonce, deadline) {
     return {
         domain: {
-            chainId: getChainId(),
+            chainId: await getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
