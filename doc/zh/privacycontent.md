@@ -27,18 +27,19 @@ const getContractInstance = () => {
 用户需要预生成token,在调用post方法时传入预生成的tokenId。当用户调用post方法，会消耗掉预生成的token。
 
 ```javascript
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 await (
-    await contract.prepareToken()
+    await privacyContract.prepareToken()
 ).wait()
 ```
 
 2. 查询用户预生成的token
 
 ```javascript
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
-const tokenId = await contract.ownedPrepareToken(accounts[0]);
+
+const tokenId = await privacyContract.ownedPrepareToken(accounts[0]);
 ```
 
 3. 发布内容
@@ -74,13 +75,13 @@ const tokenId = await contract.ownedPrepareToken(accounts[0]);
 上传后得到的交易哈希，作为content记录至合约中
 
 ```javascript
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 const content = 'zX_Oa1...';
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
-const tokenId = await contract.ownedPrepareToken(accounts[0]);
 
+const tokenId = await privacyContract.ownedPrepareToken(accounts[0]);
 await (
-    await contract.post(tokenId, content)
+    await privacyContract.post(tokenId, content)
 ).wait()
 ```
 
@@ -91,10 +92,10 @@ await (
 ```javascript
 const myFollowContractAddress = '0x000...';
 const tokenId = '1';
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 
 await (
-    await contract.shareToFollower(tokenId, myFollowContractAddress)
+    await privacyContract.shareToFollower(tokenId, myFollowContractAddress)
 ).wait()
 ```
 
@@ -105,10 +106,10 @@ await (
 ```javascript
 const myDaoContractAddress = '0x000...';
 const tokenId = '1';
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 
 await (
-    await contract.shareToDao(tokenId, myDaoContractAddress)
+    await privacyContract.shareToDao(tokenId, myDaoContractAddress)
 ).wait()
 ```
 
@@ -118,7 +119,7 @@ await (
 
 ```javascript
 const addr = '0x000...';
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 const tokenId = '1';
 
 //查询tokenId已分享的Follow合约数量
@@ -137,7 +138,7 @@ for (var i = 0; i < count; i++) {
 
 ```javascript
 const addr = '0x000...';
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 const tokenId = '1';
 
 //查询tokenId已分享的Dao合约数量
@@ -156,12 +157,15 @@ for (var i = 0; i < count; i++) {
 
 ```javascript
 const addr = '0x000...';
-const contract = getContractInstance()
+const privacyContract = getContractInstance()
 
+//查询地址持有的token数量
 const balance = await contract.balanceOf(addr);
 var contentList = [];
 for (var i = 0; i < balance; i++) {
+    //根据索引查到我持有的tokenId
     const tokenId = await contract.tokenOfOwnerByIndex(addr, i);
+    //查询tokenId对应的发布内容
     const content = await contract.contentOf(tokenId);
     contentList.push(content);
 }
@@ -172,13 +176,17 @@ for (var i = 0; i < balance; i++) {
 用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+const accounts = await ethereum.request({method: 'eth_requestAccounts'})
+const privacyContract = getContractInstance()
+
 const name = await privacyContent.name();
-const nonce = await privacyContent.nonces(owner.address);
+const nonce = await privacyContent.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(await buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
+const sign = await getSign(await buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
+var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(addr1).prepareTokenWithSign(param);
+await privacyContent.connect(accounts[1]).prepareTokenWithSign(param);
 
 async function getSign(msgParams, signerAddress) {
     const params = [signerAddress, msgParams];
@@ -232,9 +240,11 @@ async function buildPrepareParams(name, contractAddress, nonce, deadline) {
 ```javascript
 const content = 'zX_Oa1...';
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
+const privacyContract = getContractInstance()
 
 let name = await privacyContent.name();
 let nonce = await privacyContent.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 const tokenId = await privacyContent.ownedPrepareToken(accounts[0]);
 let sign = await getSign(await buildPostParams(
@@ -252,7 +262,7 @@ let param = {
     "content": content
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(addr1).postWithSign(param);
+await privacyContent.connect(accounts[1]).postWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -313,10 +323,11 @@ const privacyContent = '';
 const followContractAddress = '0x0001...';
 const tokenId = '1'
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
-
 const privacyContent = getContractInstance()
+
 let name = await privacyContent.name();
-let nonce = await privacyContent.nonces(owner.address);
+let nonce = await privacyContent.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildShareToFollowerParams(
         name,
@@ -333,7 +344,7 @@ let param = {
     "followContractAddress": followContractAddress
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(addr1).shareToFollowerWithSign(param);
+await privacyContent.connect(accounts[1]).shareToFollowerWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -394,10 +405,11 @@ const privacyContent = '';
 const daoContractAddress = '0x0001...';
 const tokenId = '1'
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
-
 const privacyContent = getContractInstance()
+
 let name = await privacyContent.name();
-let nonce = await privacyContent.nonces(owner.address);
+let nonce = await privacyContent.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildShareToDaoParams(
         name,
@@ -414,7 +426,7 @@ let param = {
     "daoContractAddress": daoContractAddress
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(addr1).shareToDaoWithSign(param);
+await privacyContent.connect(accounts[1]).shareToDaoWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {

@@ -226,6 +226,7 @@ const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 let name = await daoContract.name();
 let nonce = await daoContract.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildSetDaoURIParam(
         name,
@@ -302,6 +303,7 @@ const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 const members = ['0x001...','0x002...','0x003...'];
 let name = await daoContract.name();
 let nonce = await daoContract.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildAddMemberParam(
         name,

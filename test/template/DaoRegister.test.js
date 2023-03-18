@@ -226,21 +226,45 @@ describe("DaoRegister contract", function () {
         });
 
         it("User should burn the sbt when the owner of DAO remove user from DAO", async function () {
-            const {daoRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {daoRegister, owner, addr1,addr2,addr3,addr4} = await loadFixture(deployTokenFixture);
             await daoRegister.deployDaoContract(addr1.address, firstDAOName);
 
             const tokenId = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
-            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            let rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf);
-            await expect(daoContract.connect(addr1).remove(owner.address))
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr2).join())
+                .to.emit(daoContract, "CreateRDF")
+                .withArgs(3, rdf);
+            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr1).addMember([addr3.address]))
+                .to.emit(daoContract, "CreateRDF")
+                .withArgs(4, rdf);
+
+            rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(owner).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr1).remove(addr2.address))
+                .to.emit(daoContract, "RemoveRDF")
+                .withArgs(3, rdf);
+            expect(await daoContract.isMember(addr2.address)).equal(false);
+            rdf = ":Soul_" + addr1.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr1).remove(addr1.address))
+                .to.emit(daoContract, "RemoveRDF")
+                .withArgs(1, rdf);
+            expect(await daoContract.isMember(addr1.address)).equal(false);
+            expect(await daoContract.ownerOfDao()).equal('0x0000000000000000000000000000000000000000');
+            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            await expect(daoContract.connect(addr1).remove(addr3.address)).revertedWith("Dao: permission denied")
+            expect(await daoContract.isMember(addr3.address)).equal(true);
         });
 
         it("The owner of dao could set daoURI", async function () {

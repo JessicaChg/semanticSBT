@@ -189,6 +189,9 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
         super._burn(addr, ownedTokenId[addr]);
         delete ownedTokenId[addr];
+        if(addr == ownerOfDao){
+            ownerOfDao = address(0);
+        }
         return tokenId;
     }
 
