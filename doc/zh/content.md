@@ -55,10 +55,13 @@ await (
 const addr = '0x000...';
 const contract = getContractInstance()
 
+//查询地址持有的token数量
 const balance = await contract.balanceOf(addr);
 var contentList = [];
 for(var i = 0; i < balance;i++){
+    //根据索引查到我持有的tokenId
     const tokenId = await contract.tokenOfOwnerByIndex(addr,i);
+    //查询tokenId对应的发布内容
     const content = await contract.contentOf(tokenId);
     contentList.push(content);
 }
@@ -70,12 +73,13 @@ for(var i = 0; i < balance;i++){
 
 
 ```javascript
-
 const contract = getContractInstance()
 const postContent = 'zX_Oa1...';
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+
 let name = await content.name();
 let nonce = await content.nonces(accounts[0]);
+//签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildPostParams(
         name,
@@ -101,6 +105,7 @@ async function getSign(msgParams, signerAddress) {
         "eth_signTypedData_v4", params);
     return Bytes.splitSignature(trace);
 }
+
 
 async function getChainId() {
     return await ethereum.request({
