@@ -84,11 +84,12 @@ describe("Privacy Content contract", function () {
 
         const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
         const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
-        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic",{
+        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
-        });        const daoLogicLibrary = await DaoLogic.deploy();
+        });
+        const daoLogicLibrary = await DaoLogic.deploy();
         const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
@@ -250,6 +251,8 @@ describe("Privacy Content contract", function () {
             await followContract.connect(addr1).follow();
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
             await privacyContent.connect(owner).shareToFollower(1, followContractAddress);
+            expect(await privacyContent.sharedFollowAddressCount(1)).to.equal(1);
+            expect(await privacyContent.sharedFollowAddressByIndex(1, 0)).to.equal(followContractAddress);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
         });
 
@@ -279,6 +282,8 @@ describe("Privacy Content contract", function () {
             await daoContract.setFreeJoin(true);
             await daoContract.connect(addr1).join();
             await privacyContent.shareToDao(1, daoContractAddress.contractAddress);
+            expect(await privacyContent.sharedDaoAddressCount(1)).to.equal(1);
+            expect(await privacyContent.sharedDaoAddressByIndex(1, 0)).to.equal(daoContractAddress.contractAddress);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
 
         });
@@ -337,7 +342,7 @@ describe("Privacy Content contract", function () {
 
 
         it("Share to follow with signData", async function () {
-            const {privacyContent, followRegister,owner, addr1} = await loadFixture(deployTokenFixture);
+            const {privacyContent, followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
@@ -402,7 +407,7 @@ describe("Privacy Content contract", function () {
 
 
         it("Share to dao with signData", async function () {
-            const {privacyContent,owner, addr1} = await loadFixture(deployTokenFixture);
+            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;

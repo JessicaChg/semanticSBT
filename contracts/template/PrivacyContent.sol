@@ -52,6 +52,8 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
     mapping(uint256 => mapping(address => bool)) _shareToFollow;
     mapping(uint256 => address[]) _shareDaoAddress;
     mapping(uint256 => address[]) _shareFollowAddress;
+    mapping(uint256 => uint256) public sharedDaoAddressCount;
+    mapping(uint256 => uint256) public sharedFollowAddressCount;
 
     bytes32 internal constant PREPARE_TOKEN_WITH_SIGN_TYPE_HASH = keccak256('PrepareTokenWithSign(uint256 nonce,uint256 deadline)');
     bytes32 internal constant POST_WITH_SIGN_TYPE_HASH = keccak256('PostWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
@@ -92,6 +94,14 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
 
     function shareToDao(uint256 tokenId, address daoAddress) external {
         _shareToDaoInternal(msg.sender, tokenId, daoAddress);
+    }
+
+    function sharedFollowAddressByIndex(uint256 tokenId, uint256 index) external view returns (address){
+        return _shareFollowAddress[tokenId][index];
+    }
+
+    function sharedDaoAddressByIndex(uint256 tokenId, uint256 index) external view returns (address){
+        return _shareDaoAddress[tokenId][index];
     }
 
 
@@ -227,6 +237,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
         require(_shareFollowAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
         _shareToFollow[tokenId][followContractAddress] = true;
         _shareFollowAddress[tokenId].push(followContractAddress);
+        sharedFollowAddressCount[tokenId]++;
     }
 
     function _shareToDaoInternal(address addr, uint256 tokenId, address daoAddress) internal {
@@ -234,6 +245,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
         require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many DAOs");
         _shareToDao[tokenId][daoAddress] = true;
         _shareDaoAddress[tokenId].push(daoAddress);
+        sharedDaoAddressCount[tokenId]++;
     }
 
     function _isFollowing(address viewer, uint256 tokenId) internal view returns (bool){
