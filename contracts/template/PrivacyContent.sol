@@ -84,7 +84,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
     }
 
 
-    function post(uint256 tokenId, string memory content) external {
+    function post(uint256 tokenId, string calldata content) external {
         _post(msg.sender, tokenId, content);
     }
 

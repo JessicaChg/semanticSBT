@@ -54,7 +54,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         _join(owner);
     }
 
-    function setDaoURI(string memory daoURI_) external {
+    function setDaoURI(string calldata daoURI_) external {
         _setDaoURIInternal(msg.sender, daoURI_);
     }
 
@@ -71,7 +71,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         _ownerTransfer(msg.sender, to);
     }
 
-    function addMember(address[] memory addr) external onlyDaoOwner {
+    function addMember(address[] calldata addr) external onlyDaoOwner {
         for (uint256 i = 0; i < addr.length;) {
             _join(addr[i]);
         unchecked{

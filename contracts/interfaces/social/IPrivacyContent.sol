@@ -25,7 +25,7 @@ interface IPrivacyContent is ISemanticSBT {
      * @param tokenId The prepared tokenId.
      * @param content  The content should be the hash on Arweave. The actual encrypted content and authorization records are stored on Arweave.
      */
-    function post(uint256 tokenId, string memory content) external;
+    function post(uint256 tokenId, string calldata content) external;
 
     /**
      * Whether the address is authorized to be the view of the token.

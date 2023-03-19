@@ -22,7 +22,7 @@ interface IDao is ISemanticSBT {
       * Set the URI for a dao.
       * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
      */
-    function setDaoURI(string memory daoURI) external;
+    function setDaoURI(string calldata daoURI) external;
 
     /**
      * Is this an open dao?
@@ -33,7 +33,7 @@ interface IDao is ISemanticSBT {
      * Add the specified address to dao in batches.
      * @param addr The specified address.
      */
-    function addMember(address[] memory addr) external;
+    function addMember(address[] calldata addr) external;
 
     /**
      * Join a dao.

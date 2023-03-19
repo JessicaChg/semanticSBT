@@ -30,7 +30,7 @@ contract DaoRegister is IDaoRegister, SemanticSBTUpgradeable {
     address public daoImpl;
 
 
-    function setDaoBaseURI(string memory daoBaseURI_) external onlyOwner {
+    function setDaoBaseURI(string calldata daoBaseURI_) external onlyOwner {
         daoBaseURI = daoBaseURI_;
     }
 

@@ -62,7 +62,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
 
-    function setNameForAddr(address addr_, string memory name) external override {
+    function setNameForAddr(address addr_, string calldata name) external override {
         require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
         uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
         uint256 tokenId = _tokenIdOfName[sIndex];
@@ -74,7 +74,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
-    function setProfileURI(string memory profileURI_) external {
+    function setProfileURI(string calldata profileURI_) external {
         _profileURI[msg.sender] = profileURI_;
         string memory rdf = SemanticSBTLogicUpgradeable.buildStringRDFCustom(SOUL_CLASS_NAME, msg.sender.toHexString(), _predicates[PROFILE_URI_PREDICATE_INDEX].name, string.concat('"', profileURI_, '"'));
         if (!_ownedProfileURI[msg.sender]) {

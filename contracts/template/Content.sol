@@ -28,7 +28,7 @@ contract Content is IContent, SemanticSBTUpgradeable {
 
     /* ============ External Functions ============ */
 
-    function post(string memory content) external {
+    function post(string calldata content) external {
         _post(msg.sender, content);
     }
 
