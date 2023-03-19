@@ -35,7 +35,7 @@ library SemanticSBTLogicUpgradeable {
     bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
 
-    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
+    function addClass(string[] calldata classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
         for (uint256 i = 0; i < classList.length; i++) {
             string memory className_ = classList[i];
             require(
@@ -49,7 +49,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
+    function addPredicate(Predicate[] calldata predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
         for (uint256 i = 0; i < predicates.length; i++) {
             Predicate memory predicate_ = predicates[i];
             require(
@@ -64,7 +64,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function addSubject(string memory value, string memory className_,
+    function addSubject(string calldata value, string calldata className_,
         Subject[] storage _subjects,
         mapping(uint256 => mapping(string => uint256)) storage _subjectIndex,
         mapping(string => uint256) storage _classIndex) external returns (uint256 sIndex) {
@@ -147,7 +147,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
+    function buildRDF(SPO calldata spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
         for (uint256 i = 0; i < spo.pIndex.length; i++) {
@@ -232,20 +232,20 @@ library SemanticSBTLogicUpgradeable {
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
     }
 
-    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external pure returns (string memory){
+    function buildStringRDFCustom(string calldata class, string calldata entityValue, string calldata predicate, string calldata o) external pure returns (string memory){
         string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
         string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
         return string.concat(s, p, o, TURTLE_END_SUFFIX);
     }
 
 
-    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress,Signature memory sig) external view returns (address){
-        require(sig.deadline > block.timestamp, "SemanticSBTLogicUpgradeable: signature expired");
+    function recoverSignerFromSignature(string calldata name, address contractAddress, bytes32 hashedMessage, address expectedAddress,Signature calldata sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBT: signature expired");
         address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
             sig.v,
             sig.r,
             sig.s);
-        require(expectedAddress == signer,"SemanticSBTLogicUpgradeable: signature invalid");
+        require(expectedAddress == signer,"SemanticSBT: signature invalid");
         return signer;
     }
 
