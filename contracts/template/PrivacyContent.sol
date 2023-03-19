@@ -10,38 +10,37 @@ import "../interfaces/social/IFollow.sol";
 import "../interfaces/social/IDaoRegister.sol";
 import "../interfaces/social/IDao.sol";
 
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract PrivacyContent is IPrivacyContent, SemanticSBT {
+contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable {
     struct PrepareTokenWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
     }
 
     struct PostWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         string content;
     }
 
     struct ShareToFollowerWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         address followContractAddress;
     }
 
     struct ShareToDaoWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         uint256 tokenId;
         address daoContractAddress;
     }
 
     uint256 constant  PRIVACY_DATA_PREDICATE = 1;
-    string constant PRIVACY_PREFIX = "[Privacy]";
 
 
     mapping(address => mapping(uint256 => bool)) internal _isViewerOf;
@@ -53,6 +52,8 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     mapping(uint256 => mapping(address => bool)) _shareToFollow;
     mapping(uint256 => address[]) _shareDaoAddress;
     mapping(uint256 => address[]) _shareFollowAddress;
+    mapping(uint256 => uint256) public sharedDaoAddressCount;
+    mapping(uint256 => uint256) public sharedFollowAddressCount;
 
     bytes32 internal constant PREPARE_TOKEN_WITH_SIGN_TYPE_HASH = keccak256('PrepareTokenWithSign(uint256 nonce,uint256 deadline)');
     bytes32 internal constant POST_WITH_SIGN_TYPE_HASH = keccak256('PostWithSign(uint256 tokenId,string content,uint256 nonce,uint256 deadline)');
@@ -64,7 +65,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
     function isViewerOf(address viewer, uint256 tokenId) external override view returns (bool) {
         return isOwnerOf(viewer, tokenId) ||
-        _isFollowing(viewer, tokenId, ownerOf(tokenId)) ||
+        _isFollowing(viewer, tokenId) ||
         _isMemberOfDao(viewer, tokenId);
     }
 
@@ -95,11 +96,19 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _shareToDaoInternal(msg.sender, tokenId, daoAddress);
     }
 
+    function sharedFollowAddressByIndex(uint256 tokenId, uint256 index) external view returns (address){
+        return _shareFollowAddress[tokenId][index];
+    }
+
+    function sharedDaoAddressByIndex(uint256 tokenId, uint256 index) external view returns (address){
+        return _shareDaoAddress[tokenId][index];
+    }
+
 
     function prepareTokenWithSign(PrepareTokenWithSign calldata vars) external returns (uint256) {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -119,7 +128,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function postWithSign(PostWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -142,7 +151,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function shareToFollowerWithSign(ShareToFollowerWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -165,7 +174,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
     function shareToDaoWithSign(ShareToDaoWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
@@ -184,7 +193,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _shareToDaoInternal(addr, vars.tokenId, vars.daoContractAddress);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IPrivacyContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -192,12 +201,12 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
     /* ============ Internal Functions ============ */
 
-    function _mintPrivacy(uint256 tokenId, uint256 pIndex, string memory object) internal {
+    function _mintPrivacy(address addr, uint256 tokenId, uint256 pIndex, string memory object) internal {
         StringPO[] memory stringPOList = new StringPO[](1);
         stringPOList[0] = StringPO(pIndex, object);
         _mint(
             tokenId,
-            msg.sender,
+            addr,
             new IntPO[](0),
             stringPOList,
             new AddressPO[](0),
@@ -217,7 +226,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         require(_prepareToken[addr] == tokenId, "PrivacyContent:Permission denied");
-        _mintPrivacy(tokenId, PRIVACY_DATA_PREDICATE, string.concat(PRIVACY_PREFIX, content));
+        _mintPrivacy(addr, tokenId, PRIVACY_DATA_PREDICATE, content);
         delete _prepareToken[addr];
         _mintObject[addr][content] = tokenId;
         _contentOf[tokenId] = content;
@@ -225,9 +234,10 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
 
     function _shareToFollowerInternal(address addr, uint256 tokenId, address followContractAddress) internal {
         require(isOwnerOf(addr, tokenId), "PrivacyContent: caller is not owner");
-        require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
+        require(_shareFollowAddress[tokenId].length < 20, "PrivacyContent: shared to too many Follow contracts");
         _shareToFollow[tokenId][followContractAddress] = true;
         _shareFollowAddress[tokenId].push(followContractAddress);
+        sharedFollowAddressCount[tokenId]++;
     }
 
     function _shareToDaoInternal(address addr, uint256 tokenId, address daoAddress) internal {
@@ -235,9 +245,10 @@ contract PrivacyContent is IPrivacyContent, SemanticSBT {
         require(_shareDaoAddress[tokenId].length < 20, "PrivacyContent: shared to too many DAOs");
         _shareToDao[tokenId][daoAddress] = true;
         _shareDaoAddress[tokenId].push(daoAddress);
+        sharedDaoAddressCount[tokenId]++;
     }
 
-    function _isFollowing(address viewer, uint256 tokenId, address owner) internal view returns (bool){
+    function _isFollowing(address viewer, uint256 tokenId) internal view returns (bool){
         address[] memory followContractAddress = _shareFollowAddress[tokenId];
         for (uint256 i = 0; i < followContractAddress.length; i++) {
             if (IFollow(followContractAddress[i]).isFollowing(viewer)) {

@@ -9,7 +9,7 @@ const Bytes = require("@ethersproject/bytes");
 const name = 'Content';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://eV_a_cVZdbVcTEWzJjscg4cloGFnNyFu8tZuBBY0YaM';
+const schemaURI = 'ar://HENWTh3esXyAeLe1Yg_BrBOHhW-CcDQoU5inaAx-yNs';
 const class_ = [];
 const predicate_ = [["publicContent", 1]];
 const postContent =  "ar://the tx hash of content on arweave";
@@ -27,13 +27,13 @@ describe("Public Content contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2, addr3, addr4, addr5, addr6] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
         const contractName = "Content";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
         const content = await MyContract.deploy();
@@ -128,8 +128,9 @@ describe("Public Content contract", function () {
                 "addr": owner.address,
                 "content": postContent
             }
-            await content.connect(addr1).postWithSign(param);
+            await content.connect(addr1).postWithSign(param)
             expect(await content.rdfOf(1)).to.equal(rdf);
+            expect(await content.ownerOf(1)).to.equal(owner.address);
 
 
         });

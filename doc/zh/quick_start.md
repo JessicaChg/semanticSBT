@@ -81,7 +81,7 @@ const registerName = 'test-' + Date.now()
 
 const getContractInstance = () => {
   // 合约地址
-  const contractAddress = '0x98B646d80482fC38A40627c4770307529EE594E0'
+  const contractAddress = '0x0D195ab46a9C9C4f97666A76AADb35d93965Cac8'
   const provider = new providers.Web3Provider(window.ethereum)
   const signer = provider.getSigner()
   const contract = new ethers.Contract(contractAddress, abi, signer)

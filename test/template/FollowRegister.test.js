@@ -7,10 +7,10 @@ const hre = require("hardhat");
 const Wallet = require('@ethersproject/wallet');
 const Bytes = require('@ethersproject/bytes');
 
-const name = 'Dao Register';
+const name = 'Follow Register';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://tuVCNycNQHa0adejBcnTYqzgeUPmhOznmGcUKbUKzE8';
+const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
 const class_ = ["Contract"];
 const predicate_ = [["followContract", 3]];
 

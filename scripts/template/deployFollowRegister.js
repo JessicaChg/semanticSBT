@@ -5,6 +5,7 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
+const {ethers, upgrades} = require("hardhat");
 
 const name = 'Relation Follow Register';
 const symbol = 'SBT';
@@ -44,20 +45,19 @@ async function main() {
             FollowRegisterLogic: followRegisterLogicLibrary.address,
         }
     });
-    const followRegister = await MyContract.deploy();
+    const followRegister = await upgrades.deployProxy(MyContract,
+        [owner.address,
+            name,
+            symbol,
+            baseURI,
+            schemaURI,
+            class_,
+            predicate_],
+        {unsafeAllowLinkedLibraries: true});
+
+    await followRegister.deployed();
     console.log(
         `${contractName} deployed ,contract address: ${followRegister.address}`
-    );
-    await (await followRegister.initialize(
-        owner.address,
-        name,
-        symbol,
-        baseURI,
-        schemaURI,
-        class_,
-        predicate_)).wait();
-    console.log(
-        `${contractName} initialized!`
     );
     await (await followRegister.setFollowImpl(follow.address)).wait();
     console.log(

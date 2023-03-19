@@ -5,11 +5,12 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
+const {ethers, upgrades} = require("hardhat");
 
-const name = 'Content';
+const name = 'Relation Content';
 const symbol = 'SBT';
 const baseURI = 'https://api.example.com/v1/';
-const schemaURI = 'ar://eV_a_cVZdbVcTEWzJjscg4cloGFnNyFu8tZuBBY0YaM';
+const schemaURI = 'ar://HENWTh3esXyAeLe1Yg_BrBOHhW-CcDQoU5inaAx-yNs';
 const class_ = [];
 const predicate_ = [["publicContent", 1]];
 
@@ -17,29 +18,32 @@ const predicate_ = [["publicContent", 1]];
 async function main() {
     const [owner] = await ethers.getSigners();
 
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
     const contractName = "Content";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
-    const myContract = await MyContract.deploy();
-    console.log(`${contractName} deployed ,contract address: ${myContract.address}`);
-    await myContract.deployTransaction.wait();
 
-    await (await myContract.initialize(
-        owner.address,
-        name,
-        symbol,
-        baseURI,
-        schemaURI,
-        class_,
-        predicate_)).wait();
-    console.log(`${contractName} initialized!`);
+    const contentContract = await upgrades.deployProxy(MyContract,
+        [owner.address,
+            name,
+            symbol,
+            baseURI,
+            schemaURI,
+            class_,
+            predicate_],
+        {unsafeAllowLinkedLibraries: true});
+
+    await contentContract.deployed();
+    console.log(
+        `${contractName} deployed ,contract address: ${contentContract.address}`
+    );
+
 
 }
 

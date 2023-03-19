@@ -5,14 +5,14 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "../interfaces/social/IContent.sol";
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract Content is IContent, SemanticSBT {
+contract Content is IContent, SemanticSBTUpgradeable {
 
 
     struct PostWithSign {
-        SemanticSBTLogic.Signature sig;
+        SemanticSBTLogicUpgradeable.Signature sig;
         address addr;
         string content;
     }
@@ -36,13 +36,13 @@ contract Content is IContent, SemanticSBT {
     function postWithSign(PostWithSign calldata vars) external {
         address addr;
         unchecked {
-            addr = SemanticSBTLogic.recoverSignerFromSignature(
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
                 name(),
                 address(this),
                 keccak256(
                     abi.encode(
                         POST_WITH_SIGN_TYPE_HASH,
-            keccak256(bytes(vars.content)),
+                        keccak256(bytes(vars.content)),
                         nonces[vars.addr]++,
                         vars.sig.deadline
                     )
@@ -60,7 +60,7 @@ contract Content is IContent, SemanticSBT {
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBT) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(SemanticSBTUpgradeable) returns (bool) {
         return interfaceId == type(IContent).interfaceId ||
         super.supportsInterface(interfaceId);
     }
@@ -71,17 +71,17 @@ contract Content is IContent, SemanticSBT {
     function _post(address addr, string memory content) internal {
         _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
         uint256 tokenId = _addEmptyToken(addr, 0);
-        _mint(tokenId, PUBLIC_CONTENT_PREDICATE, content);
+        _mint(addr,tokenId, PUBLIC_CONTENT_PREDICATE, content);
         _mintContent[addr][content] = tokenId;
         _contentOf[tokenId] = content;
     }
 
-    function _mint(uint256 tokenId, uint256 pIndex, string memory object) internal {
+    function _mint(address addr,uint256 tokenId, uint256 pIndex, string memory object) internal {
         StringPO[] memory stringPOList = new StringPO[](1);
         stringPOList[0] = StringPO(pIndex, object);
         _mint(
             tokenId,
-            msg.sender,
+            addr,
             new IntPO[](0),
             stringPOList,
             new AddressPO[](0),
