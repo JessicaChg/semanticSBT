@@ -7,13 +7,13 @@
 | Name                                   | Contract Address                           |
 |----------------------------------------|--------------------------------------------|
 | <h1><strong>Identity</strong></h1>     |                                            |
-| Name Service                           | 0x0D195ab46a9C9C4f97666A76AADb35d93965Cac8 |
+| Name Service                           | 0x50F7B39ADF3B906b6104cCD1B89245836AefDA8C |
 | <h1><strong>Relationship</strong></h1> |                                            |
-| FollowRegister                         | 0xab8Dde275F3d2508c578C5bbDf43E81964BF18A4 |
-| DaoRegister                            | 0x0d59F840F8631638A75Ff53d86B481051b61553E |
+| FollowRegister                         | 0x47a8b1ad551A093e4Dc3656d8bDDA5345E8aBfb0 |
+| DaoRegister                            | 0xED9Ffd530f84efd59149e2B6fF788dfc74A20E89 |
 | <h4>Publication</h4>                   |                                            |
-| Content                                | 0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7 |
-| PrivacyContent                         | 0x0e03Da61d941E323B1477C9a8193BAb605239f51 |
+| Content                                | 0x4e4a8edF710c2464f9fa61Dc937f5F51a8E07496 |
+| PrivacyContent                         | 0x25C0626868BFEF23e161fc1bc85Fe67327510813 |
 
 
 
