@@ -16,7 +16,7 @@ interface INameService is ISemanticSBT {
 
     /**
      * To set a record for resolving the name, linking the name to an address.
-     * @param owner : The owner of the name. If the address is "0", then the link is canceled.
+     * @param owner : The owner of the name. If the address is zero address, then the link is canceled.
      * @param name : The name.
      */
     function setNameForAddr(address owner, string calldata name) external;

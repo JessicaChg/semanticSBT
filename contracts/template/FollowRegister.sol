@@ -22,9 +22,14 @@ contract FollowRegister is IFollowRegister, SemanticSBTUpgradeable {
     mapping(address => address) _ownedFollowContract;
 
     address public followImpl;
+    address public verifyContract;
 
-    function setFollowImpl(address _followImpl) external {
+    function setFollowImpl(address _followImpl) external onlyMinter {
         followImpl = _followImpl;
+    }
+
+    function setFollowVerifyContract(address _verifyContract) external onlyMinter {
+        verifyContract = _verifyContract;
     }
 
     function ownedFollowContract(address owner) external view returns (address){
@@ -36,7 +41,7 @@ contract FollowRegister is IFollowRegister, SemanticSBTUpgradeable {
         require(_ownedFollowContract[to] == address(0), "FollowRegister:Already deployed!");
         require(msg.sender == to || _minters[msg.sender], "FollowRegister:Permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
-        address followContractAddress = FollowRegisterLogic.createFollow(followImpl, to, address(this));
+        address followContractAddress = FollowRegisterLogic.createFollow(followImpl, verifyContract, to, address(this));
         _ownedFollowContract[to] = followContractAddress;
         uint256 contractIndex = SemanticSBTLogicUpgradeable.addSubject(followContractAddress.toHexString(), _classNames[CONTRACT_CLASS_INDEX], _subjects, _subjectIndex, _classIndex);
 

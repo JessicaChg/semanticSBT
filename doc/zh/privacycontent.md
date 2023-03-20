@@ -22,6 +22,8 @@ const getContractInstance = () => {
 
 ## 调用合约方法
 
+### 用户自付gas费
+
 1. 预生成token
 
 用户需要预生成token,在调用post方法时传入预生成的tokenId。当用户调用post方法，会消耗掉预生成的token。
@@ -44,8 +46,7 @@ const tokenId = await privacyContract.ownedPrepareToken(accounts[0]);
 
 3. 发布内容
 
-用户需要通过[Lit Protocol](https://developer.litprotocol.com/sdk/explanation/encryption/#encrypting)
-进行数据加密，然后将需要发布的内容上传至Arweave，内容格式为：
+预生成token之后，才能发布内容。用户需要通过[Lit Protocol](https://developer.litprotocol.com/sdk/explanation/encryption/#encrypting)进行数据加密，然后将需要发布的内容上传至Arweave，内容格式为：
 
 ```json
 
@@ -79,15 +80,14 @@ const privacyContract = getContractInstance()
 const content = 'zX_Oa1...';
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 
-const tokenId = await privacyContract.ownedPrepareToken(accounts[0]);
 await (
-    await privacyContract.post(tokenId, content)
+    await privacyContract.post(content)
 ).wait()
 ```
 
 3. 将内容分享给我的follower
 
-用户可以将上传的隐私数据分享给follower，需要指定tokenId以及要分享的Follow合约地址
+用户可以将上传的隐私数据分享给follower，需要指定tokenId以及要分享的Follow合约地址。为了避免出现循环次数过多引发查询异常，合约内限制最多分享20个Follow合约地址
 
 ```javascript
 const myFollowContractAddress = '0x000...';
@@ -101,7 +101,7 @@ await (
 
 4. 将内容分享给指定的Dao
 
-用户可以将上传的隐私数据分享给指定的Dao，那么所有的Dao成员将可以通过Lit Protocol解密出隐私数据
+用户可以将上传的隐私数据分享给指定的Dao，那么所有的Dao成员将可以通过Lit Protocol解密出隐私数据。为了避免出现循环次数过多引发查询异常，合约内限制最多分享20个Dao合约地址
 
 ```javascript
 const myDaoContractAddress = '0x000...';
@@ -171,9 +171,12 @@ for (var i = 0; i < balance; i++) {
 }
 ```
 
-8. 预生成token(代付Gas费)
+### 代付Gas费
 
 用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+
+1. 预生成token(代付Gas费)
+
 
 ```javascript
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})

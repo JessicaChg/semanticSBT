@@ -227,6 +227,48 @@ describe("Privacy Content contract", function () {
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
         });
 
+        it("Should revert when the shared address not Follow implementer", async function () {
+            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const subject = ':Soul_' + owner.address.toLowerCase();
+            const predicate = "p:privacyContent";
+            const object = `"${content}"`;
+            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+
+            await privacyContent.prepareToken();
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+
+            await expect(privacyContent.post(1, content))
+                .to.emit(privacyContent, "CreateRDF")
+                .withArgs(1, rdf);
+            expect(await privacyContent.rdfOf(1)).to.equal(rdf);
+            expect(await privacyContent.contentOf(1)).to.equal(content);
+            expect(await privacyContent.isViewerOf(owner.address, 1)).to.equal(true);
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
+
+            await expect(privacyContent.connect(owner).shareToFollower(1, privacyContent.address)).revertedWith("PrivacyContent: non Follow implementer")
+        });
+
+        it("Should revert when the shared address not Dao implementer", async function () {
+            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const subject = ':Soul_' + owner.address.toLowerCase();
+            const predicate = "p:privacyContent";
+            const object = `"${content}"`;
+            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+
+            await privacyContent.prepareToken();
+            expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
+
+            await expect(privacyContent.post(1, content))
+                .to.emit(privacyContent, "CreateRDF")
+                .withArgs(1, rdf);
+            expect(await privacyContent.rdfOf(1)).to.equal(rdf);
+            expect(await privacyContent.contentOf(1)).to.equal(content);
+            expect(await privacyContent.isViewerOf(owner.address, 1)).to.equal(true);
+            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
+
+            await expect(privacyContent.connect(owner).shareToDao(1, privacyContent.address)).revertedWith("PrivacyContent: non Dao implementer")
+        });
+
         it("Should return true when the address is following the owner of token", async function () {
             const {privacyContent, followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();

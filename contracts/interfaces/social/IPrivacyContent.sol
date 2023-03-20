@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.12;
 
-import "../ISemanticSBT.sol";
+import "./IContent.sol";
 
 
-interface IPrivacyContent is ISemanticSBT {
+interface IPrivacyContent is IContent {
 
     /**
      * Prepare a tokenId.
@@ -21,11 +21,27 @@ interface IPrivacyContent is ISemanticSBT {
     function ownedPrepareToken(address addr) external view returns (uint256 tokenId);
 
     /**
-     * Post a content.
-     * @param tokenId The prepared tokenId.
-     * @param content  The content should be the hash on Arweave. The actual encrypted content and authorization records are stored on Arweave.
+     * Prepare a tokenId. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @return tokenId The prepared tokenId.
      */
-    function post(uint256 tokenId, string calldata content) external;
+    function prepareTokenBySigner(address addr) external returns (uint256) ;
+
+    /**
+     * Share to followers. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param tokenId The tokenId.
+     * @param followContractAddress The address of Follow contract.
+     */
+    function shareToFollowerBySigner(address addr, uint256 tokenId, address followContractAddress) external;
+
+    /**
+     * Share to daos. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param tokenId The tokenId.
+     * @param daoContractAddress The address of Dao contract.
+     */
+    function shareToDaoBySigner(address addr, uint256 tokenId, address daoContractAddress) external;
 
     /**
      * Whether the address is authorized to be the view of the token.
@@ -34,12 +50,5 @@ interface IPrivacyContent is ISemanticSBT {
      * @return isViewer true--has viewer permission; false--do not have viewer permission.
      */
     function isViewerOf(address viewer, uint256 tokenId) external view returns (bool isViewer);
-
-    /**
-     * View the hash on Arweave corresponding to the token
-     * @param tokenId The tokenId.
-     * @return content The content.
-     */
-    function contentOf(uint256 tokenId) external view returns (string memory content);
 
 }

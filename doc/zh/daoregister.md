@@ -71,6 +71,8 @@ const getDaoContractInstance = (contractAddress) => {
 
 ### Dao
 
+#### 用户自付Gas费
+
 1. 查询Dao的管理员
 
 ```javascript
@@ -204,8 +206,12 @@ for(var i = 0; i < memberCount;i++){
 }
 ```
 
+#### 代付Gas费
 
-10. 设置DaoURI（代付Gas费）
+用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+
+
+1. 设置DaoURI（代付Gas费）
 
 Dao的管理员可以给Dao添加描述以及头像，将描述和头像存放在Arweave上，内容格式为：
 ```json
@@ -291,7 +297,7 @@ async function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadlin
 
 ```
 
-11. 管理员添加Dao成员（代付Gas费）
+2. 管理员添加Dao成员（代付Gas费）
 
 管理员可以将指定的地址加入到Dao中
 
@@ -368,7 +374,7 @@ async function buildAddMemberParam(name, contractAddress, members, nonce, deadli
 ```
 
 
-12. 设置开放加入（代付Gas费）
+3. 设置开放加入（代付Gas费）
 
 管理员可以将Dao设置为开放加入，即任何用户均可加入dao。
 
@@ -444,7 +450,7 @@ async function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, d
 ```
 
 
-13. 用户加入Dao（代付Gas费）
+4. 用户加入Dao（代付Gas费）
 
 在管理员设置了开发加入后，用户可自行加入Dao
 
@@ -515,7 +521,7 @@ async function buildJoinParam(name, contractAddress, nonce, deadline) {
 ```
 
 
-14. 移除Dao成员（代付Gas费）
+5. 移除Dao成员（代付Gas费）
 
 管理员可以移除Dao的成员，普通用户也可自行离开Dao
 

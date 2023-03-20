@@ -21,6 +21,8 @@ const getContractInstance = () => {
 
 ## 调用合约方法
 
+### 用户自付Gas费
+
 1. 发布内容
 
 用户可以将需要发布的内容上传至Arweave，内容格式为：
@@ -67,10 +69,23 @@ for(var i = 0; i < balance;i++){
 }
 ```
 
-3. 发布内容（代支付Gas费）
+### 代付Gas费
 
-用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+用户对数据进行签名，构建上链参数。任意地址可携带此上链参数调用合约发起交易，Gas费由发起交易的地址支付。
 
+
+1. 发布内容（代支付Gas费）
+
+用户可以将需要发布的内容上传至Arweave，内容格式为：
+```json
+{
+  "content": {
+    "body": "${The body of content}",
+    "title": "${The title of content}"
+  }
+}
+```
+上传后得到的交易哈希，构建上链参数。由实际支付Gas费的地址携带此上链参数调用合约。
 
 ```javascript
 const contract = getContractInstance()

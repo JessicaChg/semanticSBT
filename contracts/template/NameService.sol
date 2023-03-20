@@ -20,7 +20,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     uint256 constant PROFILE_URI_PREDICATE_INDEX = 3;
 
     uint256 constant SOUL_CLASS_INDEX = 1;
-    uint256 constant DOMAIN_CLASS_INDEX = 2;
+    uint256 constant NAME_CLASS_INDEX = 2;
 
 
     uint256 _minNameLength;
@@ -51,9 +51,9 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
         require(NameServiceLogic.checkValidLength(name, _minNameLength, _nameLengthControl, _countOfNameLength), "NameService: invalid length of name");
         string memory fullName = string.concat(name, suffix);
-        require(_subjectIndex[DOMAIN_CLASS_INDEX][fullName] == 0, "NameService: already added");
+        require(_subjectIndex[NAME_CLASS_INDEX][fullName] == 0, "NameService: already added");
         tokenId = _addEmptyToken(owner, 0);
-        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, DOMAIN_CLASS_INDEX, _subjects, _subjectIndex);
+        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, NAME_CLASS_INDEX, _subjects, _subjectIndex);
         SubjectPO[] memory subjectPOList = NameServiceLogic.register(tokenId, owner, sIndex, resolve,
             _tokenIdOfName, _nameOf,
             _ownedResolvedName, _ownerOfResolvedName, _tokenIdOfResolvedName
@@ -62,9 +62,14 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
 
+    /**
+     * To set a record for resolving the name, linking the name to an address.
+     * @param addr_ : The owner of the name. If the address is zero address, then the link is canceled.
+     * @param name : The name.
+     */
     function setNameForAddr(address addr_, string calldata name) external override {
         require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
-        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
+        uint256 sIndex = _subjectIndex[NAME_CLASS_INDEX][name];
         uint256 tokenId = _tokenIdOfName[sIndex];
         require(ownerOf(tokenId) == msg.sender, "NameService:not the owner");
         SPO storage spo = _tokens[tokenId];
@@ -87,7 +92,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function addr(string calldata name) virtual override external view returns (address){
-        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
+        uint256 sIndex = _subjectIndex[NAME_CLASS_INDEX][name];
         return _ownerOfResolvedName[sIndex];
     }
 
@@ -110,7 +115,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
 
     function ownerOfName(string calldata name) external view returns (address){
-        uint256 sIndex = _subjectIndex[DOMAIN_CLASS_INDEX][name];
+        uint256 sIndex = _subjectIndex[NAME_CLASS_INDEX][name];
         uint256 tokenId = _tokenIdOfName[sIndex];
         return ownerOf(tokenId);
     }
@@ -125,17 +130,23 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
-    ) internal override(SemanticSBTUpgradeable) virtual {
-        require(_ownerOfResolvedName[_nameOf[tokenId]] == address(0), "NameService:can not transfer when resolved");
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal override(ERC721EnumerableUpgradeable) virtual {
+        require(from == address(0) || _ownerOfResolvedName[_nameOf[firstTokenId]] == address(0), "NameService:can not transfer when resolved");
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
-    ) internal override(SemanticSBTUpgradeable) virtual {
-        emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal override(ERC721Upgradeable) virtual {
+        super._afterTokenTransfer(from, to, firstTokenId, batchSize);
+        if (from != address(0)) {
+            emit UpdateRDF(firstTokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[firstTokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        }
     }
 
 

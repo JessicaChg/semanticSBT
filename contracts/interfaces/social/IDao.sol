@@ -55,6 +55,42 @@ interface IDao is ISemanticSBT {
     function daoURI() external view returns (string memory daoURI);
 
     /**
+    * Set the URI for a dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+    * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
+     */
+    function setDaoURIBySigner(address addr, string calldata daoURI) external;
+
+    /**
+     * Set whether it is an open dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param isFreeJoin_ Is this an open dao
+     */
+    function setFreeJoinBySigner(address addr, bool isFreeJoin_) external;
+
+
+    /**
+     * Add the specified address to dao in batches. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param members The specified address.
+     */
+    function addMemberBySigner(address addr, address[] calldata members) external;
+
+    /**
+     * Join a dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+     */
+    function joinBySigner(address addr) external;
+
+    /**
+     * Removed from a dao.This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param member The address.
+     */
+    function removeBySigner(address addr, address member) external;
+
+
+    /**
      * The owner of a dao.
      * @param owner The owner of a dao.
      */
