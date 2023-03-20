@@ -10,6 +10,7 @@ interface IDao is ISemanticSBT {
     function initialize(
         address owner,
         address minter,
+        address verifyContract,
         string memory name_,
         string memory symbol_,
         string memory baseURI_,

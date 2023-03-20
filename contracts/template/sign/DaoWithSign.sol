@@ -91,69 +91,74 @@ contract DaoWithSign is OperateWithSignBase {
                 vars.sig
             );
         }
+        IDao(vars.target).setFreeJoinBySigner(addr, vars.isFreeJoin);
     }
 
 
     function addMemberWithSign(AddMemberWithSign calldata vars) external {
         address addr;
-    unchecked {
-        addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-            name(),
-            address(this),
-            keccak256(
-                abi.encode(
-                    ADD_MEMBER_WITH_SIGN_TYPE_HASH,
-                    vars.target,
-                    keccak256(abi.encodePacked(vars.members)),
-                    nonces[vars.addr]++,
-                    vars.sig.deadline
-                )
-            ),
-            vars.addr,
-            vars.sig
-        );
-    }
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        ADD_MEMBER_WITH_SIGN_TYPE_HASH,
+                        vars.target,
+                        keccak256(abi.encodePacked(vars.members)),
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        IDao(vars.target).addMemberBySigner(addr, vars.members);
     }
 
     function joinWithSign(JoinWithSign calldata vars) external {
         address addr;
-    unchecked {
-        addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-            name(),
-            address(this),
-            keccak256(
-                abi.encode(
-                    JOIN_WITH_SIGN_TYPE_HASH,
-                    vars.target,
-                    nonces[vars.addr]++,
-                    vars.sig.deadline
-                )
-            ),
-            vars.addr,
-            vars.sig
-        );
-    }
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        JOIN_WITH_SIGN_TYPE_HASH,
+                        vars.target,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        IDao(vars.target).joinBySigner(addr);
+
     }
 
     function removeWithSign(RemoveWithSign calldata vars) external {
         address addr;
-    unchecked {
-        addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-            name(),
-            address(this),
-            keccak256(
-                abi.encode(
-                    REMOVE_WITH_SIGN_TYPE_HASH,
-                    vars.target,
-                    vars.member,
-                    nonces[vars.addr]++,
-                    vars.sig.deadline
-                )
-            ),
-            vars.addr,
-            vars.sig
-        );
-    }
+        unchecked {
+            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
+                name(),
+                address(this),
+                keccak256(
+                    abi.encode(
+                        REMOVE_WITH_SIGN_TYPE_HASH,
+                        vars.target,
+                        vars.member,
+                        nonces[vars.addr]++,
+                        vars.sig.deadline
+                    )
+                ),
+                vars.addr,
+                vars.sig
+            );
+        }
+        IDao(vars.target).removeBySigner(addr, vars.member);
     }
 
 

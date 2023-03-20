@@ -4,7 +4,7 @@
 
 ## 构建Contract对象
 
-DaoRegister的合约地址、abi文件以及Follow合约的abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Dao合约的地址需要通过DaoRegister查到。
+DaoRegister和DaoWithSign的合约地址、abi文件,以及Dao合约的abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Dao合约的地址需要通过DaoRegister查到。
 
 - 构建DaoRegisterContract对象：
 
@@ -18,6 +18,15 @@ const getDaoRegisterContractInstance = () => {
   const signer = provider.getSigner()
   const contract = new ethers.Contract(contractAddress, daoRegisterAbi, signer)
   return contract
+}
+
+const getDaoWithSignContractInstance = () => {
+    // DaoRegister合约地址
+    const contractAddress = '0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7'
+    const provider = new providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const contract = new ethers.Contract(contractAddress, daoWithSignAbi, signer)
+    return contract
 }
 ```
 
@@ -71,7 +80,6 @@ const getDaoContractInstance = (contractAddress) => {
 
 ### Dao
 
-#### 用户自付Gas费
 
 1. 查询Dao的管理员
 
@@ -206,12 +214,8 @@ for(var i = 0; i < memberCount;i++){
 }
 ```
 
-#### 代付Gas费
 
-用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
-
-
-1. 设置DaoURI（代付Gas费）
+10. 设置DaoURI（代付Gas费）
 
 Dao的管理员可以给Dao添加描述以及头像，将描述和头像存放在Arweave上，内容格式为：
 ```json
@@ -227,15 +231,17 @@ Dao的管理员可以给Dao添加描述以及头像，将描述和头像存放�
 const daoURI = 'hX_Mne1...';
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
+const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 
-let name = await daoContract.name();
-let nonce = await daoContract.nonces(accounts[0]);
+let name = await daoWithSignContract.name();
+let nonce = await daoWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildSetDaoURIParam(
         name,
+        daoWithSignContract.address.toLowerCase(),
         daoContract.address.toLowerCase(),
         daoURI,
         parseInt(nonce),
@@ -243,11 +249,12 @@ let sign = await getSign(await buildSetDaoURIParam(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": daoContract.address,
     "addr": accounts[0],
     "daoURI": daoURI
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await daoContract.connect(accounts[1]).setDaoURIWithSign(param);
+await daoWithSignContract.connect(accounts[1]).setDaoURIWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -262,7 +269,7 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadline) {
+async function buildSetDaoURIParam(name, contractAddress,daoContractAddress, daoURI, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -273,6 +280,7 @@ async function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadlin
 
         // Defining the message signing data content.
         message: {
+            target: daoContractAddress,
             daoURI: daoURI,
             nonce: nonce,
             deadline: deadline,
@@ -287,6 +295,7 @@ async function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadlin
                 {name: 'verifyingContract', type: 'address'},
             ],
             SetDaoURIWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'daoURI', type: 'string'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -297,22 +306,24 @@ async function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadlin
 
 ```
 
-2. 管理员添加Dao成员（代付Gas费）
+11. 管理员添加Dao成员（代付Gas费）
 
 管理员可以将指定的地址加入到Dao中
 
 ```javascript
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
+const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const members = ['0x001...','0x002...','0x003...'];
-let name = await daoContract.name();
-let nonce = await daoContract.nonces(accounts[0]);
+let name = await daoWithSignContract.name();
+let nonce = await daoWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildAddMemberParam(
         name,
+        daoWithSignContract.address.toLowerCase(),
         daoContract.address.toLowerCase(),
         members,
         parseInt(nonce),
@@ -320,11 +331,12 @@ let sign = await getSign(await buildAddMemberParam(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": daoContract.address,
     "addr": accounts[0],
     "members": members
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await expect(daoContract.connect(accounts[1]).addMemberWithSign(param));
+await expect(daoWithSignContract.connect(accounts[1]).addMemberWithSign(param));
 
 
 async function getSign(msgParams, signerAddress) {
@@ -339,7 +351,8 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildAddMemberParam(name, contractAddress, members, nonce, deadline) {
+
+async function buildAddMemberParam(name, contractAddress, daoContractAddress,members, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -350,6 +363,7 @@ async function buildAddMemberParam(name, contractAddress, members, nonce, deadli
 
         // Defining the message signing data content.
         message: {
+            target: daoContractAddress,
             members: members,
             nonce: nonce,
             deadline: deadline,
@@ -364,6 +378,7 @@ async function buildAddMemberParam(name, contractAddress, members, nonce, deadli
                 {name: 'verifyingContract', type: 'address'},
             ],
             AddMemberWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'members', type: 'address[]'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -374,21 +389,23 @@ async function buildAddMemberParam(name, contractAddress, members, nonce, deadli
 ```
 
 
-3. 设置开放加入（代付Gas费）
+12. 设置开放加入（代付Gas费）
 
 管理员可以将Dao设置为开放加入，即任何用户均可加入dao。
 
 ```javascript
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
+const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const isFreeJoin = true;
-let name = await daoContract.name();
-let nonce = await daoContract.nonces(accounts[0]);
+let name = await daoWithSignContract.name();
+let nonce = await daoWithSignContract.nonces(accounts[0]);
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildSetFreeJoinParam(
         name,
+        daoWithSignContract.address.toLowerCase(),
         daoContract.address.toLowerCase(),
         isFreeJoin,
         parseInt(nonce),
@@ -396,11 +413,12 @@ let sign = await getSign(await buildSetFreeJoinParam(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": daoContract.address,
     "addr": accounts[0],
     "isFreeJoin": isFreeJoin
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await daoContract.connect(accounts[1]).setFreeJoinWithSign(param);
+await daoWithSignContract.connect(accounts[1]).setFreeJoinWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -415,7 +433,7 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, deadline) {
+async function buildSetFreeJoinParam(name, contractAddress, daoContractAddress,isFreeJoin, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -426,6 +444,7 @@ async function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, d
 
         // Defining the message signing data content.
         message: {
+            target: daoContractAddress,
             isFreeJoin: isFreeJoin,
             nonce: nonce,
             deadline: deadline,
@@ -440,6 +459,7 @@ async function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, d
                 {name: 'verifyingContract', type: 'address'},
             ],
             SetFreeJoinWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'isFreeJoin', type: 'bool'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -450,30 +470,33 @@ async function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, d
 ```
 
 
-4. 用户加入Dao（代付Gas费）
+13. 用户加入Dao（代付Gas费）
 
 在管理员设置了开发加入后，用户可自行加入Dao
 
 ```javascript
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
+const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
-let name = await daoContract.name();
-let nonce = await daoContract.nonces(accounts[0]);
+let name = await daoWithSignContract.name();
+let nonce = await daoWithSignContract.nonces(accounts[0]);
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildJoinParam(
         name,
+        daoWithSignContract.address.toLowerCase(),
         daoContract.address.toLowerCase(),
         parseInt(nonce),
         deadline),
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": daoContract.address,
     "addr": accounts[0]
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await expect(daoContract.connect(accounts[1]).joinWithSign(param))
+await expect(daoWithSignContract.connect(accounts[1]).joinWithSign(param))
 
 
 async function getSign(msgParams, signerAddress) {
@@ -488,7 +511,7 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildJoinParam(name, contractAddress, nonce, deadline) {
+async function buildJoinParam(name, contractAddress, daoContractAddress,nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -499,6 +522,7 @@ async function buildJoinParam(name, contractAddress, nonce, deadline) {
 
         // Defining the message signing data content.
         message: {
+            target: daoContractAddress,
             nonce: nonce,
             deadline: deadline,
         },
@@ -512,6 +536,7 @@ async function buildJoinParam(name, contractAddress, nonce, deadline) {
                 {name: 'verifyingContract', type: 'address'},
             ],
             JoinWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
             ],
@@ -521,20 +546,22 @@ async function buildJoinParam(name, contractAddress, nonce, deadline) {
 ```
 
 
-5. 移除Dao成员（代付Gas费）
+14. 移除Dao成员（代付Gas费）
 
 管理员可以移除Dao的成员，普通用户也可自行离开Dao
 
 ```javascript
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
+const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
-let name = await daoContract.name();
-let nonce = await daoContract.nonces(accounts[0]);
+let name = await daoWithSignContract.name();
+let nonce = await daoWithSignContract.nonces(accounts[0]);
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildRemoveParam(
         name,
+        daoWithSignContract.address.toLowerCase(),
         daoContract.address.toLowerCase(),
         accounts[0].toLowerCase(),
         parseInt(nonce),
@@ -542,11 +569,12 @@ let sign = await getSign(await buildRemoveParam(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": daoContract.address,
     "addr": accounts[0],
     "member": accounts[0]
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await expect(daoContract.connect(accounts[1]).removeWithSign(param))
+await expect(daoWithSignContract.connect(accounts[1]).removeWithSign(param))
 
 
 async function getSign(msgParams, signerAddress) {
@@ -561,7 +589,7 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildRemoveParam(name, contractAddress, member, nonce, deadline) {
+async function buildRemoveParam(name, contractAddress, daoContractAddress,member, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -572,6 +600,7 @@ async function buildRemoveParam(name, contractAddress, member, nonce, deadline) 
 
         // Defining the message signing data content.
         message: {
+            target: daoContractAddress,
             member: member,
             nonce: nonce,
             deadline: deadline,
@@ -586,6 +615,7 @@ async function buildRemoveParam(name, contractAddress, member, nonce, deadline) 
                 {name: 'verifyingContract', type: 'address'},
             ],
             RemoveWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'member', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},

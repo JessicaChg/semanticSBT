@@ -21,9 +21,28 @@ contract Content is IContent, SemanticSBTUpgradeable {
 
     mapping(address => mapping(string => uint256)) internal _mintContent;
     mapping(uint256 => string) _contentOf;
+    address public verifyContract;
 
+    modifier onlyVerifyContract{
+        require(msg.sender == verifyContract, "Follow: must be verify contract");
+        _;
+    }
 
     /* ============ External Functions ============ */
+
+    function initialize(
+        address minter,
+        address verifyContract_,
+        string memory name_,
+        string memory symbol_,
+        string memory baseURI_,
+        string memory schemaURI_,
+        string[] memory classes_,
+        Predicate[] memory predicates_
+    ) public initializer {
+        super.initialize(minter,name_,symbol_,baseURI_,schemaURI_,classes_,predicates_);
+        verifyContract = verifyContract_;
+    }
 
     function post(string calldata content) virtual external {
         uint256 tokenId = _addEmptyToken(msg.sender, 0);
@@ -31,7 +50,7 @@ contract Content is IContent, SemanticSBTUpgradeable {
     }
 
 
-    function postBySigner(address addr, string calldata content) virtual external {
+    function postBySigner(address addr, string calldata content) virtual onlyVerifyContract external {
 
         uint256 tokenId = _addEmptyToken(addr, 0);
         _post(addr, tokenId, PUBLIC_CONTENT_PREDICATE, content);

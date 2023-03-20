@@ -5,7 +5,6 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDao.sol";
-import "../libraries/DaoLogic.sol";
 
 contract Dao is IDao, SemanticSBTUpgradeable {
 
@@ -44,6 +43,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     function initialize(
         address owner,
         address minter,
+        address verifyContract_,
         string memory name_,
         string memory symbol_,
         string memory baseURI_,
@@ -54,6 +54,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
         _setOwner(owner);
         _join(owner);
+        verifyContract = verifyContract_;
     }
 
     function setDaoURI(string calldata daoURI_) external {
@@ -92,16 +93,16 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     }
 
 
-    function setDaoURIBySigner(address addr, string calldata daoURI_) external {
+    function setDaoURIBySigner(address addr, string calldata daoURI_) external onlyVerifyContract {
         _setDaoURIInternal(addr, daoURI_);
     }
 
-    function setFreeJoinBySigner(address addr, bool isFreeJoin_) external {
+    function setFreeJoinBySigner(address addr, bool isFreeJoin_) external onlyVerifyContract {
         _setFreeJoin(addr, isFreeJoin_);
     }
 
 
-    function addMemberBySigner(address addr,address[] calldata members) external {
+    function addMemberBySigner(address addr,address[] calldata members) external onlyVerifyContract {
         require(addr == ownerOfDao, "Dao: permission denied");
         for (uint256 i = 0; i < members.length;) {
             _join(members[i]);
@@ -111,12 +112,12 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         }
     }
 
-    function joinBySigner(address addr) external {
+    function joinBySigner(address addr) external onlyVerifyContract {
         require(_isFreeJoin, "Dao: permission denied");
         _join(addr);
     }
 
-    function removeBySigner(address addr, address member) external {
+    function removeBySigner(address addr, address member) external onlyVerifyContract {
         _remove(addr, member);
     }
 

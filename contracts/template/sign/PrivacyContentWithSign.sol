@@ -38,7 +38,7 @@ contract PrivacyContentWithSign is ContentWithSign {
 
 
     /* ============ External Functions ============ */
-    function prepareTokenBySigner(PrepareTokenWithSign calldata vars) external {
+    function prepareTokenWithSign(PrepareTokenWithSign calldata vars) external {
         address addr;
         unchecked {
             addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
@@ -104,7 +104,7 @@ contract PrivacyContentWithSign is ContentWithSign {
                 vars.sig
             );
         }
-        IPrivacyContent(vars.target).shareToFollowerBySigner(addr, vars.tokenId, vars.daoContractAddress);
+        IPrivacyContent(vars.target).shareToDaoBySigner(addr, vars.tokenId, vars.daoContractAddress);
 
     }
 

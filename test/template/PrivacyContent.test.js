@@ -5,6 +5,7 @@ const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const hre = require("hardhat");
 const Bytes = require("@ethersproject/bytes");
+const {upgrades} = require("hardhat");
 
 const name = 'Privacy Content';
 const symbol = 'SBT';
@@ -84,16 +85,9 @@ describe("Privacy Content contract", function () {
 
         const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
         const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
-        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic", {
-            libraries: {
-                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-            }
-        });
-        const daoLogicLibrary = await DaoLogic.deploy();
         const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-                DaoLogic: daoLogicLibrary.address,
             }
         });
         const dao = await Dao.deploy();
@@ -126,24 +120,39 @@ describe("Privacy Content contract", function () {
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
+        const PrivacyContentWithSign = await hre.ethers.getContractFactory("PrivacyContentWithSign", {
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });
+        const privacyContentWithSign = await PrivacyContentWithSign.deploy();
+        await privacyContentWithSign.deployTransaction.wait();
+        const privacyContentWithSignName = 'Privacy Content With Sign';
+        await privacyContentWithSign.initialize(privacyContentWithSignName);
+
+
         const contractName = "PrivacyContent";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const privacyContent = await MyContract.deploy();
-
-        await privacyContent.initialize(
-            owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_);
+        const privacyContent = await upgrades.deployProxy(MyContract,
+            [owner.address,
+                privacyContentWithSign.address,
+                name,
+                symbol,
+                baseURI,
+                schemaURI,
+                class_,
+                predicate_],
+            {
+                unsafeAllowLinkedLibraries: true,
+                initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'
+            });
+        await privacyContent.deployed();
         const followRegister = await deployFollowRegister();
-        return {privacyContent: privacyContent, followRegister, owner, addr1};
+        return {privacyContent: privacyContent, privacyContentWithSign, followRegister, owner, addr1};
     }
 
     // check semanticSBT belong this contract owner
@@ -186,8 +195,8 @@ describe("Privacy Content contract", function () {
         it("User should fail to post without call prepare token", async function () {
             const {privacyContent, owner} = await loadFixture(deployTokenFixture);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(0);
-            await expect(privacyContent.post(1, content))
-                .to.revertedWith("PrivacyContent:Permission denied")
+            await expect(privacyContent.post(content))
+                .to.revertedWith("PrivacyContent:Token id not exist")
         });
 
         it("User should owner a sbt after post a privacy content ", async function () {
@@ -200,7 +209,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -218,7 +227,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -237,7 +246,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -258,7 +267,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -279,7 +288,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -309,7 +318,7 @@ describe("Privacy Content contract", function () {
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
-            await expect(privacyContent.post(1, content))
+            await expect(privacyContent.post(content))
                 .to.emit(privacyContent, "CreateRDF")
                 .withArgs(1, rdf);
             expect(await privacyContent.rdfOf(1)).to.equal(rdf);
@@ -334,89 +343,109 @@ describe("Privacy Content contract", function () {
 
     describe("Call privacyContent with signData", function () {
         it("Prepare token with signData", async function () {
-            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = await privacyContent.name();
-            const nonce = await privacyContent.nonces(owner.address);
+            const {privacyContent, privacyContentWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
+            const name = await privacyContentWithSign.name();
+            const nonce = await privacyContentWithSign.nonces(owner.address);
             const deadline = Date.parse(new Date()) / 1000 + 100;
-            const sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            const sign = await getSign(buildPrepareParams(name, privacyContentWithSign.address.toLowerCase(), privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            var param =
+                {
+                    "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                    "target": privacyContent.address,
+                    "addr": owner.address
+                }
+            await privacyContentWithSign.connect(addr1).prepareTokenWithSign(param);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
         });
 
         it("Post with signData", async function () {
-            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {privacyContent, privacyContentWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-            let name = await privacyContent.name();
-            let nonce = await privacyContent.nonces(owner.address);
+            let name = await privacyContentWithSign.name();
+            let nonce = await privacyContentWithSign.nonces(owner.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
-            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            let sign = await getSign(buildPrepareParams(name, privacyContentWithSign.address.toLowerCase(), privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param =
+                {
+                    "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                    "target": privacyContent.address,
+                    "addr": owner.address
+                }
+            await privacyContentWithSign.connect(addr1).prepareTokenWithSign(param);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
 
-            nonce = await privacyContent.nonces(owner.address);
+            nonce = await privacyContentWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
-            const tokenId = await privacyContent.ownedPrepareToken(owner.address);
             sign = await getSign(buildPostParams(
                     name,
+                    privacyContentWithSign.address.toLowerCase(),
                     privacyContent.address.toLowerCase(),
-                    parseInt(tokenId),
                     content,
                     parseInt(nonce),
                     deadline),
                 owner.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": privacyContent.address,
                 "addr": owner.address,
-                "tokenId": parseInt(tokenId),
                 "content": content
             }
-            await privacyContent.connect(addr1).postWithSign(param);
-            expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
-            expect(await privacyContent.ownerOf(parseInt(tokenId))).to.equal(owner.address);
+            await privacyContentWithSign.connect(addr1).postWithSign(param);
+            expect(await privacyContent.rdfOf(1)).to.equal(rdf);
+            expect(await privacyContent.ownerOf(1)).to.equal(owner.address);
         });
 
 
         it("Share to follow with signData", async function () {
-            const {privacyContent, followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {
+                privacyContent,
+                privacyContentWithSign,
+                followRegister,
+                owner,
+                addr1
+            } = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-            let name = await privacyContent.name();
-            let nonce = await privacyContent.nonces(owner.address);
+            let name = await privacyContentWithSign.name();
+            let nonce = await privacyContentWithSign.nonces(owner.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
-            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            let sign = await getSign(buildPrepareParams(name, privacyContentWithSign.address.toLowerCase(), privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param =
+                {
+                    "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                    "target": privacyContent.address,
+                    "addr": owner.address
+                }
+            await privacyContentWithSign.connect(addr1).prepareTokenWithSign(param);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
 
-            nonce = await privacyContent.nonces(owner.address);
+            nonce = await privacyContentWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             const tokenId = await privacyContent.ownedPrepareToken(owner.address);
             sign = await getSign(buildPostParams(
                     name,
+                    privacyContentWithSign.address.toLowerCase(),
                     privacyContent.address.toLowerCase(),
-                    parseInt(tokenId),
                     content,
                     parseInt(nonce),
                     deadline),
                 owner.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": privacyContent.address,
                 "addr": owner.address,
-                "tokenId": parseInt(tokenId),
                 "content": content
             }
-            await privacyContent.connect(addr1).postWithSign(param);
+            await privacyContentWithSign.connect(addr1).postWithSign(param);
             expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
 
 
@@ -426,10 +455,11 @@ describe("Privacy Content contract", function () {
             await followContract.connect(addr1).follow();
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
 
-            nonce = await privacyContent.nonces(owner.address);
+            nonce = await privacyContentWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             sign = await getSign(buildShareToFollowerParams(
                     name,
+                    privacyContentWithSign.address.toLowerCase(),
                     privacyContent.address.toLowerCase(),
                     parseInt(tokenId),
                     followContractAddress,
@@ -438,50 +468,56 @@ describe("Privacy Content contract", function () {
                 owner.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": privacyContent.address,
                 "addr": owner.address,
                 "tokenId": parseInt(tokenId),
                 "followContractAddress": followContractAddress
             }
-            await privacyContent.connect(addr1).shareToFollowerWithSign(param);
+            await privacyContentWithSign.connect(addr1).shareToFollowerWithSign(param);
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
 
         });
 
 
         it("Share to dao with signData", async function () {
-            const {privacyContent, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {privacyContent, privacyContentWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
             const rdf = subject + ' ' + predicate + ' ' + object + '.';
 
-            let name = await privacyContent.name();
-            let nonce = await privacyContent.nonces(owner.address);
+            let name = await privacyContentWithSign.name();
+            let nonce = await privacyContentWithSign.nonces(owner.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
-            let sign = await getSign(buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await privacyContent.connect(addr1).prepareTokenWithSign(param);
+            let sign = await getSign(buildPrepareParams(name, privacyContentWithSign.address.toLowerCase(), privacyContent.address.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param =
+                {
+                    "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                    "target": privacyContent.address,
+                    "addr": owner.address
+                }
+            await privacyContentWithSign.connect(addr1).prepareTokenWithSign(param);
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
 
 
-            nonce = await privacyContent.nonces(owner.address);
+            nonce = await privacyContentWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             const tokenId = await privacyContent.ownedPrepareToken(owner.address);
             sign = await getSign(buildPostParams(
                     name,
+                    privacyContentWithSign.address.toLowerCase(),
                     privacyContent.address.toLowerCase(),
-                    parseInt(tokenId),
                     content,
                     parseInt(nonce),
                     deadline),
                 owner.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": privacyContent.address,
                 "addr": owner.address,
-                "tokenId": parseInt(tokenId),
                 "content": content
             }
-            await privacyContent.connect(addr1).postWithSign(param);
+            await privacyContentWithSign.connect(addr1).postWithSign(param);
             expect(await privacyContent.rdfOf(parseInt(tokenId))).to.equal(rdf);
 
 
@@ -493,10 +529,11 @@ describe("Privacy Content contract", function () {
             await daoContract.connect(addr1).join();
             expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(false);
 
-            nonce = await privacyContent.nonces(owner.address);
+            nonce = await privacyContentWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             sign = await getSign(buildShareToDaoParams(
                     name,
+                    privacyContentWithSign.address.toLowerCase(),
                     privacyContent.address.toLowerCase(),
                     parseInt(tokenId),
                     daoContractAddress.contractAddress,
@@ -505,12 +542,13 @@ describe("Privacy Content contract", function () {
                 owner.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": privacyContent.address,
                 "addr": owner.address,
                 "tokenId": parseInt(tokenId),
                 "daoContractAddress": daoContractAddress.contractAddress
             }
-            await privacyContent.connect(addr1).shareToDaoWithSign(param);
-            expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
+            await privacyContentWithSign.connect(addr1).shareToDaoWithSign(param);
+            // expect(await privacyContent.isViewerOf(addr1.address, 1)).to.equal(true);
 
         });
 
@@ -528,7 +566,7 @@ describe("Privacy Content contract", function () {
         return hre.network.config.chainId;
     }
 
-    function buildPrepareParams(name, contractAddress, nonce, deadline) {
+    function buildPrepareParams(name, contractAddress, privacyContractAddress, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -539,6 +577,7 @@ describe("Privacy Content contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: privacyContractAddress,
                 nonce: nonce,
                 deadline: deadline,
             },
@@ -552,6 +591,7 @@ describe("Privacy Content contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 PrepareTokenWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],
@@ -559,7 +599,7 @@ describe("Privacy Content contract", function () {
         };
     }
 
-    function buildPostParams(name, contractAddress, tokenId, content, nonce, deadline) {
+    function buildPostParams(name, contractAddress, privacyContractAddress, content, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -570,7 +610,7 @@ describe("Privacy Content contract", function () {
 
             // Defining the message signing data content.
             message: {
-                tokenId: tokenId,
+                target: privacyContractAddress,
                 content: content,
                 nonce: nonce,
                 deadline: deadline,
@@ -585,7 +625,7 @@ describe("Privacy Content contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 PostWithSign: [
-                    {name: 'tokenId', type: 'uint256'},
+                    {name: 'target', type: 'address'},
                     {name: 'content', type: 'string'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
@@ -594,7 +634,7 @@ describe("Privacy Content contract", function () {
         };
     }
 
-    function buildShareToFollowerParams(name, contractAddress, tokenId, followContractAddress, nonce, deadline) {
+    function buildShareToFollowerParams(name, contractAddress, privacyContractAddress, tokenId, followContractAddress, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -605,6 +645,7 @@ describe("Privacy Content contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: privacyContractAddress,
                 tokenId: tokenId,
                 followContractAddress: followContractAddress,
                 nonce: nonce,
@@ -620,6 +661,7 @@ describe("Privacy Content contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 ShareToFollowerWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'tokenId', type: 'uint256'},
                     {name: 'followContractAddress', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
@@ -629,7 +671,7 @@ describe("Privacy Content contract", function () {
         };
     }
 
-    function buildShareToDaoParams(name, contractAddress, tokenId, daoContractAddress, nonce, deadline) {
+    function buildShareToDaoParams(name, contractAddress, privacyContractAddress, tokenId, daoContractAddress, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -640,6 +682,7 @@ describe("Privacy Content contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: privacyContractAddress,
                 tokenId: tokenId,
                 daoContractAddress: daoContractAddress,
                 nonce: nonce,
@@ -655,6 +698,7 @@ describe("Privacy Content contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 ShareToDaoWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'tokenId', type: 'uint256'},
                     {name: 'daoContractAddress', type: 'address'},
                     {name: 'nonce', type: 'uint256'},

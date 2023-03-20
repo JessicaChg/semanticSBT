@@ -5,7 +5,7 @@ Standard里PrivacyContent的实现。
 
 ## 构建Contract对象
 
-PrivacyContent的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，通过ethers构建Contract对象：
+PrivacyContent和PrivacyContentWithSign的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，通过ethers构建Contract对象：
 
 ```javascript
 import {ethers, providers} from 'ethers'
@@ -15,7 +15,16 @@ const getContractInstance = () => {
     const contractAddress = '0x1A4231bedA090c6903c4731518C616F8FAEc5dc7'
     const provider = new providers.Web3Provider(window.ethereum)
     const signer = provider.getSigner()
-    const contract = new ethers.Contract(contractAddress, abi, signer)
+    const contract = new ethers.Contract(contractAddress, privacyContentAbi, signer)
+    return contract
+}
+
+const getPrivacyContentWithSignContractInstance = () => {
+    // 合约地址
+    const contractAddress = ''
+    const provider = new providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const contract = new ethers.Contract(contractAddress, privacyContentWithSignAbi, signer)
     return contract
 }
 ```
@@ -171,25 +180,30 @@ for (var i = 0; i < balance; i++) {
 }
 ```
 
-### 代付Gas费
+
+
+8. 预生成token(代付Gas费)
 
 用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
-
-1. 预生成token(代付Gas费)
 
 
 ```javascript
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContract = getContractInstance()
+const privacyWithSignContract = getPrivacyContentWithSignContractInstance()
 
-const name = await privacyContent.name();
-const nonce = await privacyContent.nonces(accounts[0]);
+const name = await privacyWithSignContract.name();
+const nonce = await privacyWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(await buildPrepareParams(name, privacyContent.address.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
+const sign = await getSign(await buildPrepareParams(name, privacyWithSignContract.address.toLowerCase(),privacyContract.address, parseInt(nonce), deadline), accounts[0]);
+var param = 
+    {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, 
+        "target": privacyContract.address,
+        "addr": accounts[0]
+    }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(accounts[1]).prepareTokenWithSign(param);
+await privacyWithSignContract.connect(accounts[1]).prepareTokenWithSign(param);
 
 async function getSign(msgParams, signerAddress) {
     const params = [signerAddress, msgParams];
@@ -204,7 +218,7 @@ async function getChainId() {
     });
 }
 
-async function buildPrepareParams(name, contractAddress, nonce, deadline) {
+async function buildPrepareParams(name, contractAddress, privacyContentAddress,nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -215,6 +229,7 @@ async function buildPrepareParams(name, contractAddress, nonce, deadline) {
 
         // Defining the message signing data content.
         message: {
+            target: privacyContentAddress,
             nonce: nonce,
             deadline: deadline,
         },
@@ -228,6 +243,7 @@ async function buildPrepareParams(name, contractAddress, nonce, deadline) {
                 {name: 'verifyingContract', type: 'address'},
             ],
             PrepareTokenWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
             ],
@@ -244,28 +260,28 @@ async function buildPrepareParams(name, contractAddress, nonce, deadline) {
 const content = 'zX_Oa1...';
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContract = getContractInstance()
+const privacyWithSignContract = getPrivacyContentWithSignContractInstance()
 
-let name = await privacyContent.name();
-let nonce = await privacyContent.nonces(accounts[0]);
+let name = await privacyWithSignContract.name();
+let nonce = await privacyWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
-const tokenId = await privacyContent.ownedPrepareToken(accounts[0]);
 let sign = await getSign(await buildPostParams(
         name,
+        privacyWithSignContract.address.toLowerCase(),
         privacyContent.address.toLowerCase(),
-        parseInt(tokenId),
         content,
         parseInt(nonce),
         deadline),
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": privacyContract.address,
     "addr": accounts[0],
-    "tokenId": parseInt(tokenId),
     "content": content
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(accounts[1]).postWithSign(param);
+await privacyWithSignContract.connect(accounts[1]).postWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -281,7 +297,7 @@ async function getChainId() {
     });
 }
 
-async function buildPostParams(name, contractAddress, tokenId, content, nonce, deadline) {
+async function buildPostParams(name, contractAddress, privacyContentAddress, content, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -292,7 +308,7 @@ async function buildPostParams(name, contractAddress, tokenId, content, nonce, d
 
         // Defining the message signing data content.
         message: {
-            tokenId: tokenId,
+            target: privacyContentAddress,
             content: content,
             nonce: nonce,
             deadline: deadline,
@@ -307,7 +323,7 @@ async function buildPostParams(name, contractAddress, tokenId, content, nonce, d
                 {name: 'verifyingContract', type: 'address'},
             ],
             PostWithSign: [
-                {name: 'tokenId', type: 'uint256'},
+                {name: 'target', type: 'address'},
                 {name: 'content', type: 'string'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -327,13 +343,15 @@ const followContractAddress = '0x0001...';
 const tokenId = '1'
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContent = getContractInstance()
+const privacyWithSignContract = getPrivacyContentWithSignContractInstance()
 
-let name = await privacyContent.name();
-let nonce = await privacyContent.nonces(accounts[0]);
+let name = await privacyWithSignContract.name();
+let nonce = await privacyWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildShareToFollowerParams(
         name,
+        privacyWithSignContract.address.toLowerCase(),
         privacyContent.address.toLowerCase(),
         tokenId,
         followContractAddress,
@@ -342,12 +360,12 @@ let sign = await getSign(await buildShareToFollowerParams(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
-    "addr": accounts[0],
+    "target": privacyContent.address,
     "tokenId": parseInt(tokenId),
     "followContractAddress": followContractAddress
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(accounts[1]).shareToFollowerWithSign(param);
+await privacyWithSignContract.connect(accounts[1]).shareToFollowerWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -363,7 +381,7 @@ async function getChainId() {
     });
 }
 
-async function buildShareToFollowerParams(name, contractAddress, tokenId, followContractAddress, nonce, deadline) {
+async function buildShareToFollowerParams(name, contractAddress, privacyContentAddress, tokenId, followContractAddress, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -374,6 +392,7 @@ async function buildShareToFollowerParams(name, contractAddress, tokenId, follow
 
         // Defining the message signing data content.
         message: {
+            target: privacyContentAddress,
             tokenId: tokenId,
             followContractAddress: followContractAddress,
             nonce: nonce,
@@ -389,6 +408,7 @@ async function buildShareToFollowerParams(name, contractAddress, tokenId, follow
                 {name: 'verifyingContract', type: 'address'},
             ],
             ShareToFollowerWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'tokenId', type: 'uint256'},
                 {name: 'followContractAddress', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
@@ -409,13 +429,15 @@ const daoContractAddress = '0x0001...';
 const tokenId = '1'
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContent = getContractInstance()
+const privacyWithSignContract = getPrivacyContentWithSignContractInstance()
 
-let name = await privacyContent.name();
-let nonce = await privacyContent.nonces(accounts[0]);
+let name = await privacyWithSignContract.name();
+let nonce = await privacyWithSignContract.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildShareToDaoParams(
         name,
+        privacyWithSignContract.address.toLowerCase(),
         privacyContent.address.toLowerCase(),
         tokenId,
         daoContractAddress,
@@ -424,12 +446,13 @@ let sign = await getSign(await buildShareToDaoParams(
     accounts[0]);
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": privacyContent.address,
     "addr": accounts[0],
     "tokenId": parseInt(tokenId),
     "daoContractAddress": daoContractAddress
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await privacyContent.connect(accounts[1]).shareToDaoWithSign(param);
+await privacyWithSignContract.connect(accounts[1]).shareToDaoWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -445,7 +468,7 @@ async function getChainId() {
     });
 }
 
-async function buildShareToDaoParams(name, contractAddress, tokenId, daoContractAddress, nonce, deadline) {
+async function buildShareToDaoParams(name, contractAddress, privacyContentAddress, tokenId, daoContractAddress, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -456,6 +479,7 @@ async function buildShareToDaoParams(name, contractAddress, tokenId, daoContract
 
         // Defining the message signing data content.
         message: {
+            target: privacyContentAddress,
             tokenId: tokenId,
             daoContractAddress: daoContractAddress,
             nonce: nonce,
@@ -471,6 +495,7 @@ async function buildShareToDaoParams(name, contractAddress, tokenId, daoContract
                 {name: 'verifyingContract', type: 'address'},
             ],
             ShareToDaoWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'tokenId', type: 'uint256'},
                 {name: 'daoContractAddress', type: 'address'},
                 {name: 'nonce', type: 'uint256'},

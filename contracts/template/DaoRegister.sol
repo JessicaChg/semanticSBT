@@ -28,7 +28,12 @@ contract DaoRegister is IDaoRegister, SemanticSBTUpgradeable {
     string public daoBaseURI;
 
     address public daoImpl;
+    address public verifyContract;
 
+
+    function setDaoVerifyContract(address _verifyContract) external onlyMinter {
+        verifyContract = _verifyContract;
+    }
 
     function setDaoBaseURI(string calldata daoBaseURI_) external onlyOwner {
         daoBaseURI = daoBaseURI_;
@@ -42,7 +47,7 @@ contract DaoRegister is IDaoRegister, SemanticSBTUpgradeable {
         require(daoImpl != address(0), "DaoRegister:daoImpl not set");
         require(to == msg.sender || _minters[msg.sender], "DaoRegister:permission Denied");
         uint256 tokenId = _addEmptyToken(to, 0);
-        address daoContractAddress = DaoRegisterLogic.createDao(daoImpl, to, address(this), name_, daoBaseURI);
+        address daoContractAddress = DaoRegisterLogic.createDao(daoImpl, verifyContract, to, address(this), name_, daoBaseURI);
         _daoOf[tokenId] = DaoStruct(to, daoContractAddress);
         uint256 contractIndex = SemanticSBTLogicUpgradeable.addSubject(daoContractAddress.toHexString(), _classNames[CONTRACT_CLASS_INDEX], _subjects, _subjectIndex, _classIndex);
 
