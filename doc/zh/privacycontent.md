@@ -361,6 +361,7 @@ let sign = await getSign(await buildShareToFollowerParams(
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
     "target": privacyContent.address,
+    "addr": accounts[0],
     "tokenId": parseInt(tokenId),
     "followContractAddress": followContractAddress
 }
