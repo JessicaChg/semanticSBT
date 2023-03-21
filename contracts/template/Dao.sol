@@ -33,7 +33,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     }
 
     modifier onlyVerifyContract{
-        require(msg.sender == verifyContract, "Follow: must be verify contract");
+        require(msg.sender == verifyContract, "Dao: must be verify contract");
         _;
     }
 
