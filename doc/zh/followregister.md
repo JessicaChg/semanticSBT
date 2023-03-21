@@ -117,6 +117,8 @@ for(var i = 0; i < numOfFollower;i++){
 用户对数据进行签名，打包成上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const followRegisterContract = getFollowRegisterContractInstance()
@@ -190,6 +192,8 @@ async function buildFollowParams(name, contractAddress, followContractAddress, n
 
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const followRegisterContract = getFollowRegisterContractInstance()

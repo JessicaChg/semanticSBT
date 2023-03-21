@@ -188,6 +188,8 @@ for (var i = 0; i < balance; i++) {
 
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContract = getContractInstance()
 const privacyWithSignContract = getPrivacyContentWithSignContractInstance()
@@ -257,6 +259,8 @@ async function buildPrepareParams(name, contractAddress, privacyContentAddress,n
 用户上传内容到Arweave，对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const content = 'zX_Oa1...';
 const accounts = await ethereum.request({method: 'eth_requestAccounts'})
 const privacyContract = getContractInstance()
@@ -338,6 +342,8 @@ async function buildPostParams(name, contractAddress, privacyContentAddress, con
 用户对需要分享的tokenId以及Follow合约地址进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const privacyContent = '';
 const followContractAddress = '0x0001...';
 const tokenId = '1'
@@ -425,6 +431,8 @@ async function buildShareToFollowerParams(name, contractAddress, privacyContentA
 用户对需要分享的tokenId以及dao合约地址进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const privacyContent = '';
 const daoContractAddress = '0x0001...';
 const tokenId = '1'

@@ -228,6 +228,8 @@ Dao的管理员可以给Dao添加描述以及头像，将描述和头像存放�
 
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const daoURI = 'hX_Mne1...';
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
@@ -311,6 +313,8 @@ async function buildSetDaoURIParam(name, contractAddress,daoContractAddress, dao
 管理员可以将指定的地址加入到Dao中
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
 const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
@@ -394,6 +398,8 @@ async function buildAddMemberParam(name, contractAddress, daoContractAddress,mem
 管理员可以将Dao设置为开放加入，即任何用户均可加入dao。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
 const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
@@ -475,6 +481,8 @@ async function buildSetFreeJoinParam(name, contractAddress, daoContractAddress,i
 在管理员设置了开发加入后，用户可自行加入Dao
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
 const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
@@ -551,6 +559,8 @@ async function buildJoinParam(name, contractAddress, daoContractAddress,nonce, d
 管理员可以移除Dao的成员，普通用户也可自行离开Dao
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const daoContractAddress = '0x000...';
 const daoContract = getDaoContractInstance(daoContractAddress)
 const daoWithSignContract = getDaoWithSignContractInstance(daoContractAddress)
