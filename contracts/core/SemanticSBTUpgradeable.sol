@@ -31,8 +31,6 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
     string private _symbol;
 
-    uint256 private _burnCount;
-
     SPO[] internal _tokens;
 
 
@@ -272,7 +270,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
             "SemanticSBT: caller is not approved or owner"
         );
         require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        _burn(account, id);
+        _burn(id);
     }
 
 
@@ -332,7 +330,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         emit CreateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
     }
 
-    function _burn(address account, uint256 tokenId) internal {
+    function _burn(uint256 tokenId) internal override(ERC721Upgradeable) {
         string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
         _tokens[tokenId].owner = 0;
         super._burn(tokenId);

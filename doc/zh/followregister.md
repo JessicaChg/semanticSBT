@@ -166,7 +166,7 @@ async function buildFollowParams(name, contractAddress, followContractAddress, n
             deadline: deadline,
         },
         // Refers to the keys of the *types* object below.
-        primaryType: 'Follow',
+        primaryType: 'FollowWithSign',
         types: {
             EIP712Domain: [
                 {name: 'name', type: 'string'},
@@ -174,7 +174,7 @@ async function buildFollowParams(name, contractAddress, followContractAddress, n
                 {name: 'chainId', type: 'uint256'},
                 {name: 'verifyingContract', type: 'address'},
             ],
-            Follow: [
+            FollowWithSign: [
                 {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -240,7 +240,7 @@ async function buildUnFollowParams(name, contractAddress, followContractAddress,
             deadline: deadline,
         },
         // Refers to the keys of the *types* object below.
-        primaryType: 'UnFollow',
+        primaryType: 'UnFollowWithSign',
         types: {
             EIP712Domain: [
                 {name: 'name', type: 'string'},
@@ -248,7 +248,7 @@ async function buildUnFollowParams(name, contractAddress, followContractAddress,
                 {name: 'chainId', type: 'uint256'},
                 {name: 'verifyingContract', type: 'address'},
             ],
-            UnFollow: [
+            UnFollowWithSign: [
                 {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},

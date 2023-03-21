@@ -91,7 +91,7 @@ contract Follow is IFollow, SemanticSBTUpgradeable {
 
     function _unfollow(address addr) internal returns (uint256){
         uint256 tokenId = tokenOfOwnerByIndex(addr, 0);
-        super._burn(addr, tokenId);
+        super._burn(tokenId);
         _isFollowing[addr] = false;
         return tokenId;
     }

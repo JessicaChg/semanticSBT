@@ -36,10 +36,10 @@ describe("Public Content contract", function () {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const contentWithSign = await ContentWithSign.deploy();
-        await contentWithSign.deployTransaction.wait();
         const contentWithSignName = 'Content With Sign';
-        await contentWithSign.initialize(contentWithSignName);
+        const contentWithSign = await upgrades.deployProxy(ContentWithSign,[contentWithSignName],{unsafeAllowLinkedLibraries: true});
+        await contentWithSign.deployed();
+        await contentWithSign.deployTransaction.wait();
 
 
         const contractName = "Content";

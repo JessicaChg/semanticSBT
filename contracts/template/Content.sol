@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "../interfaces/social/IContent.sol";
 import "../core/SemanticSBTUpgradeable.sol";

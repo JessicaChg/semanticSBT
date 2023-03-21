@@ -38,6 +38,24 @@ async function main() {
     console.log(
         `Follow deployed ,contract address: ${follow.address}`
     );
+
+
+    const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
+        libraries: {
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+        }
+    });
+    const followWithSignName = "Follow With Sign";
+    const followWithSign = await upgrades.deployProxy(FollowWithSign,
+        [followWithSignName],
+        {unsafeAllowLinkedLibraries: true});
+    await followWithSign.deployed();
+    await followWithSign.deployTransaction.wait();
+    console.log(`FollowWithSign deployed ,contract address: ${followWithSign.address}`);
+
+
+
+
     const contractName = "FollowRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
@@ -62,6 +80,11 @@ async function main() {
     await (await followRegister.setFollowImpl(follow.address)).wait();
     console.log(
         `${contractName} setFollowImpl successfully!`
+    );
+
+    await (await followRegister.setFollowVerifyContract(followWithSign.address)).wait();
+    console.log(
+        `${contractName} setFollowVerifyContract successfully!`
     );
 
 }

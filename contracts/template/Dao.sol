@@ -183,7 +183,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         require(caller == ownerOfDao || caller == addr, "Dao: permission denied");
         tokenId = ownedTokenId[addr];
         require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
-        super._burn(addr, ownedTokenId[addr]);
+        super._burn(ownedTokenId[addr]);
         delete ownedTokenId[addr];
         if(addr == ownerOfDao){
             ownerOfDao = address(0);
