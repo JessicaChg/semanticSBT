@@ -106,7 +106,7 @@ describe("Public Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:publicContent";
             const object = `"${postContent}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await expect(content.post(postContent))
                 .to.emit(content, "CreateRDF")
@@ -125,7 +125,7 @@ describe("Public Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:publicContent";
             const object = `"${postContent}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             let name = await contentWithSign.name();
             let nonce = await contentWithSign.nonces(owner.address);

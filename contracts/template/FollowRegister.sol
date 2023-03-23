@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IFollowRegister.sol";
 import "../interfaces/social/IFollow.sol";
-import {SocialGraphData} from "../libraries/SocialGraphData.sol";
 import {FollowRegisterLogic} from "../libraries/FollowRegisterLogic.sol";
 
 contract FollowRegister is IFollowRegister, SemanticSBTUpgradeable {

@@ -10,7 +10,7 @@ const {ethers, upgrades} = require("hardhat");
 
 const name = 'Privacy Content';
 const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
+const baseURI = '';
 const schemaURI = 'ar://DeM6LRONjAUYr3qixkguLuFvYSHkykN7ZRKHn2HR5Gs';
 const class_ = [];
 const predicate_ = [["privacyContent", 1]];

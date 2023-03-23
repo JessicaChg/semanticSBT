@@ -91,7 +91,7 @@ describe("SemanticSBT contract", function () {
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:intPredicate";
             const object = 100;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
             await expect(semanticSBT.mint(addr1.address, 0, [[1, 100]], [], [], [], []))
                 .to.emit(semanticSBT, "CreateRDF")
                 .withArgs(1, rdf);
@@ -120,7 +120,7 @@ describe("SemanticSBT contract", function () {
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:stringPredicate";
             const object = '"good"';
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await expect(semanticSBT.mint(addr1.address, 0, [], [[2, "good"]], [], [], []))
                 .to.emit(semanticSBT, "CreateRDF")
@@ -139,7 +139,7 @@ describe("SemanticSBT contract", function () {
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:addressPredicate";
             const object = ':Soul_' + addr2.address.toLowerCase();
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await expect(semanticSBT.mint(addr1.address, 0, [], [], [[3, addr2.address.toLowerCase()]], [], []))
                 .to.emit(semanticSBT, "CreateRDF")
@@ -161,7 +161,7 @@ describe("SemanticSBT contract", function () {
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:subjectPredicate";
             const object = ':' + className + '_' + subjectValue;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await expect(semanticSBT.mint(addr1.address, 0, [], [], [], [[4, 1]], []))
                 .to.emit(semanticSBT, "CreateRDF")
@@ -182,8 +182,8 @@ describe("SemanticSBT contract", function () {
 
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:blankNodePredicate";
-            const object = '[p:intPredicate ' + 100 + ' ;p:subjectPredicate :' + className + '_' + subjectValue + ']';
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const object = '[p:intPredicate ' + 100 + ';p:subjectPredicate :' + className + '_' + subjectValue + ']';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
             await expect(semanticSBT.mint(addr1.address, 0, [], [], [], [], [[5, [[1, 100]], [], [], [[4, 1]]]]))
                 .to.emit(semanticSBT, "CreateRDF")
                 .withArgs( 1, rdf);
@@ -204,7 +204,7 @@ describe("SemanticSBT contract", function () {
             const rdf = ':Soul_0x70997970c51812dc3a010c7d01b50e0d17dc79c8 p:intPredicate 100;p:stringPredicate "good";' +
                 'p:addressPredicate :Soul_0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc;' +
                 'p:subjectPredicate :TestClass_myTest;' +
-                'p:blankNodePredicate [p:intPredicate 100 ;p:subjectPredicate :TestClass_myTest].'
+                'p:blankNodePredicate [p:intPredicate 100;p:subjectPredicate :TestClass_myTest] . '
             await expect(semanticSBT.mint(addr1.address, 0, [[1, 100]], [[2, "good"]], [[3, addr2.address]], [[4, 1]], [[5, [[1, 100]], [], [], [[4, 1]]]]))
                 .to.emit(semanticSBT, "CreateRDF")
                 .withArgs( 1, rdf);

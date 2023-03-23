@@ -117,7 +117,7 @@ describe("FollowRegister contract", function () {
             await followRegister.deployFollowContract(owner.address);
 
             const followContract = await followRegister.ownedFollowContract(owner.address);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract.toLowerCase()} . `;
             expect(await followRegister.rdfOf(1)).equal(rdf);
         });
 
@@ -127,10 +127,10 @@ describe("FollowRegister contract", function () {
             await followRegister.deployFollowContract(addr1.address);
 
             const followContract1 = await followRegister.ownedFollowContract(owner.address);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract1.toLowerCase()}.`;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract1.toLowerCase()} . `;
             expect(await followRegister.rdfOf(1)).equal(rdf1);
             const followContract2 = await followRegister.ownedFollowContract(addr1.address);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${followContract2.toLowerCase()}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${followContract2.toLowerCase()} . `;
             expect(await followRegister.rdfOf(2)).equal(rdf2);
         });
 
@@ -143,7 +143,7 @@ describe("FollowRegister contract", function () {
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
             await followContract.connect(owner).follow();
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()} . `;
             expect(await followContract.rdfOf(1)).to.be.equal(rdf);
         });
 
@@ -153,7 +153,7 @@ describe("FollowRegister contract", function () {
 
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()} . `;
             await expect(followContract.connect(owner).follow())
                 .to.emit(followContract, "CreateRDF")
                 .withArgs(1, rdf);

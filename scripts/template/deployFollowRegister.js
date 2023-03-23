@@ -9,7 +9,7 @@ const {ethers, upgrades} = require("hardhat");
 
 const name = 'Relation Follow Register';
 const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
+const baseURI = '';
 const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
 const class_ = ["Contract"];
 const predicate_ = [["followContract", 3]];

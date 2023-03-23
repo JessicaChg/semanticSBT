@@ -109,7 +109,8 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schema URI cannot be empty");
         require(predicates_.length > 0, "SemanticSBT: predicate size can not be empty");
         before_init();
-        super.__ERC721_init(name_, symbol_);
+        _name = name_;
+        _symbol = symbol_;
         _minters[minter] = true;
         _baseTokenURI = baseURI_;
         schemaURI = schemaURI_;
@@ -193,7 +194,6 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     }
 
 
-
     function isOwnerOf(address account, uint256 id)
     public
     view
@@ -203,6 +203,13 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         return owner == account;
     }
 
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
 
     function tokenURI(uint256 tokenId)
     public
@@ -217,7 +224,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         return
         bytes(_baseTokenURI).length > 0
         ? string(abi.encodePacked(_baseTokenURI, tokenId.toString(), ".json"))
-        : "";
+        : SemanticSBTLogicUpgradeable.getTokenURI(tokenId, _name, rdfOf(tokenId));
     }
 
 
@@ -311,12 +318,6 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
     /* ============ Internal Functions ============ */
 
-    function _checkPredicate(uint256 pIndex, FieldType fieldType) internal view {
-        require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
-        require(_predicates[pIndex].fieldType == fieldType, "SemanticSBT: predicate type error");
-    }
-
-
     function _mint(uint256 tokenId, address account, IntPO[] memory intPOList, StringPO[] memory stringPOList,
         AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
         BlankNodePO[] memory blankNodePOList) internal {
@@ -327,11 +328,11 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         require(pIndex.length > 0, "SemanticSBT: param error");
 
         super._safeMint(account, tokenId);
-        emit CreateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        emit CreateRDF(tokenId, rdfOf(tokenId));
     }
 
     function _burn(uint256 tokenId) internal override(ERC721Upgradeable) {
-        string memory _rdf = SemanticSBTLogicUpgradeable.buildRDF(_tokens[tokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO);
+        string memory _rdf = rdfOf(tokenId);
         _tokens[tokenId].owner = 0;
         super._burn(tokenId);
         emit RemoveRDF(tokenId, _rdf);

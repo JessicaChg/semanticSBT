@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDaoRegister.sol";
 import "../interfaces/social/IDao.sol";
-import {SocialGraphData} from "../libraries/SocialGraphData.sol";
 import {DaoRegisterLogic} from "../libraries/DaoRegisterLogic.sol";
 
 contract DaoRegister is IDaoRegister, SemanticSBTUpgradeable {

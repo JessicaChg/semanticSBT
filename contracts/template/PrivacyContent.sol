@@ -124,7 +124,7 @@ contract PrivacyContent is IPrivacyContent, SemanticSBTUpgradeable, Content {
     }
 
     function _post(address addr, uint256 tokenId, string memory content) internal {
-        _checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING);
+        SemanticSBTLogicUpgradeable.checkPredicate(PRIVACY_DATA_PREDICATE, FieldType.STRING, _predicates);
         require(tokenId > 0, "PrivacyContent:Token id not exist");
         delete _prepareToken[addr];
         super._post(addr,tokenId,PRIVACY_DATA_PREDICATE,content);

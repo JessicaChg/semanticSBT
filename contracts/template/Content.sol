@@ -70,7 +70,7 @@ contract Content is IContent, SemanticSBTUpgradeable {
     /* ============ Internal Functions ============ */
 
     function _post(address addr, uint256 tokenId,uint256 pIndex, string memory content) internal {
-        _checkPredicate(pIndex, FieldType.STRING);
+        SemanticSBTLogicUpgradeable.checkPredicate(pIndex, FieldType.STRING, _predicates);
         _mint(addr,tokenId, pIndex, content);
         _mintContent[addr][content] = tokenId;
         _contentOf[tokenId] = content;

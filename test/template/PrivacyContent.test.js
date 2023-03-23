@@ -204,7 +204,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -222,7 +222,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -241,7 +241,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -262,7 +262,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -283,7 +283,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -313,7 +313,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await privacyContent.prepareToken();
             expect(await privacyContent.ownedPrepareToken(owner.address)).to.equal(1);
@@ -363,7 +363,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             let name = await privacyContentWithSign.name();
             let nonce = await privacyContentWithSign.nonces(owner.address);
@@ -412,7 +412,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             let name = await privacyContentWithSign.name();
             let nonce = await privacyContentWithSign.nonces(owner.address);
@@ -484,7 +484,7 @@ describe("Privacy Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:privacyContent";
             const object = `"${content}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             let name = await privacyContentWithSign.name();
             let nonce = await privacyContentWithSign.nonces(owner.address);

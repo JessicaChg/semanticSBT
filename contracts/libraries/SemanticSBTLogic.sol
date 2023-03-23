@@ -19,6 +19,14 @@ library SemanticSBTLogic {
         uint256 deadline;
     }
 
+    struct SemanticStorage {
+        string[] _classNames;
+        Predicate[] _predicates;
+        string[] _stringO;
+        Subject[] _subjects;
+        BlankNodeO[] _blankNodeO;
+    }
+
     bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
     bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
@@ -151,34 +159,34 @@ library SemanticSBTLogic {
             } else if (FieldType.SUBJECT == p.fieldType) {
                 _rdf = string.concat(_rdf, buildSubjectRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _subjects));
             } else if (FieldType.BLANKNODE == p.fieldType) {
-                _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+                _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], SemanticStorage(_classNames, _predicates, _stringO, _subjects, _blankNodeO)));
             }
-            string memory suffix = i == spo.pIndex.length - 1 ? "." : ";";
+            string memory suffix = i == spo.pIndex.length - 1 ? " . " : ";";
             _rdf = string.concat(_rdf, suffix);
         }
     }
 
-    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) internal view returns (string memory){
+    function buildS(SPO memory spo, string[] memory _classNames, Subject[] memory _subjects) internal pure returns (string memory){
         string memory _className = spo.sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[spo.sIndex].cIndex];
         string memory subjectValue = spo.sIndex == 0 ? address(spo.owner).toHexString() : _subjects[spo.sIndex].value;
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);
     }
 
-    function buildIntRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
+    function buildIntRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates) internal pure returns (string memory){
         Predicate memory predicate_ = _predicates[pIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = oIndex.toString();
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildStringRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates, string[] storage _stringO) internal view returns (string memory){
+    function buildStringRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates, string[] memory _stringO) internal pure returns (string memory){
         Predicate memory predicate_ = _predicates[pIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = string.concat('"', _stringO[oIndex], '"');
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildAddressRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
+    function buildAddressRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates) internal pure returns (string memory){
         Predicate memory predicate_ = _predicates[pIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = string.concat(ENTITY_PREFIX, SOUL_CLASS_NAME, CONCATENATION_CHARACTER, address(uint160(oIndex)).toHexString());
@@ -186,7 +194,7 @@ library SemanticSBTLogic {
     }
 
 
-    function buildSubjectRDF(uint256 pIndex, uint256 oIndex, string[] storage _classNames, Predicate[] storage _predicates, Subject[] storage _subjects) internal view returns (string memory){
+    function buildSubjectRDF(uint256 pIndex, uint256 oIndex, string[] memory _classNames, Predicate[] memory _predicates, Subject[] memory _subjects) internal pure returns (string memory){
         Predicate memory predicate_ = _predicates[pIndex];
         string memory _className = _classNames[_subjects[oIndex].cIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
@@ -195,24 +203,24 @@ library SemanticSBTLogic {
     }
 
 
-    function buildBlankNodeRDF(uint256 pIndex, uint256 oIndex, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
+    function buildBlankNodeRDF(uint256 pIndex, uint256 oIndex, SemanticStorage memory vars) internal view returns (string memory){
+        Predicate memory predicate_ = vars._predicates[pIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
 
-        uint256[] memory blankPList = _blankNodeO[oIndex].pIndex;
-        uint256[] memory blankOList = _blankNodeO[oIndex].oIndex;
+        uint256[] memory blankPList = vars._blankNodeO[oIndex].pIndex;
+        uint256[] memory blankOList = vars._blankNodeO[oIndex].oIndex;
 
         string memory _rdf = "";
         for (uint256 i = 0; i < blankPList.length; i++) {
-            Predicate memory _p = _predicates[blankPList[i]];
+            Predicate memory _p = vars._predicates[blankPList[i]];
             if (FieldType.INT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildIntRDF(blankPList[i], blankOList[i], _predicates));
+                _rdf = string.concat(_rdf, buildIntRDF(blankPList[i], blankOList[i], vars._predicates));
             } else if (FieldType.STRING == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildStringRDF(blankPList[i], blankOList[i], _predicates, _stringO));
+                _rdf = string.concat(_rdf, buildStringRDF(blankPList[i], blankOList[i], vars._predicates, vars._stringO));
             } else if (FieldType.ADDRESS == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
+                _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], vars._predicates));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], vars._classNames, vars._predicates, vars._subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);

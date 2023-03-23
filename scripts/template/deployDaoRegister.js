@@ -9,7 +9,7 @@ const {ethers, upgrades} = require("hardhat");
 
 const name = 'Relation Dao Register';
 const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
+const baseURI = '';
 const schemaURI = 'ar://7mRfawDArdDEcoHpiFkmrURYlMSkREwDnK3wYzZ7-x4';
 const class_ = ["Contract"];
 const predicate_ = [["daoContract", 3]];

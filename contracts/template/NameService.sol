@@ -15,11 +15,8 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    uint256 constant HOLD_PREDICATE_INDEX = 1;
-    uint256 constant RESOLVED_PREDICATE_INDEX = 2;
     uint256 constant PROFILE_URI_PREDICATE_INDEX = 3;
 
-    uint256 constant SOUL_CLASS_INDEX = 1;
     uint256 constant NAME_CLASS_INDEX = 2;
 
 
@@ -76,7 +73,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfName, _ownedResolvedName,
             _ownerOfResolvedName, _tokenIdOfResolvedName);
         NameServiceLogic.updatePIndexOfToken(addr_, spo);
-        emit UpdateRDF(tokenId, SemanticSBTLogicUpgradeable.buildRDF(spo, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        emit UpdateRDF(tokenId, rdfOf(tokenId));
     }
 
     function setProfileURI(string calldata profileURI_) external {
@@ -145,7 +142,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     ) internal override(ERC721Upgradeable) virtual {
         super._afterTokenTransfer(from, to, firstTokenId, batchSize);
         if (from != address(0)) {
-            emit UpdateRDF(firstTokenId, SemanticSBTLogicUpgradeable.buildRDF(_tokens[firstTokenId], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+            emit UpdateRDF(firstTokenId, rdfOf(firstTokenId));
         }
     }
 
