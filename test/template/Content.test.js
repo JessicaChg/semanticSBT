@@ -5,6 +5,7 @@ const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const hre = require("hardhat");
 const Bytes = require("@ethersproject/bytes");
+const {ethers, upgrades} = require("hardhat");
 
 const name = 'Content';
 const symbol = 'SBT';
@@ -30,23 +31,36 @@ describe("Public Content contract", function () {
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
+        const ContentWithSign = await hre.ethers.getContractFactory("ContentWithSign", {
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });
+        const contentWithSignName = 'Content With Sign';
+        const contentWithSign = await upgrades.deployProxy(ContentWithSign,[contentWithSignName],{unsafeAllowLinkedLibraries: true});
+        await contentWithSign.deployed();
+        await contentWithSign.deployTransaction.wait();
+
+
         const contractName = "Content";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
-        const content = await MyContract.deploy();
+        const content = await upgrades.deployProxy(MyContract,
+            [owner.address,
+                contentWithSign.address,
+                name,
+                symbol,
+                baseURI,
+                schemaURI,
+                class_,
+                predicate_],
+            {unsafeAllowLinkedLibraries: true, initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'});
 
-        await content.initialize(
-            owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_);
-        return {content: content, owner, addr1};
+        await content.deployed();
+        return {content: content, contentWithSign, owner, addr1};
     }
 
     // check semanticSBT belong this contract owner
@@ -92,7 +106,7 @@ describe("Public Content contract", function () {
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:publicContent";
             const object = `"${postContent}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
             await expect(content.post(postContent))
                 .to.emit(content, "CreateRDF")
@@ -107,17 +121,18 @@ describe("Public Content contract", function () {
     describe("Call content with signData", function () {
 
         it("Post with signData", async function () {
-            const { content, owner, addr1} = await loadFixture(deployTokenFixture);
+            const { content, contentWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
             const subject = ':Soul_' + owner.address.toLowerCase();
             const predicate = "p:publicContent";
             const object = `"${postContent}"`;
-            const rdf = subject + ' ' + predicate + ' ' + object + '.';
+            const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
 
-            let name = await content.name();
-            let nonce = await content.nonces(owner.address);
+            let name = await contentWithSign.name();
+            let nonce = await contentWithSign.nonces(owner.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildPostParams(
                     name,
+                    contentWithSign.address.toLowerCase(),
                     content.address.toLowerCase(),
                     postContent,
                     parseInt(nonce),
@@ -125,12 +140,14 @@ describe("Public Content contract", function () {
                 owner.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": content.address,
                 "addr": owner.address,
                 "content": postContent
             }
-            await content.connect(addr1).postWithSign(param)
+            await contentWithSign.connect(addr1).postWithSign(param)
             expect(await content.rdfOf(1)).to.equal(rdf);
             expect(await content.ownerOf(1)).to.equal(owner.address);
+            expect(await content.contentOf(1)).to.equal(postContent);
 
 
         });
@@ -150,7 +167,7 @@ describe("Public Content contract", function () {
     }
 
 
-    function buildPostParams(name, contractAddress, content, nonce, deadline) {
+    function buildPostParams(name, contractAddress, contentContractAddress, content, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -161,6 +178,7 @@ describe("Public Content contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: contentContractAddress,
                 content: content,
                 nonce: nonce,
                 deadline: deadline,
@@ -175,6 +193,7 @@ describe("Public Content contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 PostWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'content', type: 'string'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},

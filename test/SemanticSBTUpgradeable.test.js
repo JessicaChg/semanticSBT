@@ -29,12 +29,12 @@ describe("SemanticSBT contract", function () {
     async function deployTokenFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
 
-        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+        const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const SemanticSBT = await ethers.getContractFactory("SemanticSBT", {
+        const SemanticSBT = await ethers.getContractFactory("SemanticSBTUpgradeable", {
             libraries: {
-                SemanticSBTLogic: semanticSBTLogicLibrary.address,
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }
         });
         const semanticSBT = await SemanticSBT.deploy();
@@ -97,12 +97,22 @@ describe("SemanticSBT contract", function () {
                 .withArgs(1, rdf);
             expect(await semanticSBT.rdfOf(1)).to.equal(rdf);
             expect(await semanticSBT.ownerOf(1)).to.equal(addr1.address);
+            expect(await semanticSBT.balanceOf(addr1.address)).to.equal(1);
+            expect(await semanticSBT.totalSupply()).equal(1);
+            expect(await semanticSBT.tokenOfOwnerByIndex(addr1.address,0)).equal(1);
+            expect(await semanticSBT.tokenByIndex(0)).equal(1);
 
 
             await semanticSBT.connect(addr1).approve(owner.address, 1)
             await expect(semanticSBT.burn(addr1.address, 1))
                 .to.emit(semanticSBT, "RemoveRDF")
                 .withArgs( 1, rdf);
+            await expect(semanticSBT.rdfOf(1)).to.be.revertedWith("SemanticSBT: SemanticSBT does not exist");
+            expect(await semanticSBT.balanceOf(addr1.address)).to.equal(0);
+            expect(await semanticSBT.totalSupply()).equal(0);
+            await expect(semanticSBT.tokenOfOwnerByIndex(addr1.address,0)).to.be.revertedWith("ERC721Enumerable: owner index out of bounds")
+            await expect(semanticSBT.tokenByIndex(0)).to.be.revertedWith("ERC721Enumerable: global index out of bounds");
+
         });
 
         it("mint with only stringPredicatet,then burn", async function () {
@@ -172,7 +182,7 @@ describe("SemanticSBT contract", function () {
 
             const subject = ':Soul_' + addr1.address.toLowerCase();
             const predicate = "p:blankNodePredicate";
-            const object = '[p:intPredicate ' + 100 + ' ;p:subjectPredicate :' + className + '_' + subjectValue + ']';
+            const object = '[p:intPredicate ' + 100 + ';p:subjectPredicate :' + className + '_' + subjectValue + ']';
             const rdf = subject + ' ' + predicate + ' ' + object + ' . ';
             await expect(semanticSBT.mint(addr1.address, 0, [], [], [], [], [[5, [[1, 100]], [], [], [[4, 1]]]]))
                 .to.emit(semanticSBT, "CreateRDF")
@@ -194,7 +204,7 @@ describe("SemanticSBT contract", function () {
             const rdf = ':Soul_0x70997970c51812dc3a010c7d01b50e0d17dc79c8 p:intPredicate 100;p:stringPredicate "good";' +
                 'p:addressPredicate :Soul_0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc;' +
                 'p:subjectPredicate :TestClass_myTest;' +
-                'p:blankNodePredicate [p:intPredicate 100 ;p:subjectPredicate :TestClass_myTest] . '
+                'p:blankNodePredicate [p:intPredicate 100;p:subjectPredicate :TestClass_myTest] . '
             await expect(semanticSBT.mint(addr1.address, 0, [[1, 100]], [[2, "good"]], [[3, addr2.address]], [[4, 1]], [[5, [[1, 100]], [], [], [[4, 1]]]]))
                 .to.emit(semanticSBT, "CreateRDF")
                 .withArgs( 1, rdf);

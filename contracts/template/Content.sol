@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "../interfaces/social/IContent.sol";
 import "../core/SemanticSBTUpgradeable.sol";
@@ -21,37 +20,39 @@ contract Content is IContent, SemanticSBTUpgradeable {
 
     mapping(address => mapping(string => uint256)) internal _mintContent;
     mapping(uint256 => string) _contentOf;
+    address public verifyContract;
 
-    bytes32 internal constant POST_WITH_SIGN_TYPE_HASH = keccak256('PostWithSign(string content,uint256 nonce,uint256 deadline)');
-    mapping(address => uint256) public nonces;
-
+    modifier onlyVerifyContract{
+        require(msg.sender == verifyContract, "Follow: must be verify contract");
+        _;
+    }
 
     /* ============ External Functions ============ */
 
-    function post(string memory content) external {
-        _post(msg.sender, content);
+    function initialize(
+        address minter,
+        address verifyContract_,
+        string memory name_,
+        string memory symbol_,
+        string memory baseURI_,
+        string memory schemaURI_,
+        string[] memory classes_,
+        Predicate[] memory predicates_
+    ) public initializer {
+        super.initialize(minter,name_,symbol_,baseURI_,schemaURI_,classes_,predicates_);
+        verifyContract = verifyContract_;
+    }
+
+    function post(string calldata content) virtual external {
+        uint256 tokenId = _addEmptyToken(msg.sender, 0);
+        _post(msg.sender, tokenId, PUBLIC_CONTENT_PREDICATE, content);
     }
 
 
-    function postWithSign(PostWithSign calldata vars) external {
-        address addr;
-        unchecked {
-            addr = SemanticSBTLogicUpgradeable.recoverSignerFromSignature(
-                name(),
-                address(this),
-                keccak256(
-                    abi.encode(
-                        POST_WITH_SIGN_TYPE_HASH,
-                        keccak256(bytes(vars.content)),
-                        nonces[vars.addr]++,
-                        vars.sig.deadline
-                    )
-                ),
-                vars.addr,
-                vars.sig
-            );
-        }
-        _post(addr, vars.content);
+    function postBySigner(address addr, string calldata content) virtual onlyVerifyContract external {
+
+        uint256 tokenId = _addEmptyToken(addr, 0);
+        _post(addr, tokenId, PUBLIC_CONTENT_PREDICATE, content);
     }
 
 
@@ -68,10 +69,9 @@ contract Content is IContent, SemanticSBTUpgradeable {
 
     /* ============ Internal Functions ============ */
 
-    function _post(address addr, string memory content) internal {
-        _checkPredicate(PUBLIC_CONTENT_PREDICATE, FieldType.STRING);
-        uint256 tokenId = _addEmptyToken(addr, 0);
-        _mint(addr,tokenId, PUBLIC_CONTENT_PREDICATE, content);
+    function _post(address addr, uint256 tokenId,uint256 pIndex, string memory content) internal {
+        SemanticSBTLogicUpgradeable.checkPredicate(pIndex, FieldType.STRING, _predicates);
+        _mint(addr,tokenId, pIndex, content);
         _mintContent[addr][content] = tokenId;
         _contentOf[tokenId] = content;
     }

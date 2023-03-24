@@ -4,7 +4,7 @@
 
 ## 构建Contract对象
 
-Content的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，通过ethers构建Contract对象：
+Content以及ContentWithSign的合约地址以及abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，通过ethers构建Contract对象：
 
 ```javascript
 import { ethers, providers } from 'ethers'
@@ -14,12 +14,23 @@ const getContractInstance = () => {
   const contractAddress = '0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7'
   const provider = new providers.Web3Provider(window.ethereum)
   const signer = provider.getSigner()
-  const contract = new ethers.Contract(contractAddress, abi, signer)
+  const contract = new ethers.Contract(contractAddress, contentAbi, signer)
   return contract
+}
+
+const getContentWithSignContractInstance = () => {
+    // 合约地址
+    const contractAddress = ''
+    const provider = new providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const contract = new ethers.Contract(contractAddress, contentWithSignAbi, signer)
+    return contract
 }
 ```
 
 ## 调用合约方法
+
+### 用户自付Gas费
 
 1. 发布内容
 
@@ -67,23 +78,40 @@ for(var i = 0; i < balance;i++){
 }
 ```
 
-3. 发布内容（代支付Gas费）
+### 代付Gas费
 
-用户对数据进行签名，构建上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
+用户对数据进行签名，构建上链参数。任意地址可携带此上链参数调用合约发起交易，Gas费由发起交易的地址支付。
 
+
+1. 发布内容（代支付Gas费）
+
+用户可以将需要发布的内容上传至Arweave，内容格式为：
+```json
+{
+  "content": {
+    "body": "${The body of content}",
+    "title": "${The title of content}"
+  }
+}
+```
+上传后得到的交易哈希，构建上链参数。由实际支付Gas费的地址携带此上链参数调用合约。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const contract = getContractInstance()
+const contractWithSign = getContentWithSignContractInstance()
 const postContent = 'zX_Oa1...';
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
-let name = await content.name();
-let nonce = await content.nonces(accounts[0]);
+let name = await contractWithSign.name();
+let nonce = await contractWithSign.nonces(accounts[0]);
 //签名过期时间(单位：秒)。此处示例为当前时间100s之后签名失效
 let deadline = Date.parse(new Date()) / 1000 + 100;
 let sign = await getSign(await buildPostParams(
         name,
-        content.address.toLowerCase(),
+        contractWithSign.address.toLowerCase(),
+    contract.address.toLowerCase(),
         postContent,
         parseInt(nonce),
         deadline),
@@ -91,11 +119,12 @@ let sign = await getSign(await buildPostParams(
 //构建参数
 let param = {
     "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": contract.address,
     "addr": accounts[0],
     "content": postContent
 }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await content.connect(accounts[1]).postWithSign(param);
+await contractWithSign.connect(accounts[1]).postWithSign(param);
 
 
 
@@ -113,11 +142,10 @@ async function getChainId() {
       });
 }
 
-
-async function buildPostParams(name, contractAddress, content, nonce, deadline) {
+function buildPostParams(name, contractAddress, contentContractAddress, content, nonce, deadline) {
     return {
         domain: {
-            chainId: await getChainId(),
+            chainId: getChainId(),
             name: name,
             verifyingContract: contractAddress,
             version: '1',
@@ -125,6 +153,7 @@ async function buildPostParams(name, contractAddress, content, nonce, deadline) 
 
         // Defining the message signing data content.
         message: {
+            target: contentContractAddress,
             content: content,
             nonce: nonce,
             deadline: deadline,
@@ -139,6 +168,7 @@ async function buildPostParams(name, contractAddress, content, nonce, deadline) 
                 {name: 'verifyingContract', type: 'address'},
             ],
             PostWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'content', type: 'string'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
@@ -146,6 +176,5 @@ async function buildPostParams(name, contractAddress, content, nonce, deadline) 
         },
     };
 }
-
 ```
 

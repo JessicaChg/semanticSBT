@@ -35,20 +35,23 @@ describe("DaoRegister contract", function () {
 
         const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
         const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
-        const DaoLogic = await hre.ethers.getContractFactory("DaoLogic", {
-            libraries: {
-                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-            }
-        });
-        const daoLogicLibrary = await DaoLogic.deploy();
         const Dao = await hre.ethers.getContractFactory("Dao", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-                DaoLogic: daoLogicLibrary.address,
             }
         });
         const dao = await Dao.deploy();
         await dao.deployTransaction.wait();
+
+        const DaoWithSign = await hre.ethers.getContractFactory("DaoWithSign", {
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });
+        const daoWithSign = await DaoWithSign.deploy();
+        await daoWithSign.deployTransaction.wait();
+        const daoWithSignName = 'Dao With Sign';
+        await daoWithSign.initialize(daoWithSignName);
 
         const contractName = "DaoRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
@@ -68,7 +71,8 @@ describe("DaoRegister contract", function () {
             class_,
             predicate_);
         await daoRegister.setDaoImpl(dao.address);
-        return {daoRegister, owner, addr1, addr2, addr3, addr4, addr5, addr6};
+        await daoRegister.setDaoVerifyContract(daoWithSign.address);
+        return {daoRegister, daoWithSign, owner, addr1, addr2, addr3, addr4, addr5, addr6};
     }
 
 
@@ -115,12 +119,12 @@ describe("DaoRegister contract", function () {
 
             const tokenId = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()} . `;
             expect(await daoRegister.rdfOf(1)).equal(rdf);
 
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await daoContract.name()).equal(firstDAOName)
-            const rdfInDao = `:Soul_${owner.address.toLowerCase()} p:join :Dao_${contractAddress.toLowerCase()}.`;
+            const rdfInDao = `:Soul_${owner.address.toLowerCase()} p:join :Dao_${contractAddress.toLowerCase()} . `;
             expect(await daoContract.rdfOf(1)).equal(rdfInDao);
         });
 
@@ -135,13 +139,13 @@ describe("DaoRegister contract", function () {
             const tokenId1 = await daoRegister.tokenOfOwnerByIndex(owner.address, 0);
             const tokenId2 = await daoRegister.tokenOfOwnerByIndex(addr1.address, 0);
             var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId1);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()} . `;
             expect(await daoRegister.rdfOf(1)).equal(rdf1);
             const firstDaoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await firstDaoContract.name()).equal(firstDAOName)
 
             var {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId2);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:daoContract :Contract_${contractAddress.toLowerCase()} . `;
             expect(await daoRegister.rdfOf(2)).equal(rdf2);
             const secondDaoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             expect(await secondDaoContract.name()).equal(secondDAOName)
@@ -183,7 +187,7 @@ describe("DaoRegister contract", function () {
                 addr4.address,
                 addr5.address,
             ];
-            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr1).addMember(member))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf)
@@ -199,7 +203,7 @@ describe("DaoRegister contract", function () {
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
-            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf);
@@ -215,7 +219,7 @@ describe("DaoRegister contract", function () {
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
-            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf);
@@ -233,36 +237,36 @@ describe("DaoRegister contract", function () {
             const {daoOwner, contractAddress} = await daoRegister.daoOf(tokenId);
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
-            let rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            let rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(owner).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf);
-            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr2).join())
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(3, rdf);
-            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr1).addMember([addr3.address]))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(4, rdf);
 
-            rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(owner).remove(owner.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf);
             expect(await daoContract.isMember(owner.address)).equal(false);
-            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr1).remove(addr2.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(3, rdf);
             expect(await daoContract.isMember(addr2.address)).equal(false);
-            rdf = ":Soul_" + addr1.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + addr1.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr1).remove(addr1.address))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(1, rdf);
             expect(await daoContract.isMember(addr1.address)).equal(false);
             expect(await daoContract.ownerOfDao()).equal('0x0000000000000000000000000000000000000000');
-            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
+            rdf = ":Soul_" + addr3.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
             await expect(daoContract.connect(addr1).remove(addr3.address)).revertedWith("Dao: permission denied")
             expect(await daoContract.isMember(addr3.address)).equal(true);
         });
@@ -291,6 +295,7 @@ describe("DaoRegister contract", function () {
         it("Add member with signData", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2,
@@ -312,23 +317,25 @@ describe("DaoRegister contract", function () {
                 addr5.address,
             ];
 
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr1.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr1.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildAddMember(
                     name,
-                    daoContract.address.toLowerCase(),
+                    daoWithSign.address.toLowerCase(),
+                daoContract.address.toLowerCase(),
                     members,
                     parseInt(nonce),
                     deadline),
                 addr1.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr1.address,
                 "members": members
             }
-            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).addMemberWithSign(param))
+            const rdf = ":Soul_" + owner.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(owner).addMemberWithSign(param))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf)
         });
@@ -337,6 +344,7 @@ describe("DaoRegister contract", function () {
         it("User should join a dao with signData", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2
@@ -348,21 +356,23 @@ describe("DaoRegister contract", function () {
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
 
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr2.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr2.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildJoinParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     parseInt(nonce),
                     deadline),
                 addr2.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr2.address
             }
-            const rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).joinWithSign(param))
+            const rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(owner).joinWithSign(param))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf)
         });
@@ -371,6 +381,7 @@ describe("DaoRegister contract", function () {
         it("User should removed from a dao with user's signData", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2,
@@ -383,29 +394,32 @@ describe("DaoRegister contract", function () {
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
 
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr2.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr2.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildJoinParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     parseInt(nonce),
                     deadline),
                 addr2.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr2.address
             }
-            let rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).joinWithSign(param))
+            let rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(owner).joinWithSign(param))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf)
 
-            name = await daoContract.name();
-            nonce = await daoContract.nonces(addr2.address);
+            name = await daoWithSign.name();
+            nonce = await daoWithSign.nonces(addr2.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             sign = await getSign(buildRemoveParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     addr2.address.toLowerCase(),
                     parseInt(nonce),
@@ -413,11 +427,12 @@ describe("DaoRegister contract", function () {
                 addr2.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr2.address,
                 "member": addr2.address
             }
-            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(addr3).removeWithSign(param))
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(addr3).removeWithSign(param))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf)
         });
@@ -425,6 +440,7 @@ describe("DaoRegister contract", function () {
         it("User should removed from a dao with signData of dao's owner", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2,
@@ -437,29 +453,32 @@ describe("DaoRegister contract", function () {
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
             await daoContract.connect(addr1).setFreeJoin(true);
 
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr2.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr2.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildJoinParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     parseInt(nonce),
                     deadline),
                 addr2.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr2.address
             }
-            let rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(owner).joinWithSign(param))
+            let rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(owner).joinWithSign(param))
                 .to.emit(daoContract, "CreateRDF")
                 .withArgs(2, rdf)
 
-            name = await daoContract.name();
-            nonce = await daoContract.nonces(addr1.address);
+            name = await daoWithSign.name();
+            nonce = await daoWithSign.nonces(addr1.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
             sign = await getSign(buildRemoveParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     addr2.address.toLowerCase(),
                     parseInt(nonce),
@@ -467,11 +486,12 @@ describe("DaoRegister contract", function () {
                 addr1.address);
             param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr1.address,
                 "member": addr2.address
             }
-            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + ".";
-            await expect(daoContract.connect(addr3).removeWithSign(param))
+            rdf = ":Soul_" + addr2.address.toLowerCase() + " p:join :Dao_" + daoContract.address.toLowerCase() + " . ";
+            await expect(daoWithSign.connect(addr3).removeWithSign(param))
                 .to.emit(daoContract, "RemoveRDF")
                 .withArgs(2, rdf)
         });
@@ -479,6 +499,7 @@ describe("DaoRegister contract", function () {
         it("Set daoURI with signData", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2
@@ -490,11 +511,12 @@ describe("DaoRegister contract", function () {
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
 
             const daoURI = 'test-dao-URI';
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr2.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr2.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildSetDaoURIParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     daoURI,
                     parseInt(nonce),
@@ -502,16 +524,18 @@ describe("DaoRegister contract", function () {
                 addr1.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr1.address,
                 "daoURI": daoURI
             }
-            await daoContract.connect(addr2).setDaoURIWithSign(param);
+            await daoWithSign.connect(addr2).setDaoURIWithSign(param);
             expect(await daoContract.daoURI()).equal(daoURI);
         });
 
         it("Set freeJoin signData", async function () {
             const {
                 daoRegister,
+                daoWithSign,
                 owner,
                 addr1,
                 addr2
@@ -523,11 +547,12 @@ describe("DaoRegister contract", function () {
             const daoContract = await hre.ethers.getContractAt("Dao", contractAddress);
 
             const isFreeJoin = true;
-            let name = await daoContract.name();
-            let nonce = await daoContract.nonces(addr2.address);
+            let name = await daoWithSign.name();
+            let nonce = await daoWithSign.nonces(addr2.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
             let sign = await getSign(buildSetFreeJoinParam(
                     name,
+                    daoWithSign.address.toLowerCase(),
                     daoContract.address.toLowerCase(),
                     isFreeJoin,
                     parseInt(nonce),
@@ -535,10 +560,11 @@ describe("DaoRegister contract", function () {
                 addr1.address);
             let param = {
                 "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": daoContract.address,
                 "addr": addr1.address,
                 "isFreeJoin": isFreeJoin
             }
-            await daoContract.connect(addr2).setFreeJoinWithSign(param);
+            await daoWithSign.connect(addr2).setFreeJoinWithSign(param);
             expect(await daoContract.isFreeJoin()).equal(true);
         });
     })
@@ -554,7 +580,7 @@ describe("DaoRegister contract", function () {
         return hre.network.config.chainId;
     }
 
-    function buildAddMember(name, contractAddress, members, nonce, deadline) {
+    function buildAddMember(name, contractAddress, daoContractAddress,members, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -565,6 +591,7 @@ describe("DaoRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: daoContractAddress,
                 members: members,
                 nonce: nonce,
                 deadline: deadline,
@@ -579,6 +606,7 @@ describe("DaoRegister contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 AddMemberWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'members', type: 'address[]'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
@@ -587,7 +615,7 @@ describe("DaoRegister contract", function () {
         };
     }
 
-    function buildJoinParam(name, contractAddress, nonce, deadline) {
+    function buildJoinParam(name, contractAddress, daoContractAddress,nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -598,6 +626,7 @@ describe("DaoRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: daoContractAddress,
                 nonce: nonce,
                 deadline: deadline,
             },
@@ -611,6 +640,7 @@ describe("DaoRegister contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 JoinWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],
@@ -618,7 +648,7 @@ describe("DaoRegister contract", function () {
         };
     }
 
-    function buildRemoveParam(name, contractAddress, member, nonce, deadline) {
+    function buildRemoveParam(name, contractAddress, daoContractAddress,member, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -629,6 +659,7 @@ describe("DaoRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: daoContractAddress,
                 member: member,
                 nonce: nonce,
                 deadline: deadline,
@@ -643,6 +674,7 @@ describe("DaoRegister contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 RemoveWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'member', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
@@ -652,7 +684,7 @@ describe("DaoRegister contract", function () {
     }
 
 
-    function buildSetDaoURIParam(name, contractAddress, daoURI, nonce, deadline) {
+    function buildSetDaoURIParam(name, contractAddress, daoContractAddress, daoURI, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -663,6 +695,7 @@ describe("DaoRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: daoContractAddress,
                 daoURI: daoURI,
                 nonce: nonce,
                 deadline: deadline,
@@ -677,6 +710,7 @@ describe("DaoRegister contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 SetDaoURIWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'daoURI', type: 'string'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
@@ -685,7 +719,7 @@ describe("DaoRegister contract", function () {
         };
     }
 
-    function buildSetFreeJoinParam(name, contractAddress, isFreeJoin, nonce, deadline) {
+    function buildSetFreeJoinParam(name, contractAddress, daoContractAddress, isFreeJoin, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -696,6 +730,7 @@ describe("DaoRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: daoContractAddress,
                 isFreeJoin: isFreeJoin,
                 nonce: nonce,
                 deadline: deadline,
@@ -710,6 +745,7 @@ describe("DaoRegister contract", function () {
                     {name: 'verifyingContract', type: 'address'},
                 ],
                 SetFreeJoinWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'isFreeJoin', type: 'bool'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},

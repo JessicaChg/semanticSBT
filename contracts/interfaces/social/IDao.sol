@@ -10,6 +10,7 @@ interface IDao is ISemanticSBT {
     function initialize(
         address owner,
         address minter,
+        address verifyContract,
         string memory name_,
         string memory symbol_,
         string memory baseURI_,
@@ -22,7 +23,7 @@ interface IDao is ISemanticSBT {
       * Set the URI for a dao.
       * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
      */
-    function setDaoURI(string memory daoURI) external;
+    function setDaoURI(string calldata daoURI) external;
 
     /**
      * Is this an open dao?
@@ -33,7 +34,7 @@ interface IDao is ISemanticSBT {
      * Add the specified address to dao in batches.
      * @param addr The specified address.
      */
-    function addMember(address[] memory addr) external;
+    function addMember(address[] calldata addr) external;
 
     /**
      * Join a dao.
@@ -53,6 +54,42 @@ interface IDao is ISemanticSBT {
      * @return daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
      */
     function daoURI() external view returns (string memory daoURI);
+
+    /**
+    * Set the URI for a dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+    * @param daoURI  A resource address pointing to the data of a dao's information. It is a transaction hash on Arweave.
+     */
+    function setDaoURIBySigner(address addr, string calldata daoURI) external;
+
+    /**
+     * Set whether it is an open dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param isFreeJoin_ Is this an open dao
+     */
+    function setFreeJoinBySigner(address addr, bool isFreeJoin_) external;
+
+
+    /**
+     * Add the specified address to dao in batches. This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param members The specified address.
+     */
+    function addMemberBySigner(address addr, address[] calldata members) external;
+
+    /**
+     * Join a dao. This can only be called by the verify contract.
+     * @param addr The message signer.
+     */
+    function joinBySigner(address addr) external;
+
+    /**
+     * Removed from a dao.This can only be called by the verify contract.
+     * @param addr The message signer.
+     * @param member The address.
+     */
+    function removeBySigner(address addr, address member) external;
+
 
     /**
      * The owner of a dao.

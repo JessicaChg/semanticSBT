@@ -10,7 +10,7 @@ const {ethers, upgrades} = require("hardhat");
 
 const name = 'Privacy Content';
 const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
+const baseURI = '';
 const schemaURI = 'ar://DeM6LRONjAUYr3qixkguLuFvYSHkykN7ZRKHn2HR5Gs';
 const class_ = [];
 const predicate_ = [["privacyContent", 1]];
@@ -23,6 +23,20 @@ async function main() {
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
+    const PrivacyContentWithSign = await hre.ethers.getContractFactory("PrivacyContentWithSign", {
+        libraries: {
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+        }
+    });
+    const privacyContentWithSignName = "Privacy Content With Sign";
+    const privacyContentWithSign = await upgrades.deployProxy(PrivacyContentWithSign,
+        [privacyContentWithSignName],
+        {unsafeAllowLinkedLibraries: true});
+    await privacyContentWithSign.deployed();
+    await privacyContentWithSign.deployTransaction.wait();
+    console.log(`PrivacyContentWithSign deployed ,contract address: ${privacyContentWithSign.address}`);
+
+
     const contractName = "PrivacyContent";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
@@ -31,13 +45,14 @@ async function main() {
     });
     const privacyContentContract = await upgrades.deployProxy(MyContract,
         [owner.address,
+            privacyContentWithSign.address,
             name,
             symbol,
             baseURI,
             schemaURI,
             class_,
             predicate_],
-        {unsafeAllowLinkedLibraries: true});
+        {unsafeAllowLinkedLibraries: true, initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'});
 
     await privacyContentContract.deployed();
     console.log(

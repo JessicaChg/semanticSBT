@@ -42,6 +42,17 @@ describe("FollowRegister contract", function () {
         const follow = await Follow.deploy();
         await follow.deployTransaction.wait();
 
+        const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
+            libraries: {
+                SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            }
+        });
+        const followWithSign = await FollowWithSign.deploy();
+        await followWithSign.deployTransaction.wait();
+        const followWithSignName = 'Follow With Sign';
+        await followWithSign.initialize(followWithSignName);
+
+
         const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
@@ -60,7 +71,8 @@ describe("FollowRegister contract", function () {
             class_,
             predicate_);
         await followRegister.setFollowImpl(follow.address);
-        return {followRegister, owner, addr1, addr2};
+        await followRegister.setFollowVerifyContract(followWithSign.address);
+        return {followRegister, followWithSign, owner, addr1, addr2};
     }
 
     // check semanticSBT belong this contract owner
@@ -105,7 +117,7 @@ describe("FollowRegister contract", function () {
             await followRegister.deployFollowContract(owner.address);
 
             const followContract = await followRegister.ownedFollowContract(owner.address);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract.toLowerCase()} . `;
             expect(await followRegister.rdfOf(1)).equal(rdf);
         });
 
@@ -115,10 +127,10 @@ describe("FollowRegister contract", function () {
             await followRegister.deployFollowContract(addr1.address);
 
             const followContract1 = await followRegister.ownedFollowContract(owner.address);
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract1.toLowerCase()}.`;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:followContract :Contract_${followContract1.toLowerCase()} . `;
             expect(await followRegister.rdfOf(1)).equal(rdf1);
             const followContract2 = await followRegister.ownedFollowContract(addr1.address);
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${followContract2.toLowerCase()}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:followContract :Contract_${followContract2.toLowerCase()} . `;
             expect(await followRegister.rdfOf(2)).equal(rdf2);
         });
 
@@ -131,7 +143,7 @@ describe("FollowRegister contract", function () {
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
             await followContract.connect(owner).follow();
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()} . `;
             expect(await followContract.rdfOf(1)).to.be.equal(rdf);
         });
 
@@ -141,7 +153,7 @@ describe("FollowRegister contract", function () {
 
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:following :Soul_${addr1.address.toLowerCase()} . `;
             await expect(followContract.connect(owner).follow())
                 .to.emit(followContract, "CreateRDF")
                 .withArgs(1, rdf);
@@ -158,41 +170,54 @@ describe("FollowRegister contract", function () {
 
     describe("Call follow contracts with signData", function () {
         it("Follow with signData", async function () {
-            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {followRegister, followWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
             await followRegister.deployFollowContract(addr1.address);
 
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
 
-            const name = await followContract.name();
-            const nonce = await followContract.nonces(owner.address);
+            const name = await followWithSign.name();
+            const nonce = await followWithSign.nonces(owner.address);
             const deadline = Date.parse(new Date()) / 1000 + 100;
-            const sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await followContract.connect(addr1).followWithSign(param);
+            const sign = await getSign(buildFollowParams(name, followWithSign.address.toLowerCase(), followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            var param =
+                {
+                    "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                    "target": followContractAddress,
+                    "addr": owner.address
+                }
+            await followWithSign.connect(addr1).followWithSign(param);
             expect(await followContract.ownerOf(1)).equal(owner.address)
         });
 
         it("Unfollow with signData", async function () {
-            const {followRegister, owner, addr1} = await loadFixture(deployTokenFixture);
+            const {followRegister, followWithSign, owner, addr1} = await loadFixture(deployTokenFixture);
             await followRegister.deployFollowContract(addr1.address);
 
             const followContractAddress = await followRegister.ownedFollowContract(addr1.address);
             const followContract = await hre.ethers.getContractAt("Follow", followContractAddress);
 
-            const name = await followContract.name();
-            let nonce = await followContract.nonces(owner.address);
+            const name = await followWithSign.name();
+            let nonce = await followWithSign.nonces(owner.address);
             let deadline = Date.parse(new Date()) / 1000 + 100;
-            let sign = await getSign(buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            let param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await followContract.connect(addr1).followWithSign(param);
+            let sign = await getSign(buildFollowParams(name, followWithSign.address.toLowerCase(), followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            let param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": followContractAddress,
+                "addr": owner.address
+            }
+            await followWithSign.connect(addr1).followWithSign(param);
             expect(await followContract.ownerOf(1)).equal(owner.address)
 
-            nonce = await followContract.nonces(owner.address);
+            nonce = await followWithSign.nonces(owner.address);
             deadline = Date.parse(new Date()) / 1000 + 100;
-            sign = await getSign(buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
-            param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": owner.address}
-            await followContract.connect(addr1).unfollowWithSign(param);
+            sign = await getSign(buildUnFollowParams(name, followWithSign.address.toLowerCase(), followContractAddress.toLowerCase(), parseInt(nonce), deadline), owner.address);
+            param = {
+                "sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+                "target": followContractAddress,
+                "addr": owner.address
+            }
+            await followWithSign.connect(addr1).unfollowWithSign(param);
             expect(await followContract.totalSupply()).equal(0)
         });
 
@@ -211,7 +236,7 @@ describe("FollowRegister contract", function () {
         return hre.network.config.chainId;
     }
 
-    function buildFollowParams(name, contractAddress, nonce, deadline) {
+    function buildFollowParams(name, contractAddress, followContractAddress, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -222,11 +247,12 @@ describe("FollowRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: followContractAddress,
                 nonce: nonce,
                 deadline: deadline,
             },
             // Refers to the keys of the *types* object below.
-            primaryType: 'Follow',
+            primaryType: 'FollowWithSign',
             types: {
                 EIP712Domain: [
                     {name: 'name', type: 'string'},
@@ -234,7 +260,8 @@ describe("FollowRegister contract", function () {
                     {name: 'chainId', type: 'uint256'},
                     {name: 'verifyingContract', type: 'address'},
                 ],
-                Follow: [
+                FollowWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],
@@ -242,7 +269,7 @@ describe("FollowRegister contract", function () {
         };
     }
 
-    function buildUnFollowParams(name, contractAddress, nonce, deadline) {
+    function buildUnFollowParams(name, contractAddress, followContractAddress, nonce, deadline) {
         return {
             domain: {
                 chainId: getChainId(),
@@ -253,11 +280,12 @@ describe("FollowRegister contract", function () {
 
             // Defining the message signing data content.
             message: {
+                target: followContractAddress,
                 nonce: nonce,
                 deadline: deadline,
             },
             // Refers to the keys of the *types* object below.
-            primaryType: 'UnFollow',
+            primaryType: 'UnFollowWithSign',
             types: {
                 EIP712Domain: [
                     {name: 'name', type: 'string'},
@@ -265,7 +293,8 @@ describe("FollowRegister contract", function () {
                     {name: 'chainId', type: 'uint256'},
                     {name: 'verifyingContract', type: 'address'},
                 ],
-                UnFollow: [
+                UnFollowWithSign: [
+                    {name: 'target', type: 'address'},
                     {name: 'nonce', type: 'uint256'},
                     {name: 'deadline', type: 'uint256'},
                 ],

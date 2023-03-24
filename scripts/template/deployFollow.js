@@ -7,16 +7,16 @@
 const hre = require("hardhat");
 const {ethers, upgrades} = require("hardhat");
 
-const name = 'Relation Follow Register';
+const name = "Follow Template";
 const symbol = 'SBT';
 const baseURI = '';
-const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
-const class_ = ["Contract"];
-const predicate_ = [["followContract", 3]];
+const schemaURI = 'ar://-2hCuTMqo1fz2iyzf7dbEbzoyceod5KFOyGGqNiEQWY';
+const class_ = [];
+const predicate_ = [["following", 3]];
 
 async function main() {
 
-    const [owner] = await ethers.getSigners();
+    const [owner, addr1] = await ethers.getSigners();
 
     const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
@@ -28,18 +28,6 @@ async function main() {
     console.log(
         `FollowRegisterLogic deployed ,contract address: ${followRegisterLogicLibrary.address}`
     );
-    const Follow = await hre.ethers.getContractFactory("Follow", {
-        libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-        }
-    });
-    const follow = await Follow.deploy();
-    await follow.deployTransaction.wait();
-    console.log(
-        `Follow deployed ,contract address: ${follow.address}`
-    );
-
-
     const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
@@ -55,37 +43,36 @@ async function main() {
 
 
 
-
-    const contractName = "FollowRegister";
-    const MyContract = await hre.ethers.getContractFactory(contractName, {
+    const Follow = await hre.ethers.getContractFactory("Follow", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-            FollowRegisterLogic: followRegisterLogicLibrary.address,
         }
     });
-    const followRegister = await upgrades.deployProxy(MyContract,
-        [owner.address,
-            name,
-            symbol,
-            baseURI,
-            schemaURI,
-            class_,
-            predicate_],
-        {unsafeAllowLinkedLibraries: true});
+    const follow = await Follow.deploy();
+    await follow.deployTransaction.wait();
+    console.log(
+        `Follow deployed ,contract address: ${follow.address}`
+    );
+    await follow["initialize(address,address,address,string,string,string,string,string[],(string,uint8)[])"](
+        owner.address,
+        owner.address,
+        followWithSign.address,
+        name,
+        symbol,
+        baseURI,
+        schemaURI,
+        class_,
+        predicate_);
 
-    await followRegister.deployed();
     console.log(
-        `${contractName} deployed ,contract address: ${followRegister.address}`
-    );
-    await (await followRegister.setFollowImpl(follow.address)).wait();
-    console.log(
-        `${contractName} setFollowImpl successfully!`
+        `Follow contract initialize successfully!`
     );
 
-    await (await followRegister.setFollowVerifyContract(followWithSign.address)).wait();
-    console.log(
-        `${contractName} setFollowVerifyContract successfully!`
-    );
+    await follow.connect(addr1).follow()
+    console.log(`${addr1.address} following  ${owner.address} successfully!`);
+
+    const rdf = await follow.rdfOf(1);
+    console.log(`The rdf of the first token is:  ${rdf}`);
 
 }
 

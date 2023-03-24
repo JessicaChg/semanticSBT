@@ -5,7 +5,6 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../core/SemanticSBTUpgradeable.sol";
 import "../interfaces/social/IDao.sol";
-import "../libraries/DaoLogic.sol";
 
 contract Dao is IDao, SemanticSBTUpgradeable {
 
@@ -18,9 +17,6 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     uint256 constant JOIN_PREDICATE_INDEX = 1;
     uint256 constant DAO_URI_PREDICATE_INDEX = 2;
 
-    uint256 constant SOUL_CLASS_INDEX = 1;
-    uint256 constant DAO_CLASS_INDEX = 2;
-
     string  constant DAO_CLASS_NAME = "Dao";
 
     address public ownerOfDao;
@@ -28,11 +24,16 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     bool _setDaoURI;
     bool _isFreeJoin;
     mapping(address => uint256) ownedTokenId;
+    address public verifyContract;
 
-    mapping(address => uint256) public nonces;
 
     modifier onlyDaoOwner{
         require(msg.sender == ownerOfDao, "Dao: must be daoOwner");
+        _;
+    }
+
+    modifier onlyVerifyContract{
+        require(msg.sender == verifyContract, "Dao: must be verify contract");
         _;
     }
 
@@ -42,6 +43,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     function initialize(
         address owner,
         address minter,
+        address verifyContract_,
         string memory name_,
         string memory symbol_,
         string memory baseURI_,
@@ -52,9 +54,10 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
         _setOwner(owner);
         _join(owner);
+        verifyContract = verifyContract_;
     }
 
-    function setDaoURI(string memory daoURI_) external {
+    function setDaoURI(string calldata daoURI_) external {
         _setDaoURIInternal(msg.sender, daoURI_);
     }
 
@@ -71,12 +74,12 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         _ownerTransfer(msg.sender, to);
     }
 
-    function addMember(address[] memory addr) external onlyDaoOwner {
+    function addMember(address[] calldata addr) external onlyDaoOwner {
         for (uint256 i = 0; i < addr.length;) {
             _join(addr[i]);
-        unchecked{
-            i++;
-        }
+            unchecked{
+                i++;
+            }
         }
     }
 
@@ -90,39 +93,32 @@ contract Dao is IDao, SemanticSBTUpgradeable {
     }
 
 
-    function setDaoURIWithSign(DaoLogic.SetDaoURIWithSign calldata vars) external {
-        address addr = DaoLogic.setDaoURIWithSign(vars, name(), address(this), nonces[vars.addr]++);
-        _setDaoURIInternal(addr, vars.daoURI);
+    function setDaoURIBySigner(address addr, string calldata daoURI_) external onlyVerifyContract {
+        _setDaoURIInternal(addr, daoURI_);
     }
 
-    function setFreeJoinWithSign(DaoLogic.SetFreeJoinWithSign calldata vars) external {
-        address addr = DaoLogic.setFreeJoinWithSign(vars, name(), address(this), nonces[vars.addr]++);
-        _setFreeJoin(addr, vars.isFreeJoin);
+    function setFreeJoinBySigner(address addr, bool isFreeJoin_) external onlyVerifyContract {
+        _setFreeJoin(addr, isFreeJoin_);
     }
 
 
-    function addMemberWithSign(DaoLogic.AddMemberWithSign calldata vars) external {
-
-        address addr = DaoLogic.addMemberWithSign(vars, name(), address(this), nonces[vars.addr]++);
+    function addMemberBySigner(address addr,address[] calldata members) external onlyVerifyContract {
         require(addr == ownerOfDao, "Dao: permission denied");
-
-        for (uint256 i = 0; i < vars.members.length;) {
-            _join(vars.members[i]);
+        for (uint256 i = 0; i < members.length;) {
+            _join(members[i]);
             unchecked{
                 i++;
             }
         }
     }
 
-    function joinWithSign(DaoLogic.JoinWithSign calldata vars) external returns (uint256 tokenId){
+    function joinBySigner(address addr) external onlyVerifyContract {
         require(_isFreeJoin, "Dao: permission denied");
-        address addr = DaoLogic.joinWithSign(vars, name(), address(this), nonces[vars.addr]++);
-        tokenId = _join(addr);
+        _join(addr);
     }
 
-    function removeWithSign(DaoLogic.RemoveWithSign calldata vars) external returns (uint256 tokenId){
-        address addr = DaoLogic.removeWithSign(vars, name(), address(this), nonces[vars.addr]++);
-        return _remove(addr,vars.member);
+    function removeBySigner(address addr, address member) external onlyVerifyContract {
+        _remove(addr, member);
     }
 
 
@@ -187,7 +183,7 @@ contract Dao is IDao, SemanticSBTUpgradeable {
         require(caller == ownerOfDao || caller == addr, "Dao: permission denied");
         tokenId = ownedTokenId[addr];
         require(ownedTokenId[addr] != 0, "Dao: not the member of dao");
-        super._burn(addr, ownedTokenId[addr]);
+        super._burn(ownedTokenId[addr]);
         delete ownedTokenId[addr];
         if(addr == ownerOfDao){
             ownerOfDao = address(0);

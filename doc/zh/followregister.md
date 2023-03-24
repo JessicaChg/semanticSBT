@@ -4,7 +4,7 @@
 
 ## 构建Contract对象
 
-FollowRegister的合约地址、abi文件以及Follow合约的abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Follow合约的地址需要通过FollowRegister查到，每个地址拥有自己的Follow合约。
+FollowRegister和FollowWithSign的合约地址、abi文件,以及Follow合约的abi文件可以查询[Relation Protocol资源列表](./resource.md)获得，Follow合约的地址需要通过FollowRegister查到，每个地址拥有自己的Follow合约。
 通过ethers构建FollowRegisterContract对象：
 
 ```javascript
@@ -16,6 +16,14 @@ const getFollowRegisterContractInstance = () => {
     const provider = new providers.Web3Provider(window.ethereum)
     const signer = provider.getSigner()
     const contract = new ethers.Contract(contractAddress, followRegisterAbi, signer)
+    return contract
+}
+
+const getFollowWithSignContractInstance = () => {
+    const contractAddress = '0xAC0f863b66173E69b1C57Fec5e31c01c7C6959B7'
+    const provider = new providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    const contract = new ethers.Contract(contractAddress, followWithSignAbi, signer)
     return contract
 }
 ```
@@ -109,20 +117,27 @@ for(var i = 0; i < numOfFollower;i++){
 用户对数据进行签名，打包成上链参数。任意地址可携带此上链参数发起交易，Gas费由发起交易的地址支付。
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const followRegisterContract = getFollowRegisterContractInstance()
 const followContractAddress = await followRegisterContract.ownedFollowContract(accounts[0]);
 const followContract = getFollowContractInstance(followContractAddress)
+const followWithsignContract = getFollowWithSignContractInstance(followContractAddress)
 
-const name = await followContract.name();
-const nonce = await followContract.nonces(accounts[0]);
+const name = await followWithsignContract.name();
+const nonce = await followWithsignContract.nonces(accounts[0]);
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(await buildFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
+const sign = await getSign(await buildFollowParams(name, followWithsignContract.toLowerCase(),followContractAddress.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
 //该参数为调用followWithSign方法的入参
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
+var param = 
+    {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, 
+        "target": followContractAddress,
+        "addr": accounts[0]
+    }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await followContract.connect(accounts[1]).followWithSign(param);
+await followWithsignContract.connect(accounts[1]).followWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -137,7 +152,7 @@ async function getChainId() {
         method: 'eth_chainId',
     });
 }
-async function buildFollowParams(name, contractAddress, nonce, deadline) {
+async function buildFollowParams(name, contractAddress, followContractAddress, nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -148,11 +163,12 @@ async function buildFollowParams(name, contractAddress, nonce, deadline) {
 
         // Defining the message signing data content.
         message: {
+            target: followContractAddress,
             nonce: nonce,
             deadline: deadline,
         },
         // Refers to the keys of the *types* object below.
-        primaryType: 'Follow',
+        primaryType: 'FollowWithSign',
         types: {
             EIP712Domain: [
                 {name: 'name', type: 'string'},
@@ -160,7 +176,8 @@ async function buildFollowParams(name, contractAddress, nonce, deadline) {
                 {name: 'chainId', type: 'uint256'},
                 {name: 'verifyingContract', type: 'address'},
             ],
-            Follow: [
+            FollowWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
             ],
@@ -175,20 +192,27 @@ async function buildFollowParams(name, contractAddress, nonce, deadline) {
 
 
 ```javascript
+import { Bytes } from '@ethersproject/bytes'
+
 const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
 const followRegisterContract = getFollowRegisterContractInstance()
 const followContractAddress = await followRegisterContract.ownedFollowContract(accounts[0]);
 const followContract = getFollowContractInstance(followContractAddress)
+const followWithSignContract = getFollowWithSignContractInstance(followContractAddress)
 
-const name = await followContract.name();
-const nonce = await followContract.nonces(accounts[0]);
+const name = await followWithSignContract.name();
+const nonce = await followWithSignContract.nonces(accounts[0]);
 const deadline = Date.parse(new Date()) / 1000 + 100;
-const sign = await getSign(await buildUnFollowParams(name, followContractAddress.toLowerCase(), parseInt(nonce), deadline), accounts[0]);
+const sign = await getSign(await buildUnFollowParams(name, followWithSignContract.address.toLowerCase(), followContractAddress.toLowerCase(),parseInt(nonce), deadline), accounts[0]);
 //该参数为调用followWithSign方法的入参
-var param = {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline}, "addr": accounts[0]}
+var param = 
+    {"sig": {"v": sign.v, "r": sign.r, "s": sign.s, "deadline": deadline},
+    "target": followContractAddress,
+    "addr": accounts[0]
+    }
 //实际场景中，这个方法由实际支付Gas的账户来调用
-await followContract.connect(accounts[1]).unfollowWithSign(param);
+await followWithSignContract.connect(accounts[1]).unfollowWithSign(param);
 
 
 async function getSign(msgParams, signerAddress) {
@@ -204,7 +228,7 @@ async function getChainId() {
     });
 }
 
-async function buildUnFollowParams(name, contractAddress, nonce, deadline) {
+async function buildUnFollowParams(name, contractAddress, followContractAddress,nonce, deadline) {
     return {
         domain: {
             chainId: await getChainId(),
@@ -215,11 +239,12 @@ async function buildUnFollowParams(name, contractAddress, nonce, deadline) {
 
         // Defining the message signing data content.
         message: {
+            target: followContractAddress,
             nonce: nonce,
             deadline: deadline,
         },
         // Refers to the keys of the *types* object below.
-        primaryType: 'UnFollow',
+        primaryType: 'UnFollowWithSign',
         types: {
             EIP712Domain: [
                 {name: 'name', type: 'string'},
@@ -227,7 +252,8 @@ async function buildUnFollowParams(name, contractAddress, nonce, deadline) {
                 {name: 'chainId', type: 'uint256'},
                 {name: 'verifyingContract', type: 'address'},
             ],
-            UnFollow: [
+            UnFollowWithSign: [
+                {name: 'target', type: 'address'},
                 {name: 'nonce', type: 'uint256'},
                 {name: 'deadline', type: 'uint256'},
             ],

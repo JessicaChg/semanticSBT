@@ -99,7 +99,7 @@ describe("Name Service contract", function () {
             await nameService.register(owner.address, name, true);
 
             const fullName = name + suffix;
-            const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Name_${fullName}.`;
+            const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Name_${fullName} . `;
             expect(await nameService.rdfOf(1)).to.be.equal(rdf);
         });
 
@@ -180,12 +180,12 @@ describe("Name Service contract", function () {
 
             const name = "my-name";
             const fullName = name + suffix;
-            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Name_${fullName}.`;
+            const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Name_${fullName} . `;
             await expect(nameService.register(owner.address, name, false))
                 .to.be.emit(nameService, "CreateRDF")
                 .withArgs(1, rdf1);
 
-            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Name_${fullName}.`;
+            const rdf2 = `:Soul_${addr1.address.toLowerCase()} p:hold :Name_${fullName} . `;
             await expect(nameService.transferFrom(owner.address, addr1.address, 1))
                 .to.be.emit(nameService, "UpdateRDF")
                 .withArgs(1, rdf2);

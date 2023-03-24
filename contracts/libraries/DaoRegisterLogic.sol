@@ -14,13 +14,13 @@ library DaoRegisterLogic {
     string constant SYMBOL = "DSBT";
     string constant SCHEMA_URI = "ar://UTbYdbPy5Ov2bZ1ikWm_4RhMT5GJPvasE57qtSfL1oQ";
 
-    function createDao(address daoImpl,address owner, address minter, string memory name, string memory baseURI) external returns (address){
+    function createDao(address daoImpl, address verifyContract, address owner, address minter, string memory name, string memory baseURI) external returns (address){
         address daoContract = Clones.clone(daoImpl);
-        _initDao(daoContract, owner, minter, name, baseURI);
+        _initDao(daoContract, verifyContract, owner, minter, name, baseURI);
         return daoContract;
     }
 
-    function _initDao(address contractAddress, address owner, address minter, string memory name, string memory baseURI) internal {
+    function _initDao(address contractAddress, address verifyContract, address owner, address minter, string memory name, string memory baseURI) internal {
         string[] memory classNames_ = new string[](1);
         classNames_[0] = DAO_CLASS_NAME;
         Predicate[] memory predicates_ = new Predicate[](2);
@@ -29,6 +29,7 @@ library DaoRegisterLogic {
         IDao(contractAddress).initialize(
             owner,
             minter,
+        verifyContract,
             name,
             SYMBOL,
             string.concat(baseURI, "/json/"),
