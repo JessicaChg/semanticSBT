@@ -63,7 +63,6 @@ async function main() {
         schemaURI,
         class_,
         predicate_);
-    // {unsafeAllowLinkedLibraries: true, initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'});
 
     console.log(
         `Follow contract initialize successfully!`
