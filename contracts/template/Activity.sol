@@ -46,6 +46,18 @@ contract Activity is IActivity, SemanticSBT {
         _oIndex = super.addSubject(activityName, _classNames[_activityCIndex]);
     }
 
+    function whiteListRange(uint256 offset, uint256 limit) public view returns (address[] memory whiteList_){
+        if (offset > _whiteLists.length) {
+            return new address[](0);
+        }
+        uint256 end = (offset + limit) > _whiteLists.length ? _whiteLists.length : offset + limit;
+        limit = (offset + limit) > _whiteLists.length ? (_whiteLists.length - offset) : limit;
+        whiteList_ = new address[](limit);
+        for (uint256 i = offset; i < end; i++) {
+            whiteList_[i - offset] = _whiteLists[i];
+        }
+    }
+
     function addWhiteList(address[] memory addressList) external
     onlyMinter {
         for (uint256 i = 0; i < addressList.length; i++) {

@@ -53,7 +53,7 @@ async function main() {
     console.log(
         `Follow deployed ,contract address: ${follow.address}`
     );
-    await follow["initialize(address,address,address,string,string,string,string,string[],(string,uint8)[])"](
+    await (await follow["initialize(address,address,address,string,string,string,string,string[],(string,uint8)[])"](
         owner.address,
         owner.address,
         followWithSign.address,
@@ -62,13 +62,13 @@ async function main() {
         baseURI,
         schemaURI,
         class_,
-        predicate_);
+        predicate_)).wait();
 
     console.log(
         `Follow contract initialize successfully!`
     );
 
-    await follow.connect(addr1).follow()
+    await (await follow.connect(addr1).follow()).wait()
     console.log(`${addr1.address} following  ${owner.address} successfully!`);
 
     const rdf = await follow.rdfOf(1);

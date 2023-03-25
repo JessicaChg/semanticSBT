@@ -60,8 +60,3 @@ pragma solidity ^0.8.0;
         uint256 cIndex;
     }
 
-
-    struct MintStruct {
-        string value;
-        uint256 cIndex;
-    }
