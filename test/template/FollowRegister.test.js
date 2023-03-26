@@ -42,6 +42,11 @@ describe("FollowRegister contract", function () {
         const follow = await Follow.deploy();
         await follow.deployTransaction.wait();
 
+        const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+        const upgradeableBeacon = await UpgradeableBeacon.deploy(follow.address);
+        await upgradeableBeacon.deployTransaction.wait();
+        console.log(`Follow:${follow.address} , UpgradeableBeacon:${upgradeableBeacon.address}`);
+
         const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
@@ -70,7 +75,7 @@ describe("FollowRegister contract", function () {
             schemaURI,
             class_,
             predicate_);
-        await followRegister.setFollowImpl(follow.address);
+        await followRegister.setFollowImpl(upgradeableBeacon.address);
         await followRegister.setFollowVerifyContract(followWithSign.address);
         return {followRegister, followWithSign, owner, addr1, addr2};
     }

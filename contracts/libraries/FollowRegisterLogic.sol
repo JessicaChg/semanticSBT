@@ -3,8 +3,10 @@ pragma solidity ^0.8.12;
 
 import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {IFollow} from "../interfaces/social/IFollow.sol";
+import {Follow} from "../template/Follow.sol";
+import {BeaconProxy} from "../upgrade/BeaconProxy.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
-
+import "hardhat/console.sol";
 
 library FollowRegisterLogic {
 
@@ -15,11 +17,19 @@ library FollowRegisterLogic {
     string constant SCHEMA_URI = "ar://-2hCuTMqo1fz2iyzf7dbEbzoyceod5KFOyGGqNiEQWY";
 
 
-    function createFollow(address followImpl,address verifyContract, address owner, address minter) external returns (address){
-        address followContract = Clones.clone(followImpl);
-        _initFollow(followContract, verifyContract, owner, minter);
+
+    function createFollow(address beaconAddress, address verifyContract, address owner, address minter) external returns (address){
+        address followContract;
+        bytes memory code = type(BeaconProxy).creationCode;
+        bytes memory data = _getEncodeWithSelector(verifyContract, owner, minter);
+        bytes memory bytecode = abi.encodePacked(code, abi.encode(beaconAddress, data));
+        bytes32 salt = keccak256(abi.encodePacked(owner, minter));
+        assembly {
+            followContract := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
         return followContract;
     }
+
 
     function _initFollow(address followContract, address verifyContract, address owner, address minter) internal returns (bool) {
         Predicate[] memory predicates_ = new Predicate[](1);
@@ -27,6 +37,15 @@ library FollowRegisterLogic {
         IFollow(followContract).initialize(owner, minter, verifyContract, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
         return true;
     }
+
+    function _getEncodeWithSelector(address verifyContract, address owner, address minter) internal returns (bytes memory) {
+        Predicate[] memory predicates_ = new Predicate[](1);
+        predicates_[0] = Predicate(FOLLOWING, FieldType.SUBJECT);
+        bytes4 func = IFollow.initialize.selector;
+
+        return abi.encodeWithSelector(func, owner, minter, verifyContract, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
+    }
+
 
 
 }

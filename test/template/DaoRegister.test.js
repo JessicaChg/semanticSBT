@@ -43,6 +43,12 @@ describe("DaoRegister contract", function () {
         const dao = await Dao.deploy();
         await dao.deployTransaction.wait();
 
+        const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+        const upgradeableBeacon = await UpgradeableBeacon.deploy(dao.address);
+        await upgradeableBeacon.deployTransaction.wait();
+        console.log(`Dao:${dao.address} , UpgradeableBeacon:${upgradeableBeacon.address}`);
+
+
         const DaoWithSign = await hre.ethers.getContractFactory("DaoWithSign", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
@@ -70,7 +76,7 @@ describe("DaoRegister contract", function () {
             schemaURI,
             class_,
             predicate_);
-        await daoRegister.setDaoImpl(dao.address);
+        await daoRegister.setDaoImpl(upgradeableBeacon.address);
         await daoRegister.setDaoVerifyContract(daoWithSign.address);
         return {daoRegister, daoWithSign, owner, addr1, addr2, addr3, addr4, addr5, addr6};
     }
