@@ -23,20 +23,20 @@
 
 * zkSync Era测试网
 
-| Name                                   | Contract Address                           |
-|----------------------------------------|--------------------------------------------|
-| <h1><strong>Identity</strong></h1>     |                                            |
-| Name Service                           | 0xd1282A7Be00f4a9d9C48437Baa1b0e78fD1F6566 |
-| <h1><strong>Relationship</strong></h1> |                                            |
-| FollowRegister                         | 0xF15B73Ab1aE23BE61106366b3df2bB4CeEbF82e0 |
-| FollowWithSign                         | 0xAAE511562240649E2217f84108eFECaAd6f6793D |
-| DaoRegister                            |                                            |
-| DaoWithSign                            | 0x299C41c4b6e91ea770BE149962bE072B6A346E57 |
-| <h4>Publication</h4>                   |                                            |
-| Content                                | 0x1C81C3DAdf0bdfab245bb82D77E815d783d2C9F3 |
-| ContentWithSign                        | 0xC30e188BbE9706eBC16670833246b0367C17Ce87 |
-| PrivacyContent                         | 0x6f9339dFe3D274669E46866d521ABf09DC206Fb0 |
-| PrivacyWithSign                        | 0x9746E2cb6263F5BC8e5A9FFdba08BBaf99260846 |
+| Name                                   | Contract Address                            |
+|----------------------------------------|---------------------------------------------|
+| <h1><strong>Identity</strong></h1>     |                                             |
+| Name Service                           | 0xd1282A7Be00f4a9d9C48437Baa1b0e78fD1F6566  |
+| <h1><strong>Relationship</strong></h1> |                                             |
+| FollowRegister                         | 0x734dE4f1b3a1c0619ECB80e3a676a6cFabe72Adc  |
+| FollowWithSign                         | 0xAAE511562240649E2217f84108eFECaAd6f6793D  |
+| DaoRegister                            | 0x7229Dc0117E8484D61137B7304b02b163beC912c  |
+| DaoWithSign                            | 0x299C41c4b6e91ea770BE149962bE072B6A346E57  |
+| <h4>Publication</h4>                   |                                             |
+| Content                                | 0x1C81C3DAdf0bdfab245bb82D77E815d783d2C9F3  |
+| ContentWithSign                        | 0xC30e188BbE9706eBC16670833246b0367C17Ce87  |
+| PrivacyContent                         | 0x6f9339dFe3D274669E46866d521ABf09DC206Fb0  |
+| PrivacyWithSign                        | 0x9746E2cb6263F5BC8e5A9FFdba08BBaf99260846  |
 
 
 ## 合约abi文件
