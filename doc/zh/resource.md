@@ -21,12 +21,19 @@
 
 
 
+* Goerli测试网
+
+| Name                                   | Contract Address                           |
+|----------------------------------------|--------------------------------------------|
+| <h1><strong>Identity</strong></h1>     |                                            |
+| Name Service                           | 0xe4AA1f1E5be0A4E7F80CAC26C2Db1611C3E70c41 |
+
+
+
 * zkSync Era测试网
 
 | Name                                   | Contract Address                            |
 |----------------------------------------|---------------------------------------------|
-| <h1><strong>Identity</strong></h1>     |                                             |
-| Name Service                           | 0xd1282A7Be00f4a9d9C48437Baa1b0e78fD1F6566  |
 | <h1><strong>Relationship</strong></h1> |                                             |
 | FollowRegister                         | 0x734dE4f1b3a1c0619ECB80e3a676a6cFabe72Adc  |
 | FollowWithSign                         | 0xAAE511562240649E2217f84108eFECaAd6f6793D  |
