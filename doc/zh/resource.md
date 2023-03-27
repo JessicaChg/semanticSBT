@@ -33,7 +33,7 @@
 | DaoRegister                            | 0x7229Dc0117E8484D61137B7304b02b163beC912c  |
 | DaoWithSign                            | 0x299C41c4b6e91ea770BE149962bE072B6A346E57  |
 | <h4>Publication</h4>                   |                                             |
-| Content                                | 0x1C81C3DAdf0bdfab245bb82D77E815d783d2C9F3  |
+| Content                                | 0x32F94762b55E74E53059b34FD45e40F618C8B028  |
 | ContentWithSign                        | 0xC30e188BbE9706eBC16670833246b0367C17Ce87  |
 | PrivacyContent                         | 0x6f9339dFe3D274669E46866d521ABf09DC206Fb0  |
 | PrivacyWithSign                        | 0x9746E2cb6263F5BC8e5A9FFdba08BBaf99260846  |

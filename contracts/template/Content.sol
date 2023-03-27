@@ -23,7 +23,7 @@ contract Content is IContent, SemanticSBTUpgradeable {
     address public verifyContract;
 
     modifier onlyVerifyContract{
-        require(msg.sender == verifyContract, "Follow: must be verify contract");
+        require(msg.sender == verifyContract, "Content: must be verify contract");
         _;
     }
 
