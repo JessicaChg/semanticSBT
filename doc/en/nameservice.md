@@ -10,7 +10,7 @@ Via [Relation Protocol's resources](./resource.md), you can acquire the contract
 import { ethers, providers } from 'ethers'
 
 const getContractInstance = () => {
-  // 合约地址
+  // Contract address
   const contractAddress = '0x0D195ab46a9C9C4f97666A76AADb35d93965Cac8'
   const provider = new providers.Web3Provider(window.ethereum)
   const signer = provider.getSigner()
