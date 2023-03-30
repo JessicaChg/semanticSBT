@@ -47,6 +47,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
         require(NameServiceLogic.checkValidLength(name, _minNameLength, _nameLengthControl, _countOfNameLength), "NameService: invalid length of name");
+        require(msg.sender == owner || _minters[msg.sender], "NameService: permission denied");
         string memory fullName = string.concat(name, suffix);
         require(_subjectIndex[NAME_CLASS_INDEX][fullName] == 0, "NameService: already added");
         tokenId = _addEmptyToken(owner, 0);

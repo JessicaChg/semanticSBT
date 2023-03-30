@@ -31,6 +31,10 @@ library NameServiceLogic {
     }
 
 
+    /**
+     * To set a record for resolving the name, linking the name to an address.
+     * @param addr : The owner of the name. If the address is zero address, then the link is canceled.
+     */
     function setNameForAddr(address addr, uint256 dSIndex,
         mapping(uint256 => uint256) storage _tokenIdOfName, mapping(address => uint256) storage _ownedResolvedName,
         mapping(uint256 => address) storage _ownerOfResolvedName, mapping(uint256 => uint256) storage _tokenIdOfResolvedName) public {

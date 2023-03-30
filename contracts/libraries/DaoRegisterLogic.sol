@@ -28,26 +28,7 @@ library DaoRegisterLogic {
     }
 
 
-    function _initDao(address contractAddress, address verifyContract, address owner, address minter, string memory name, string memory baseURI) internal {
-        string[] memory classNames_ = new string[](1);
-        classNames_[0] = DAO_CLASS_NAME;
-        Predicate[] memory predicates_ = new Predicate[](2);
-        predicates_[0] = Predicate(JOIN_PREDICATE, FieldType.SUBJECT);
-        predicates_[1] = Predicate(DAO_URI_PREDICATE, FieldType.STRING);
-        IDao(contractAddress).initialize(
-            owner,
-            minter,
-        verifyContract,
-            name,
-            SYMBOL,
-            string.concat(baseURI, "/json/"),
-            SCHEMA_URI,
-            classNames_,
-            predicates_);
-    }
-
-
-    function _getEncodeWithSelector(address verifyContract, address owner, address minter, string memory name, string memory baseURI) internal returns (bytes memory) {
+    function _getEncodeWithSelector(address verifyContract, address owner, address minter, string memory name, string memory baseURI) internal pure returns (bytes memory) {
         string[] memory classNames_ = new string[](1);
         classNames_[0] = DAO_CLASS_NAME;
         Predicate[] memory predicates_ = new Predicate[](2);

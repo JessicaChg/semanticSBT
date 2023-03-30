@@ -17,7 +17,6 @@ library FollowRegisterLogic {
     string constant SCHEMA_URI = "ar://-2hCuTMqo1fz2iyzf7dbEbzoyceod5KFOyGGqNiEQWY";
 
 
-
     function createFollow(address beaconAddress, address verifyContract, address owner, address minter) external returns (address){
         address followContract;
         bytes memory code = type(BeaconProxy).creationCode;
@@ -30,22 +29,13 @@ library FollowRegisterLogic {
         return followContract;
     }
 
-
-    function _initFollow(address followContract, address verifyContract, address owner, address minter) internal returns (bool) {
-        Predicate[] memory predicates_ = new Predicate[](1);
-        predicates_[0] = Predicate(FOLLOWING, FieldType.SUBJECT);
-        IFollow(followContract).initialize(owner, minter, verifyContract, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
-        return true;
-    }
-
-    function _getEncodeWithSelector(address verifyContract, address owner, address minter) internal returns (bytes memory) {
+    function _getEncodeWithSelector(address verifyContract, address owner, address minter) internal pure returns (bytes memory) {
         Predicate[] memory predicates_ = new Predicate[](1);
         predicates_[0] = Predicate(FOLLOWING, FieldType.SUBJECT);
         bytes4 func = IFollow.initialize.selector;
 
         return abi.encodeWithSelector(func, owner, minter, verifyContract, NAME, SYMBOL, BASE_URI, SCHEMA_URI, new string[](0), predicates_);
     }
-
 
 
 }

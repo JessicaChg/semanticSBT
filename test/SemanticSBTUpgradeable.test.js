@@ -32,7 +32,7 @@ describe("SemanticSBT contract", function () {
         const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
         const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
 
-        const SemanticSBT = await ethers.getContractFactory("SemanticSBTUpgradeable", {
+        const SemanticSBT = await ethers.getContractFactory("MockSemanticSBTUpgradeable", {
             libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             }

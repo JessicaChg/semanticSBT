@@ -4,8 +4,7 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
-const {ethers, upgrades} = require("hardhat");
+const {ethers,upgrades} = require("hardhat");
 
 const name = 'Relation Dao Register';
 const symbol = 'SBT';
@@ -18,13 +17,13 @@ async function main() {
 
     const [owner] = await ethers.getSigners();
 
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
+    const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(`SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
-    const DaoRegisterLogic = await hre.ethers.getContractFactory("DaoRegisterLogic");
+    const DaoRegisterLogic = await ethers.getContractFactory("DaoRegisterLogic");
     const daoRegisterLogicLibrary = await DaoRegisterLogic.deploy();
     console.log(`DaoRegisterLogic deployed ,contract address: ${daoRegisterLogicLibrary.address}`);
-    const Dao = await hre.ethers.getContractFactory("Dao", {
+    const Dao = await ethers.getContractFactory("Dao", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
@@ -33,7 +32,7 @@ async function main() {
     await dao.deployTransaction.wait();
     console.log(`Dao deployed ,contract address: ${dao.address}`);
 
-    const DaoWithSign = await hre.ethers.getContractFactory("DaoWithSign", {
+    const DaoWithSign = await ethers.getContractFactory("DaoWithSign", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
@@ -48,7 +47,7 @@ async function main() {
 
 
     const contractName = "DaoRegister";
-    const MyContract = await hre.ethers.getContractFactory(contractName, {
+    const MyContract = await ethers.getContractFactory(contractName, {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
             DaoRegisterLogic: daoRegisterLogicLibrary.address,
@@ -71,6 +70,11 @@ async function main() {
     await (await daoRegister.setDaoVerifyContract(daoWithSign.address)).wait();
     console.log(`${contractName} setDaoVerifyContract successfully!` );
 }
+
+// async function main() {
+//
+// }
+
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
