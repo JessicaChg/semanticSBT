@@ -8,8 +8,8 @@ import {StringUtils} from "./StringUtils.sol";
 library NameServiceLogic {
     using StringUtils for *;
 
-    uint256 constant holdPredicateIndex = 1;
-    uint256 constant resolvePredicateIndex = 2;
+    uint256 constant HOLD_PREDICATE_INDEX = 1;
+    uint256 constant RESOLVE_PREDICATE_INDEX = 2;
 
     function register(uint256 tokenId, address owner, uint256 sIndex, bool resolve,
         mapping(uint256 => uint256) storage _tokenIdOfName,
@@ -23,9 +23,9 @@ library NameServiceLogic {
         if (resolve) {
             setNameForAddr(owner, sIndex, _tokenIdOfName, _ownedResolvedName,
                 _ownerOfResolvedName, _tokenIdOfResolvedName);
-            subjectPOList[0] = SubjectPO(resolvePredicateIndex, sIndex);
+            subjectPOList[0] = SubjectPO(resolve_Predicate_Index, sIndex);
         } else {
-            subjectPOList[0] = SubjectPO(holdPredicateIndex, sIndex);
+            subjectPOList[0] = SubjectPO(hold_Predicate_Index, sIndex);
         }
         return subjectPOList;
     }
@@ -54,9 +54,9 @@ library NameServiceLogic {
 
     function updatePIndexOfToken(address addr, SPO storage spo) public {
         if (addr == address(0)) {
-            spo.pIndex[0] = holdPredicateIndex;
+            spo.pIndex[0] = hold_Predicate_Index;
         } else {
-            spo.pIndex[0] = resolvePredicateIndex;
+            spo.pIndex[0] = resolve_Predicate_Index;
         }
     }
 
