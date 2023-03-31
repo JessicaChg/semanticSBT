@@ -177,9 +177,9 @@ library SemanticSBTLogicUpgradeable {
             }
             string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
             _rdf = string.concat(_rdf, suffix);
-        unchecked{
-            i++;
-        }
+            unchecked{
+                i++;
+            }
         }
     }
 
@@ -256,7 +256,6 @@ library SemanticSBTLogicUpgradeable {
         string memory description,
         string memory rdf
     ) external pure returns (string memory) {
-        string memory name = string.concat(id.toString());
         return
         string(
             abi.encodePacked(
@@ -264,7 +263,7 @@ library SemanticSBTLogicUpgradeable {
                 Base64.encode(
                     abi.encodePacked(
                         '{"name":"',
-                        name,
+                        id.toString(),
                         '","description":"',
                         description,
                         '","image":"data:image/svg+xml;base64,',
@@ -276,36 +275,6 @@ library SemanticSBTLogicUpgradeable {
         );
     }
 
-//    function buildText(SPO calldata spo, string[] calldata _classNames, Predicate[] calldata _predicates, string[] calldata _stringO,
-//        Subject[] calldata _subjects, BlankNodeO[] calldata _blankNodeO) external pure returns (string memory){
-//        uint256 x = 10;
-//        uint256 y = 150;
-//        string memory text = getText(x, y, buildS(spo, _classNames, _subjects));
-//        x = 20;
-//        for (uint256 i = 0; i < spo.pIndex.length;) {
-//            y = y + 50;
-//            Predicate memory p = _predicates[spo.pIndex[i]];
-//            string memory po;
-//            if (FieldType.INT == p.fieldType) {
-//                po = buildIntRDF(p, spo.oIndex[i]);
-//            } else if (FieldType.STRING == p.fieldType) {
-//                po = buildStringRDF(p, spo.oIndex[i], _stringO);
-//            } else if (FieldType.ADDRESS == p.fieldType) {
-//                po = buildAddressRDF(p, spo.oIndex[i]);
-//            } else if (FieldType.SUBJECT == p.fieldType) {
-//                po = buildSubjectRDF(p, spo.oIndex[i], _classNames, _subjects);
-//            } else if (FieldType.BLANKNODE == p.fieldType) {
-//                po = buildBlankNodeRDF(p, spo.oIndex[i], SemanticStorage(_classNames, _predicates, _stringO, _subjects, _blankNodeO));
-//            }
-//            string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
-//            po = string.concat(po, suffix);
-//            text = string.concat(text, getText(x, y, po));
-//        unchecked{
-//            i++;
-//        }
-//        }
-//        return text;
-//    }
 
     function _getSVGImageBase64Encoded(string memory text)
     internal
@@ -315,7 +284,7 @@ library SemanticSBTLogicUpgradeable {
         return
         Base64.encode(
             abi.encodePacked(
-                '<svg  class="icon" viewBox="0 0 1200 450" version="1.1" xmlns="http://www.w3.org/2000/svg" width="1200" height="450" fill="white" > <rect xmlns="http://www.w3.org/2000/svg" id="default-picture-background" x="0" width="1200" height="450" fill="white"/>',
+                '<svg  class="icon" viewBox="0 0 1200 450" version="1.1" xmlns="http://www.w3.org/2000/svg" width="1200" height="450" fill="white" > <rect xmlns="http://www.w3.org/2000/svg" x="0" width="1200" height="450" fill="white"/>',
                 text,
                 '</svg>'
             )
@@ -348,11 +317,11 @@ library SemanticSBTLogicUpgradeable {
 
     function _calculateDigest(string memory name, address contractAddress, bytes32 hashedMessage) internal view returns (bytes32) {
         bytes32 digest;
-    unchecked {
-        digest = keccak256(
-            abi.encodePacked('\x19\x01', _calculateDomainSeparator(name, contractAddress), hashedMessage)
-        );
-    }
+        unchecked {
+            digest = keccak256(
+                abi.encodePacked('\x19\x01', _calculateDomainSeparator(name, contractAddress), hashedMessage)
+            );
+        }
         return digest;
     }
 

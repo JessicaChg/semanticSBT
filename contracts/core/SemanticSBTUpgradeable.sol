@@ -61,15 +61,9 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     string[] internal _stringO;
     BlankNodeO[] internal _blankNodeO;
 
-
     string  constant SOUL_CLASS_NAME = "Soul";
 
-
-    event EventMinterAdded(address indexed newMinter);
-
-    event EventMinterRemoved(address indexed oldMinter);
-
-
+    event SetMinter(address indexed addr, bool isMinter);
 
     modifier onlyMinter() {
         require(_minters[msg.sender], "SemanticSBT: must be minter");
@@ -117,7 +111,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
         SemanticSBTLogicUpgradeable.addClass(classes_, _classNames, _classIndex);
         SemanticSBTLogicUpgradeable.addPredicate(predicates_, _predicates, _predicateIndex);
-        emit EventMinterAdded(minter);
+        emit SetMinter(minter, true);
     }
 
 
@@ -255,31 +249,6 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         super.safeTransferFrom(from, to, tokenId, _data);
     }
 
-    function addSubject(string memory value, string memory className_) public onlyMinter returns (uint256 sIndex) {
-        return SemanticSBTLogicUpgradeable.addSubject(value, className_, _subjects, _subjectIndex, _classIndex);
-    }
-
-    function mint(address account, uint256 sIndex, IntPO[] memory intPOList, StringPO[] memory stringPOList,
-        AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList) external onlyMinter returns (uint256) {
-        require(account != address(0), "SemanticSBT: mint to the zero address");
-        require(sIndex < _subjects.length, "SemanticSBT: param error");
-
-        uint256 tokenId = _addEmptyToken(account, sIndex);
-
-        _mint(tokenId, account, intPOList, stringPOList, addressPOList, subjectPOList, blankNodePOList);
-        return tokenId;
-    }
-
-    function burn(address account, uint256 id) external onlyMinter {
-        require(
-            _isApprovedOrOwner(_msgSender(), id),
-            "SemanticSBT: caller is not approved or owner"
-        );
-        require(isOwnerOf(account, id), "SemanticSBT: not owner");
-        _burn(id);
-    }
-
 
     function setURI(string calldata newURI) external onlyOwner {
         _baseTokenURI = newURI;
@@ -301,18 +270,9 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     }
 
 
-    function addMinter(address minter) external onlyOwner {
-        require(minter != address(0), "SemanticSBT: minter must not be null address");
-        require(!_minters[minter], "SemanticSBT: minter already added");
-        _minters[minter] = true;
-        emit EventMinterAdded(minter);
-    }
-
-
-    function removeMinter(address minter) external onlyOwner {
-        require(_minters[minter], "SemanticSBT: minter does not exist");
-        delete _minters[minter];
-        emit EventMinterRemoved(minter);
+    function setMinter(address addr, bool _isMinter) external onlyOwner {
+        _minters[addr] = _isMinter;
+        emit SetMinter(addr, _isMinter);
     }
 
 

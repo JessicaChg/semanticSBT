@@ -50,6 +50,12 @@ describe("Privacy Content contract", function () {
         const follow = await Follow.deploy();
         await follow.deployTransaction.wait();
 
+        const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+        const upgradeableBeacon = await UpgradeableBeacon.deploy(follow.address);
+        await upgradeableBeacon.deployTransaction.wait();
+
+
+
         const contractName = "FollowRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
@@ -67,7 +73,7 @@ describe("Privacy Content contract", function () {
             schemaURI,
             class_,
             predicate_);
-        await followRegister.setFollowImpl(follow.address);
+        await followRegister.setFollowImpl(upgradeableBeacon.address);
         return followRegister;
     }
 
@@ -93,6 +99,11 @@ describe("Privacy Content contract", function () {
         const dao = await Dao.deploy();
         await dao.deployTransaction.wait();
 
+        const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+        const upgradeableBeacon = await UpgradeableBeacon.deploy(dao.address);
+        await upgradeableBeacon.deployTransaction.wait();
+
+
         const contractName = "DaoRegister";
         const MyContract = await hre.ethers.getContractFactory(contractName, {
             libraries: {
@@ -110,7 +121,7 @@ describe("Privacy Content contract", function () {
             schemaURI,
             class_,
             predicate_);
-        await daoRegister.setDaoImpl(dao.address);
+        await daoRegister.setDaoImpl(upgradeableBeacon.address);
         return daoRegister;
     }
 

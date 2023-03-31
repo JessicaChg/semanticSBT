@@ -1,8 +1,8 @@
-# Relation Protocol 资源列表
+# Relation Protocol's list of resources
 
-## 合约地址
+## Contract addresses
 
-* Mumbai测试网
+* Mumbai Testnet
 
 | Name                                   | Contract Address                           |
 |----------------------------------------|--------------------------------------------|
@@ -21,7 +21,7 @@
 
 
 
-* Goerli测试网
+* Goerli Testnet
 
 | Name                                   | Contract Address                           |
 |----------------------------------------|--------------------------------------------|
@@ -30,7 +30,7 @@
 
 
 
-* zkSync Era测试网
+* zkSync Era Testnet
 
 | Name                                   | Contract Address                            |
 |----------------------------------------|---------------------------------------------|
@@ -46,10 +46,10 @@
 | PrivacyWithSign                        | 0x9746E2cb6263F5BC8e5A9FFdba08BBaf99260846  |
 
 
-## 合约abi文件
+## The abi files of contracts
 
 
-| Name                                   | abi文件链接                                                          |
+| Name                                   | abi file link                                                          |
 |----------------------------------------|------------------------------------------------------------------|
 | <h1><strong>Identity</strong></h1>     |                                                                  |
 | Name Service                           | [NameService.json](../abi/NameService.json)                      |
@@ -67,7 +67,3 @@
 | ContentWithSign                        | [ContentWithSign.abi](../abi/ContentWithSign.json)               |
 | PrivacyContent                         | [PrivacyContent.abi](../abi/PrivacyContent.json)                 |
 | PrivacyContentWithSign                 | [PrivacyContentWithSign.abi](../abi/PrivacyContentWithSign.json) |
-
-
-
-
