@@ -2,6 +2,18 @@
 
 ## 合约地址
 
+* Goerli测试网
+
+| Name                                    | Contract Address                           |
+|-----------------------------------------|--------------------------------------------|
+| <h3><strong>Identity</strong></h3>      |                                            |
+| Name Service                            | 0xe4AA1f1E5be0A4E7F80CAC26C2Db1611C3E70c41 |
+| <h3><strong>Relationship</strong></h3>  |                                            |
+| <h4><strong>Follow</strong></h4>        |                                            |
+| FollowRegister                          | 0x43950C674398ab80F86CAc4F00dE3B66ABe64c35 |
+| FollowWithSign                          | 0x1ff9dEedE1af7c6DBEF84850baA586fE59a252b9 |
+
+
 * Mumbai测试网
 
 | Name                                   | Contract Address                           |
@@ -20,15 +32,6 @@
 | ContentWithSign                        | 0xD5F82F40d622Fa6772e52F475E9f6f8EFf9c0369 |
 | PrivacyContent                         | 0x27f61DD5DF5D52459327465F4bD4df1913a69304 |
 | PrivacyWithSign                        | 0x35B7691225471582F03691e8b3825C3359D3Ad22 |
-
-
-
-* Goerli测试网
-
-| Name                               | Contract Address                           |
-|------------------------------------|--------------------------------------------|
-| <h3><strong>Identity</strong></h3> |                                            |
-| Name Service                       | 0xe4AA1f1E5be0A4E7F80CAC26C2Db1611C3E70c41 |
 
 
 
