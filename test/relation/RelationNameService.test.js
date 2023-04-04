@@ -37,7 +37,7 @@ describe("Name Service contract", function () {
         const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
         const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
 
-        const contractName = "NameService";
+        const contractName = "RelationNameService";
         console.log(contractName)
 
         const MyContract = await ethers.getContractFactory(contractName,{
@@ -47,20 +47,20 @@ describe("Name Service contract", function () {
             }
         });
         const nameService = await upgrades.deployProxy(MyContract,
-            [owner.address,
+            [
+                suffix,
                 name,
                 symbol,
-                baseURI,
                 schemaURI,
                 class_,
                 predicate_],
-            {unsafeAllowLinkedLibraries: true});
-
+            {
+                unsafeAllowLinkedLibraries: true,
+                initializer: 'initialize(string, string, string, string, string[], (string,uint8)[])'
+            });
         await nameService.deployed();
-        await (await nameService.setMinNameLength(minNameLength_)).wait();
-        await (await nameService.setMaxNameLength(maxNameLength_)).wait();
+        await nameService.deployTransaction.wait();
         await (await nameService.setNameLengthControl(nameLengthControl._nameLength, nameLengthControl._maxCount)).wait();
-        await (await nameService.setSuffix(suffix)).wait();
         return {nameService, owner, addr1, addr2};
     }
 

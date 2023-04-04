@@ -16,10 +16,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/ISemanticSBTSchema.sol";
 import "../interfaces/ISemanticSBT.sol";
+import "../interfaces/IERC5192.sol";
 import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 
-contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, ERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema {
+contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, ERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema, IERC5192 {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for uint160;
@@ -46,7 +47,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
     mapping(uint256 => mapping(string => uint256)) internal _subjectIndex;
 
-    string private _baseTokenURI;
+    string internal _baseTokenURI;
 
     string public schemaURI;
 
@@ -133,6 +134,14 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         return _transferable;
     }
 
+    function locked(uint256 tokenId) external override view returns (bool){
+        if(_transferable){
+            return true;
+        }
+        return false;
+    }
+
+
 
     function baseURI() public view returns (string memory) {
         return _baseTokenURI;
@@ -208,6 +217,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     function tokenURI(uint256 tokenId)
     public
     view
+    virtual
     override
     returns (string memory)
     {
