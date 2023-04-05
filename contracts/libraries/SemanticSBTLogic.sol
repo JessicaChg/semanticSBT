@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import '@openzeppelin/contracts/utils/Base64.sol';
 import "../core/SemanticBaseStruct.sol";
 
 
 library SemanticSBTLogic {
-    using Address for address;
-    using Strings for uint256;
-    using Strings for uint160;
-    using Strings for address;
+    using AddressUpgradeable for address;
+    using StringsUpgradeable for uint256;
+    using StringsUpgradeable for uint160;
+    using StringsUpgradeable for address;
+
 
     struct Signature {
         uint8 v;
@@ -27,23 +29,23 @@ library SemanticSBTLogic {
         BlankNodeO[] _blankNodeO;
     }
 
+    string  constant TURTLE_LINE_SUFFIX = ";";
+    string  constant TURTLE_END_SUFFIX = " . ";
+    string  constant SOUL_CLASS_NAME = "Soul";
+
+    string  constant public ENTITY_PREFIX = ":";
+    string  constant public PROPERTY_PREFIX = "p:";
+
+    string  constant CONCATENATION_CHARACTER = "_";
+    string  constant BLANK_NODE_START_CHARACTER = "[";
+    string  constant BLANK_NODE_END_CHARACTER = "]";
+    string  constant BLANK_SPACE = " ";
+
     bytes32 internal constant EIP712_REVISION_HASH = keccak256('1');
     bytes32 internal constant EIP712_DOMAIN_TYPE_HASH = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
-    string  public constant TURTLE_LINE_SUFFIX = " ;";
-    string  public constant TURTLE_END_SUFFIX = " . ";
-    string  public constant SOUL_CLASS_NAME = "Soul";
 
-    string  public constant ENTITY_PREFIX = ":";
-    string  public constant PROPERTY_PREFIX = "p:";
-
-    string  public constant CONCATENATION_CHARACTER = "_";
-    string  public constant BLANK_NODE_START_CHARACTER = "[";
-    string  public constant BLANK_NODE_END_CHARACTER = "]";
-    string  public constant BLANK_SPACE = " ";
-
-
-    function addClass(string[] memory classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
+    function addClass(string[] calldata classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
         for (uint256 i = 0; i < classList.length; i++) {
             string memory className_ = classList[i];
             require(
@@ -57,7 +59,7 @@ library SemanticSBTLogic {
     }
 
 
-    function addPredicate(Predicate[] memory predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
+    function addPredicate(Predicate[] calldata predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
         for (uint256 i = 0; i < predicates.length; i++) {
             Predicate memory predicate_ = predicates[i];
             require(
@@ -72,9 +74,19 @@ library SemanticSBTLogic {
     }
 
 
+    function addSubject(string calldata value, string calldata className_,
+        Subject[] storage _subjects,
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex,
+        mapping(string => uint256) storage _classIndex) external returns (uint256 sIndex) {
+        uint256 cIndex = _classIndex[className_];
+        require(cIndex > 0, "SemanticSBT: param error");
+        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
+        sIndex = _addSubject(value, cIndex, _subjects, _subjectIndex);
+    }
+
     function mint(uint256[] storage pIndex, uint256[] storage oIndex,
         IntPO[] memory intPOList, StringPO[] memory stringPOList, AddressPO[] memory addressPOList, SubjectPO[] memory subjectPOList,
-        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) public {
+        BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external {
 
         addIntPO(pIndex, oIndex, intPOList, _predicates);
         addStringPO(pIndex, oIndex, stringPOList, _predicates, _stringO);
@@ -85,19 +97,19 @@ library SemanticSBTLogic {
     }
 
 
-    function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) public {
+    function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) internal {
         for (uint256 i = 0; i < intPOList.length; i++) {
             IntPO memory intPO = intPOList[i];
-            _checkPredicate(intPO.pIndex, FieldType.INT, _predicates);
+            checkPredicate(intPO.pIndex, FieldType.INT, _predicates);
             pIndex.push(intPO.pIndex);
             oIndex.push(intPO.o);
         }
     }
 
-    function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) public {
+    function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) internal {
         for (uint256 i = 0; i < stringPOList.length; i++) {
             StringPO memory stringPO = stringPOList[i];
-            _checkPredicate(stringPO.pIndex, FieldType.STRING, _predicates);
+            checkPredicate(stringPO.pIndex, FieldType.STRING, _predicates);
             uint256 _oIndex = _stringO.length;
             _stringO.push(stringPO.o);
             pIndex.push(stringPO.pIndex);
@@ -105,26 +117,26 @@ library SemanticSBTLogic {
         }
     }
 
-    function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) public {
+    function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) internal {
         for (uint256 i = 0; i < addressPOList.length; i++) {
             AddressPO memory addressPO = addressPOList[i];
-            _checkPredicate(addressPO.pIndex, FieldType.ADDRESS, _predicates);
+            checkPredicate(addressPO.pIndex, FieldType.ADDRESS, _predicates);
             pIndex.push(addressPO.pIndex);
             oIndex.push(uint160(addressPO.o));
         }
     }
 
-    function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) public {
+    function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) internal {
         for (uint256 i = 0; i < subjectPOList.length; i++) {
             SubjectPO memory subjectPO = subjectPOList[i];
-            _checkPredicate(subjectPO.pIndex, FieldType.SUBJECT, _predicates);
+            checkPredicate(subjectPO.pIndex, FieldType.SUBJECT, _predicates);
             require(subjectPO.oIndex > 0 && subjectPO.oIndex < _subjects.length, "SemanticSBT: subject not exist");
             pIndex.push(subjectPO.pIndex);
             oIndex.push(subjectPO.oIndex);
         }
     }
 
-    function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) public {
+    function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
         for (uint256 i = 0; i < blankNodePOList.length; i++) {
             BlankNodePO memory blankNodePO = blankNodePOList[i];
             require(blankNodePO.pIndex < _predicates.length, "SemanticSBT: predicate not exist");
@@ -145,24 +157,29 @@ library SemanticSBTLogic {
     }
 
 
-    function buildRDF(SPO memory spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
+    function buildRDF(SPO calldata spo, string[] calldata _classNames, Predicate[] calldata _predicates,
+        string[] calldata _stringO, Subject[] calldata _subjects,
+        BlankNodeO[] calldata _blankNodeO) external pure returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
-        for (uint256 i = 0; i < spo.pIndex.length; i++) {
+        for (uint256 i = 0; i < spo.pIndex.length;) {
             Predicate memory p = _predicates[spo.pIndex[i]];
             if (FieldType.INT == p.fieldType) {
-                _rdf = string.concat(_rdf, buildIntRDF(spo.pIndex[i], spo.oIndex[i], _predicates));
+                _rdf = string.concat(_rdf, buildIntRDF(p, spo.oIndex[i]));
             } else if (FieldType.STRING == p.fieldType) {
-                _rdf = string.concat(_rdf, buildStringRDF(spo.pIndex[i], spo.oIndex[i], _predicates, _stringO));
+                _rdf = string.concat(_rdf, buildStringRDF(p, spo.oIndex[i], _stringO));
             } else if (FieldType.ADDRESS == p.fieldType) {
-                _rdf = string.concat(_rdf, buildAddressRDF(spo.pIndex[i], spo.oIndex[i], _predicates));
+                _rdf = string.concat(_rdf, buildAddressRDF(p, spo.oIndex[i]));
             } else if (FieldType.SUBJECT == p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _subjects));
+                _rdf = string.concat(_rdf, buildSubjectRDF(p, spo.oIndex[i], _classNames, _subjects));
             } else if (FieldType.BLANKNODE == p.fieldType) {
-                _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], SemanticStorage(_classNames, _predicates, _stringO, _subjects, _blankNodeO)));
+                _rdf = string.concat(_rdf, buildBlankNodeRDF(p, spo.oIndex[i], SemanticStorage(_classNames, _predicates, _stringO, _subjects, _blankNodeO)));
             }
-            string memory suffix = i == spo.pIndex.length - 1 ? " . " : ";";
+            string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
             _rdf = string.concat(_rdf, suffix);
+            unchecked{
+                i++;
+            }
         }
     }
 
@@ -172,30 +189,26 @@ library SemanticSBTLogic {
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);
     }
 
-    function buildIntRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates) internal pure returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
+    function buildIntRDF(Predicate memory predicate_, uint256 oIndex) internal pure returns (string memory){
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = oIndex.toString();
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildStringRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates, string[] memory _stringO) internal pure returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
+    function buildStringRDF(Predicate memory predicate_, uint256 oIndex, string[] memory _stringO) internal pure returns (string memory){
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = string.concat('"', _stringO[oIndex], '"');
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildAddressRDF(uint256 pIndex, uint256 oIndex, Predicate[] memory _predicates) internal pure returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
+    function buildAddressRDF(Predicate memory predicate_, uint256 oIndex) internal pure returns (string memory){
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = string.concat(ENTITY_PREFIX, SOUL_CLASS_NAME, CONCATENATION_CHARACTER, address(uint160(oIndex)).toHexString());
         return string.concat(p, BLANK_SPACE, o);
     }
 
 
-    function buildSubjectRDF(uint256 pIndex, uint256 oIndex, string[] memory _classNames, Predicate[] memory _predicates, Subject[] memory _subjects) internal pure returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
+    function buildSubjectRDF(Predicate memory predicate_, uint256 oIndex, string[] memory _classNames, Subject[] memory _subjects) internal pure returns (string memory){
         string memory _className = _classNames[_subjects[oIndex].cIndex];
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
         string memory o = string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, _subjects[oIndex].value);
@@ -203,48 +216,101 @@ library SemanticSBTLogic {
     }
 
 
-    function buildBlankNodeRDF(uint256 pIndex, uint256 oIndex, SemanticStorage memory vars) internal view returns (string memory){
-        Predicate memory predicate_ = vars._predicates[pIndex];
+    function buildBlankNodeRDF(Predicate memory predicate_, uint256 oIndex, SemanticStorage memory vars) internal pure returns (string memory){
         string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
 
         uint256[] memory blankPList = vars._blankNodeO[oIndex].pIndex;
         uint256[] memory blankOList = vars._blankNodeO[oIndex].oIndex;
 
         string memory _rdf = "";
-        for (uint256 i = 0; i < blankPList.length; i++) {
+        for (uint256 i = 0; i < blankPList.length;) {
             Predicate memory _p = vars._predicates[blankPList[i]];
             if (FieldType.INT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildIntRDF(blankPList[i], blankOList[i], vars._predicates));
+                _rdf = string.concat(_rdf, buildIntRDF(_p, blankOList[i]));
             } else if (FieldType.STRING == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildStringRDF(blankPList[i], blankOList[i], vars._predicates, vars._stringO));
+                _rdf = string.concat(_rdf, buildStringRDF(_p, blankOList[i], vars._stringO));
             } else if (FieldType.ADDRESS == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], vars._predicates));
+                _rdf = string.concat(_rdf, buildAddressRDF(_p, blankOList[i]));
             } else if (FieldType.SUBJECT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], vars._classNames, vars._predicates, vars._subjects));
+                _rdf = string.concat(_rdf, buildSubjectRDF(_p, blankOList[i], vars._classNames, vars._subjects));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
+            }
+            unchecked{
+                i++;
             }
         }
 
         return string.concat(p, BLANK_SPACE, BLANK_NODE_START_CHARACTER, _rdf, BLANK_NODE_END_CHARACTER);
     }
 
-
-    function buildStringRDFCustom(string memory class, string memory entityValue, string memory predicate, string memory o) external pure returns (string memory){
+    function buildStringRDFCustom(string calldata class, string calldata entityValue, string calldata predicate, string calldata o) external pure returns (string memory){
         string memory s = string.concat(ENTITY_PREFIX, class, CONCATENATION_CHARACTER, entityValue, BLANK_SPACE);
         string memory p = string.concat(PROPERTY_PREFIX, predicate, BLANK_SPACE);
-        return string.concat(s, p, o, SemanticSBTLogic.TURTLE_END_SUFFIX);
+        return string.concat(s, p, o, TURTLE_END_SUFFIX);
+    }
+
+    function getTokenURI(
+        uint256 id,
+        string memory description,
+        string memory rdf
+    ) external pure returns (string memory) {
+        return
+        string(
+            abi.encodePacked(
+                'data:application/json;base64,',
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name":"',
+                        id.toString(),
+                        '","description":"',
+                        description,
+                        '","image":"data:image/svg+xml;base64,',
+                        _getSVGImageBase64Encoded(getText(10, 150, rdf)),
+                        '"}'
+                    )
+                )
+            )
+        );
     }
 
 
-    function recoverSignerFromSignature(string memory name, address contractAddress, bytes32 hashedMessage, address expectedAddress, Signature memory sig) external view returns (address){
-        require(sig.deadline > block.timestamp, "SemanticSBTLogic: signature expired");
+    function _getSVGImageBase64Encoded(string memory text)
+    internal
+    pure
+    returns (string memory)
+    {
+        return
+        Base64.encode(
+            abi.encodePacked(
+                '<svg  class="icon" viewBox="0 0 1200 450" version="1.1" xmlns="http://www.w3.org/2000/svg" width="1200" height="450" fill="white" > <rect xmlns="http://www.w3.org/2000/svg" x="0" width="1200" height="450" fill="white"/>',
+                text,
+                '</svg>'
+            )
+        );
+    }
+
+
+    function getText(uint256 x, uint256 y, string memory content) public pure returns (string memory){
+        return string.concat(
+            '<text x="',
+            x.toString(),
+            '" y="',
+            y.toString(),
+            '" fill="black" font-size="20" >',
+            content,
+            '</text>');
+    }
+
+
+    function recoverSignerFromSignature(string calldata name, address contractAddress, bytes32 hashedMessage, address expectedAddress, Signature calldata sig) external view returns (address){
+        require(sig.deadline > block.timestamp, "SemanticSBT: signature expired");
         address signer = ecrecover(_calculateDigest(name, contractAddress, hashedMessage),
             sig.v,
             sig.r,
             sig.s);
-        require(expectedAddress == signer, "SemanticSBTLogic: signature invalid");
+        require(expectedAddress == signer, "SemanticSBT: signature invalid");
         return signer;
     }
 
@@ -273,8 +339,17 @@ library SemanticSBTLogic {
     }
 
 
-    function _checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) internal view {
+    function checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] memory _predicates) public pure {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
         require(_predicates[pIndex].fieldType == fieldType, "SemanticSBT: predicate type error");
+    }
+
+
+    function _addSubject(string memory value, uint256 cIndex,
+        Subject[] storage _subjects,
+        mapping(uint256 => mapping(string => uint256)) storage _subjectIndex) public returns (uint256 sIndex){
+        sIndex = _subjects.length;
+        _subjectIndex[cIndex][value] = sIndex;
+        _subjects.push(Subject(value, cIndex));
     }
 }

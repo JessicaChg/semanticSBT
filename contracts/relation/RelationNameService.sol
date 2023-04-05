@@ -26,7 +26,7 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer{
+    ) public initializer {
         __Pausable_init_unchained();
         super.initialize(msg.sender, name_, symbol_, "", schemaURI_, classes_, predicates_);
         _minNameLength = 3;
@@ -43,19 +43,23 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         _unpause();
     }
 
-    function addResolvedName() external onlyOwner{
-
+    function withdraw() public {
+        payable(owner()).transfer(address(this).balance);
     }
 
     function register(address owner, string calldata name, bool resolve) external override(NameService) whenNotPaused onlyMinter returns (uint tokenId) {
         return super._register(owner, name, resolve);
     }
 
-    function register(address owner, string calldata name, uint256 deadline, bytes memory signature, bool resolve) external whenNotPaused returns (uint tokenId) {
-        require(_minters[NameServiceLogic.recoverAddress(address(this), msg.sender, name, deadline, signature)], "NameService: invalid signature");
+    function register(address owner, string calldata name, uint256 deadline, uint256 price, bytes memory signature, bool resolve) external whenNotPaused payable returns (uint tokenId) {
+        require(msg.value >= price,"NameService: insufficient value");
+        require(_minters[NameServiceLogic.recoverAddress(address(this), msg.sender, name, deadline, price, signature)], "NameService: invalid signature");
         return super._register(owner, name, resolve);
     }
 
+    function recover(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 price,bytes memory signature) external view returns(address){
+        return NameServiceLogic.recoverAddress(contractAddress,caller,name,deadline,price,signature);
+    }
 
     function valid(string memory name) public view override returns (bool){
         return super.valid(name);

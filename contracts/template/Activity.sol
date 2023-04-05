@@ -18,10 +18,10 @@ contract Activity is IActivity, SemanticSBT {
     using Strings for address;
 
 
-    uint256 private _soulCIndex = 1;
-    uint256 private _activityCIndex = 2;
-    uint256 private _pIndex = 1;
-    uint256 private _oIndex = 1;
+    uint256 _soulCIndex = 1;
+    uint256 _activityCIndex = 2;
+    uint256 _pIndex = 1;
+    uint256 _oIndex = 1;
 
 
     mapping(address => mapping(uint256 => mapping(uint256 => bool)))  _mintedSPO;
@@ -41,9 +41,9 @@ contract Activity is IActivity, SemanticSBT {
     }
 
 
-    function setActivity(string memory activityName) external onlyMinter{
-        require(getMinted() == 0,"Activity:can not set activity after minted!" );
-        _oIndex = super.addSubject(activityName, _classNames[_activityCIndex]);
+    function setActivity(string memory activityName) external onlyMinter {
+        require(getMinted() == 0, "Activity:can not set activity after minted!");
+        _oIndex = SemanticSBTLogic.addSubject(activityName, _classNames[_activityCIndex], _subjects, _subjectIndex, _classIndex);
     }
 
     function whiteListRange(uint256 offset, uint256 limit) public view returns (address[] memory whiteList_){

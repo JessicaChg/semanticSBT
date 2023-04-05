@@ -36,6 +36,9 @@ contract SemanticSBTWithMerkleTree is SemanticSBT {
         return _freeMintable;
     }
 
+    function addSubject(string memory value, string memory className_) public onlyMinter returns (uint256 sIndex) {
+        return SemanticSBTLogic.addSubject(value, className_, _subjects, _subjectIndex, _classIndex);
+    }
 
     function setWhiteList(string memory whiteListURL_, bytes32 _root) external onlyOwner {
         whiteListURL = whiteListURL_;

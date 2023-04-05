@@ -135,13 +135,11 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     }
 
     function locked(uint256 tokenId) external override view returns (bool){
-        if(_transferable){
+        if (_transferable) {
             return true;
         }
         return false;
     }
-
-
 
     function baseURI() public view returns (string memory) {
         return _baseTokenURI;

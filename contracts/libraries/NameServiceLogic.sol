@@ -12,6 +12,7 @@ library NameServiceLogic {
     using StringUtils for *;
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
+    using ECDSA for bytes;
     using ECDSA for bytes32;
 
     uint256 constant HOLD_PREDICATE_INDEX = 1;
@@ -131,12 +132,13 @@ library NameServiceLogic {
     }
 
 
-    function recoverAddress(address contractAddress, address caller, string calldata name, uint256 deadline, bytes memory signature) external view returns (address) {
+    function recoverAddress(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 price,bytes memory signature) external view returns (address) {
         require(deadline > block.timestamp, "signature expired");
         string memory originalData = string.concat(
             contractAddress.toHexString(),
             caller.toHexString(),
             deadline.toString(),
+            price.toString(),
             name);
         bytes32 hash = keccak256(abi.encodePacked(originalData)).toEthSignedMessageHash();
         return hash.recover(signature);

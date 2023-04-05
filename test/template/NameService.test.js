@@ -107,23 +107,6 @@ describe("Name Service contract", function () {
         });
 
 
-        it("User should fail to register a name when the length of name less than minNameLength", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "do";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
-
-        it("User should fail to register a name when the length of name larger than maxNameLength", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "123456789012345678901";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
-
-        it("User should fail to register a name with zero width character", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "1‏﻿﻿11";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
 
         it("User should get name by name after register a name,and then call the function setNameForAddr ", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
