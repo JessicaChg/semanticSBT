@@ -20,11 +20,6 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     uint256 internal constant NAME_CLASS_INDEX = 2;
 
 
-    uint256 internal _minNameLength;
-    //_maxNameLength = 0 means there is no max limit
-    uint256 internal _maxNameLength;
-    mapping(uint256 => uint256) internal _nameLengthControl;
-    mapping(uint256 => uint256) internal _countOfNameLength;
     string public suffix;
 
 
@@ -36,18 +31,6 @@ contract NameService is INameService, SemanticSBTUpgradeable {
 
     function setSuffix(string calldata suffix_) external onlyMinter {
         suffix = suffix_;
-    }
-
-    function setMinNameLength(uint256 minNameLength_) external onlyMinter {
-        _minNameLength = minNameLength_;
-    }
-
-    function setMaxNameLength(uint256 maxNameLength_) external onlyMinter {
-        _maxNameLength = maxNameLength_;
-    }
-
-    function setNameLengthControl(uint256 _nameLength, uint256 _maxCount) external onlyMinter {
-        _nameLengthControl[_nameLength] = _maxCount;
     }
 
 
@@ -85,10 +68,6 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         }
     }
 
-    function valid(string memory name) public virtual view returns (bool){
-        return NameServiceLogic.checkValidLength(name, _minNameLength, _maxNameLength, _nameLengthControl, _countOfNameLength)
-        && !NameServiceLogic.isZeroWidth(name);
-    }
 
 
     function addr(string calldata name) virtual override external view returns (address){
