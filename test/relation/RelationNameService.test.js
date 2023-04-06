@@ -3,19 +3,14 @@
 */
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
-const hre = require("hardhat");
 const {ethers, upgrades} = require("hardhat");
 
 const name = 'Name Service';
 const symbol = 'SBT';
-const baseURI = 'https://api.example.com/v1/';
 const schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
 const class_ = ["Name"];
-const predicate_ = [["hold", 3], ["resolved", 3],["profileHash", 1]];
+const predicate_ = [["hold", 3], ["resolved", 3], ["profileHash", 1]];
 
-const minNameLength_ = 3;
-const maxNameLength_ = 20;
-const nameLengthControl = {"_nameLength": 8, "_maxCount": 1};//means the maxCount of 4 characters is 1
 const suffix = ".rel";
 
 /*
@@ -40,8 +35,8 @@ describe("Name Service contract", function () {
         const contractName = "RelationNameService";
         console.log(contractName)
 
-        const MyContract = await ethers.getContractFactory(contractName,{
-            libraries:{
+        const MyContract = await ethers.getContractFactory(contractName, {
+            libraries: {
                 SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
                 NameServiceLogic: nameServiceLogicLibrary.address,
             }
@@ -60,7 +55,6 @@ describe("Name Service contract", function () {
             });
         await nameService.deployed();
         await nameService.deployTransaction.wait();
-        await (await nameService.setNameLengthControl(nameLengthControl._nameLength, nameLengthControl._maxCount)).wait();
         return {nameService, owner, addr1, addr2};
     }
 
@@ -99,7 +93,7 @@ describe("Name Service contract", function () {
         it("Register a name", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const name = "my-fist-name";
-            await nameService.register(owner.address, name, true);
+            await nameService["register(address,string,bool)"](owner.address, name, true);
 
             const fullName = name + suffix;
             const rdf = `:Soul_${owner.address.toLowerCase()} p:resolved :Name_${fullName} . `;
@@ -107,28 +101,10 @@ describe("Name Service contract", function () {
         });
 
 
-        it("User should fail to register a name when the length of name less than minNameLength", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "do";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
-
-        it("User should fail to register a name when the length of name larger than maxNameLength", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "123456789012345678901";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
-
-        it("User should fail to register a name with zero width character", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "1‏﻿﻿11";
-            await expect(nameService.connect(addr1).register(owner.address, name, true)).to.be.revertedWith("NameService: invalid name");
-        });
-
         it("User should get name by name after register a name,and then call the function setNameForAddr ", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            await nameService.register(owner.address, name, false);
+            await nameService["register(address,string,bool)"](owner.address, name, false);
 
             const fullName = name + suffix;
             expect(await nameService.addr(fullName)).to.be.equal("0x0000000000000000000000000000000000000000");
@@ -139,10 +115,41 @@ describe("Name Service contract", function () {
             expect(await nameService.nameOf(owner.address)).to.be.equal(fullName);
         });
 
+        it("User should fail to register whit insufficient value", async function () {
+            const {nameService, owner} = await loadFixture(deployTokenFixture);
+            const name = "my-name";
+
+            const deadline = Date.parse(new Date()) / 1000 + 10000000;
+            const mintCount = 500;
+            const price = 1000000000;
+            //sign with originalData: 0xdc64a140aa3e981100a9beca4e685f962f0cf6c90xf39fd6e51aad88f6f4ce6ab8827279cfffb9226616906912462100my-name
+            const signature = "0xba98f67f2e2069a334f1f43faf40f0d2400c1f34831070017d119ce8ce6099464adc101eb90a8c7008ffab310ca68a08c197dd5580842bd9577d0abc65bfd6631c";
+
+            await expect(nameService["register(address,string,uint256,uint256,uint256,bytes)"](owner.address, name, deadline, mintCount, price, signature, {value: (price - 1)})).revertedWith("NameService: insufficient value");
+        })
+
+        it("User should register whit a signature by minter", async function () {
+            const {nameService, owner} = await loadFixture(deployTokenFixture);
+            const minter = "0x000c1dD252027dB65484bA0D3AcdBAB0047A01a1";
+            await nameService.setMinter(minter,true);
+            expect(await nameService.minters(minter)).equal(true);
+
+            const name = "my-name";
+            const deadline = 1690691246;
+            const mintCount = 2;
+            const price = 100;
+            // const originalData = buildOriginalSignData(nameService.address, owner.address, deadline, mintCount, price, name);
+            //sign with originalData: 0xdc64a140aa3e981100a9beca4e685f962f0cf6c90xf39fd6e51aad88f6f4ce6ab8827279cfffb9226616906912462100my-name
+            const signature = "0xba98f67f2e2069a334f1f43faf40f0d2400c1f34831070017d119ce8ce6099464adc101eb90a8c7008ffab310ca68a08c197dd5580842bd9577d0abc65bfd6631c";
+
+            await nameService["register(address,string,uint256,uint256,uint256,bytes)"](owner.address, name,deadline, mintCount, price, signature,{value:price});
+
+        })
+
         it("User should get address by name after call the function setNameForAddr ", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            await nameService.register(owner.address, name, false);
+            await nameService["register(address,string,bool)"](owner.address, name, false);
 
             const fullName = name + suffix;
             expect(await nameService.addr(fullName)).to.be.equal("0x0000000000000000000000000000000000000000");
@@ -156,7 +163,7 @@ describe("Name Service contract", function () {
         it("Should return zero address after call setNameForAddr with zero address", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            await nameService.register(owner.address, name, false);
+            await nameService["register(address,string,bool)"](owner.address, name, false);
 
             const fullName = name + suffix;
             expect(await nameService.addr(fullName)).to.be.equal("0x0000000000000000000000000000000000000000");
@@ -174,7 +181,7 @@ describe("Name Service contract", function () {
         it("User should fail to transfer when not be transferable", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            await nameService.register(owner.address, name, false);
+            await nameService["register(address,string,bool)"](owner.address, name, false);
             await expect(nameService.transferFrom(owner.address, addr1.address, 1)).to.be.revertedWith("SemanticSBT: must transferable")
         });
 
@@ -184,7 +191,7 @@ describe("Name Service contract", function () {
             await nameService.setTransferable(true);
 
             const name = "my-name";
-            await nameService.register(owner.address, name, true);
+            await nameService["register(address,string,bool)"](owner.address, name, true);
             await expect(nameService.transferFrom(owner.address, addr1.address, 1)).to.be.revertedWith("NameService:can not transfer when resolved");
         });
 
@@ -196,7 +203,7 @@ describe("Name Service contract", function () {
             const name = "my-name";
             const fullName = name + suffix;
             const rdf1 = `:Soul_${owner.address.toLowerCase()} p:hold :Name_${fullName} . `;
-            await expect(nameService.register(owner.address, name, false))
+            await expect(nameService["register(address,string,bool)"](owner.address, name, false))
                 .to.be.emit(nameService, "CreateRDF")
                 .withArgs(1, rdf1);
 
@@ -210,8 +217,8 @@ describe("Name Service contract", function () {
         it("User should fail to setProfileHash when name has not resolved", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            
-            await nameService.register(owner.address, name, false);
+
+            await nameService["register(address,string,bool)"](owner.address, name, false);
             const profileURI = String(Math.random())
             expect(nameService.setProfileURI(profileURI)).to.be.revertedWith("NameService:not resolved the name")
         })
@@ -219,13 +226,18 @@ describe("Name Service contract", function () {
         it("User could setProfileHash when name has resolved and get the right profileHash", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const name = "my-name";
-            
-            await nameService.register(owner.address, name, true);
+
+            await nameService["register(address,string,bool)"](owner.address, name, true);
             const profileURI = String(Math.random())
             await nameService.setProfileURI(profileURI)
             expect(await nameService.profileURI(owner.address.toLowerCase())).to.be.equal(profileURI)
         })
     })
+
+    function buildOriginalSignData(contractAddress, owner, deadline, mintCount, price, name) {
+        return contractAddress.toLowerCase() + owner.toLowerCase() + deadline + mintCount + price + name;
+    }
+
 
 })
 

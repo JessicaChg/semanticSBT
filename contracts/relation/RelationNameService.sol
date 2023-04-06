@@ -29,8 +29,6 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
     ) public initializer {
         __Pausable_init_unchained();
         super.initialize(msg.sender, name_, symbol_, "", schemaURI_, classes_, predicates_);
-        _minNameLength = 3;
-        _maxNameLength = 20;
         suffix = suffix_;
     }
 
@@ -51,18 +49,11 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         return super._register(owner, name, resolve);
     }
 
-    function register(address owner, string calldata name, uint256 deadline, uint256 price, bytes memory signature, bool resolve) external whenNotPaused payable returns (uint tokenId) {
-        require(msg.value >= price,"NameService: insufficient value");
-        require(_minters[NameServiceLogic.recoverAddress(address(this), msg.sender, name, deadline, price, signature)], "NameService: invalid signature");
-        return super._register(owner, name, resolve);
-    }
-
-    function recover(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 price,bytes memory signature) external view returns(address){
-        return NameServiceLogic.recoverAddress(contractAddress,caller,name,deadline,price,signature);
-    }
-
-    function valid(string memory name) public view override returns (bool){
-        return super.valid(name);
+    function register(address owner, string calldata name, uint256 deadline, uint256 _mintCount, uint256 price, bytes memory signature) external whenNotPaused payable returns (uint tokenId) {
+        require(_mintCount == 0 || getMinted() < _mintCount, "NameService: param need refresh");
+        require(msg.value >= price, "NameService: insufficient value");
+        require(_minters[NameServiceLogic.recoverAddress(address(this), msg.sender, name, deadline, _mintCount, price, signature)], "NameService: invalid signature");
+        return super._register(owner, name, false);
     }
 
     function tokenURI(uint256 tokenId)

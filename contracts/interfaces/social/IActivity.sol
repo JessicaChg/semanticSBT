@@ -10,7 +10,7 @@ interface IActivity is ISemanticSBT {
 
     function addWhiteList(address[] memory addressList) external;
 
-    function participate() external;
+    function mint() external;
 
 
 }

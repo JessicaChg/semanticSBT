@@ -132,12 +132,13 @@ library NameServiceLogic {
     }
 
 
-    function recoverAddress(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 price,bytes memory signature) external view returns (address) {
+    function recoverAddress(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 _mintCount, uint256 price, bytes memory signature) external view returns (address) {
         require(deadline > block.timestamp, "signature expired");
         string memory originalData = string.concat(
             contractAddress.toHexString(),
             caller.toHexString(),
             deadline.toString(),
+            _mintCount.toString(),
             price.toString(),
             name);
         bytes32 hash = keccak256(abi.encodePacked(originalData)).toEthSignedMessageHash();

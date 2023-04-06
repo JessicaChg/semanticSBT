@@ -78,7 +78,7 @@ contract Activity is IActivity, SemanticSBT {
     }
 
 
-    function participate() external {
+    function mint() external {
         require(_freeMintable || whiteList[msg.sender], "Activity: permission denied");
         require(_duplicatable || !_mintedSPO[msg.sender][_pIndex][_oIndex], "Activity: already minted");
         _mintedSPO[msg.sender][_pIndex][_oIndex] = true;
