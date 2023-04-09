@@ -49,11 +49,11 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         return super._register(owner, name, resolve);
     }
 
-    function register(address owner, string calldata name, uint256 deadline, uint256 _mintCount, uint256 price, bytes memory signature) external whenNotPaused payable returns (uint tokenId) {
-        require(_mintCount == 0 || getMinted() < _mintCount, "NameService: param need refresh");
+    function register(string calldata name, uint256 deadline, uint256 _mintCount, uint256 price, bytes memory signature) external whenNotPaused payable returns (uint tokenId) {
+        require(_mintCount == 0 || getMinted() < _mintCount, "NameService: error mint count");
         require(msg.value >= price, "NameService: insufficient value");
         require(_minters[NameServiceLogic.recoverAddress(address(this), msg.sender, name, deadline, _mintCount, price, signature)], "NameService: invalid signature");
-        return super._register(owner, name, false);
+        return super._register(msg.sender, name, false);
     }
 
     function tokenURI(uint256 tokenId)
