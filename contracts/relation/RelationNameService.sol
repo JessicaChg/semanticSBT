@@ -26,10 +26,9 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer {
+    ) public override initializer {
         __Pausable_init_unchained();
-        super.initialize(msg.sender, name_, symbol_, "", schemaURI_, classes_, predicates_);
-        suffix = suffix_;
+        super.initialize(suffix_, name_, symbol_, schemaURI_, classes_, predicates_);
     }
 
 

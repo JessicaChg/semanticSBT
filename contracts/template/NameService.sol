@@ -29,7 +29,15 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     mapping(address => string) internal _profileURI;
     mapping(address => bool) internal _ownedProfileURI;
 
-    function setSuffix(string calldata suffix_) external onlyMinter {
+    function initialize(
+        string memory suffix_,
+        string memory name_,
+        string memory symbol_,
+        string memory schemaURI_,
+        string[] memory classes_,
+        Predicate[] memory predicates_
+    ) public virtual initializer {
+        super.initialize(msg.sender, name_, symbol_, "", schemaURI_, classes_, predicates_);
         suffix = suffix_;
     }
 

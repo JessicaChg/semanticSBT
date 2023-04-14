@@ -60,7 +60,6 @@ async function main() {
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    await (await myContract.setNameLengthControl(minNameLength_, nameLengthControl._nameLength, nameLengthControl._maxCount)).wait();
     await (await myContract.setSuffix(suffix)).wait();
 
 }

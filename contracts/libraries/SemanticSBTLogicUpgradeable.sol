@@ -46,7 +46,7 @@ library SemanticSBTLogicUpgradeable {
 
 
     function addClass(string[] calldata classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
-        for (uint256 i = 0; i < classList.length; i++) {
+        for (uint256 i = 0; i < classList.length;) {
             string memory className_ = classList[i];
             require(
                 keccak256(abi.encode(className_)) != keccak256(abi.encode("")),
@@ -55,12 +55,15 @@ library SemanticSBTLogicUpgradeable {
             require(_classIndex[className_] == 0, "SemanticSBT: already added");
             _classNames.push(className_);
             _classIndex[className_] = _classNames.length - 1;
+            unchecked{
+                i++;
+            }
         }
     }
 
 
     function addPredicate(Predicate[] calldata predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
-        for (uint256 i = 0; i < predicates.length; i++) {
+        for (uint256 i = 0; i < predicates.length; ) {
             Predicate memory predicate_ = predicates[i];
             require(
                 keccak256(abi.encode(predicate_.name)) !=
@@ -70,6 +73,9 @@ library SemanticSBTLogicUpgradeable {
             require(_predicateIndex[predicate_.name] == 0, "SemanticSBT: already added");
             _predicates.push(predicate_);
             _predicateIndex[predicate_.name] = _predicates.length - 1;
+            unchecked{
+                i++;
+            }
         }
     }
 
@@ -98,46 +104,58 @@ library SemanticSBTLogicUpgradeable {
 
 
     function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) internal {
-        for (uint256 i = 0; i < intPOList.length; i++) {
+        for (uint256 i = 0; i < intPOList.length; ) {
             IntPO memory intPO = intPOList[i];
             checkPredicate(intPO.pIndex, FieldType.INT, _predicates);
             pIndex.push(intPO.pIndex);
             oIndex.push(intPO.o);
+            unchecked{
+                i++;
+            }
         }
     }
 
     function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) internal {
-        for (uint256 i = 0; i < stringPOList.length; i++) {
+        for (uint256 i = 0; i < stringPOList.length; ) {
             StringPO memory stringPO = stringPOList[i];
             checkPredicate(stringPO.pIndex, FieldType.STRING, _predicates);
             uint256 _oIndex = _stringO.length;
             _stringO.push(stringPO.o);
             pIndex.push(stringPO.pIndex);
             oIndex.push(_oIndex);
+            unchecked{
+                i++;
+            }
         }
     }
 
     function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) internal {
-        for (uint256 i = 0; i < addressPOList.length; i++) {
+        for (uint256 i = 0; i < addressPOList.length;) {
             AddressPO memory addressPO = addressPOList[i];
             checkPredicate(addressPO.pIndex, FieldType.ADDRESS, _predicates);
             pIndex.push(addressPO.pIndex);
             oIndex.push(uint160(addressPO.o));
+            unchecked{
+                i++;
+            }
         }
     }
 
     function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) internal {
-        for (uint256 i = 0; i < subjectPOList.length; i++) {
+        for (uint256 i = 0; i < subjectPOList.length;) {
             SubjectPO memory subjectPO = subjectPOList[i];
             checkPredicate(subjectPO.pIndex, FieldType.SUBJECT, _predicates);
             require(subjectPO.oIndex > 0 && subjectPO.oIndex < _subjects.length, "SemanticSBT: subject not exist");
             pIndex.push(subjectPO.pIndex);
             oIndex.push(subjectPO.oIndex);
+            unchecked{
+                i++;
+            }
         }
     }
 
     function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
-        for (uint256 i = 0; i < blankNodePOList.length; i++) {
+        for (uint256 i = 0; i < blankNodePOList.length;) {
             BlankNodePO memory blankNodePO = blankNodePOList[i];
             require(blankNodePO.pIndex < _predicates.length, "SemanticSBT: predicate not exist");
 
@@ -153,15 +171,18 @@ library SemanticSBTLogicUpgradeable {
 
             pIndex.push(blankNodePO.pIndex);
             oIndex.push(_blankNodeOIndex);
+            unchecked{
+                i++;
+            }
         }
     }
 
 
 
-    function buildRDF(SPO calldata spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
+    function buildRDF(SPO storage spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
-        for (uint256 i = 0; i < spo.pIndex.length; i++) {
+        for (uint256 i = 0; i < spo.pIndex.length;) {
             Predicate memory p = _predicates[spo.pIndex[i]];
             if (FieldType.INT == p.fieldType) {
                 _rdf = string.concat(_rdf, buildIntRDF(spo.pIndex[i], spo.oIndex[i], _predicates));
@@ -176,55 +197,53 @@ library SemanticSBTLogicUpgradeable {
             }
             string memory suffix = i == spo.pIndex.length - 1 ? "." : ";";
             _rdf = string.concat(_rdf, suffix);
+            unchecked{
+                i++;
+            }
         }
     }
 
-    function buildS(SPO memory spo, string[] storage _classNames, Subject[] storage _subjects) public view returns (string memory){
+    function buildS(SPO storage spo, string[] storage _classNames, Subject[] storage _subjects) public view returns (string memory){
         string memory _className = spo.sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[spo.sIndex].cIndex];
         string memory subjectValue = spo.sIndex == 0 ? address(spo.owner).toHexString() : _subjects[spo.sIndex].value;
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);
     }
 
     function buildIntRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
+        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
         string memory o = oIndex.toString();
         return string.concat(p, BLANK_SPACE, o);
     }
 
     function buildStringRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates, string[] storage _stringO) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
+        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
         string memory o = string.concat('"', _stringO[oIndex], '"');
         return string.concat(p, BLANK_SPACE, o);
     }
 
     function buildAddressRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
+        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
         string memory o = string.concat(ENTITY_PREFIX, SOUL_CLASS_NAME, CONCATENATION_CHARACTER, address(uint160(oIndex)).toHexString());
         return string.concat(p, BLANK_SPACE, o);
     }
 
 
     function buildSubjectRDF(uint256 pIndex, uint256 oIndex, string[] storage _classNames, Predicate[] storage _predicates, Subject[] storage _subjects) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
         string memory _className = _classNames[_subjects[oIndex].cIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
+        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
         string memory o = string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, _subjects[oIndex].value);
         return string.concat(p, BLANK_SPACE, o);
     }
 
 
     function buildBlankNodeRDF(uint256 pIndex, uint256 oIndex, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal view returns (string memory){
-        Predicate memory predicate_ = _predicates[pIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, predicate_.name);
+        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
 
         uint256[] memory blankPList = _blankNodeO[oIndex].pIndex;
         uint256[] memory blankOList = _blankNodeO[oIndex].oIndex;
 
         string memory _rdf = "";
-        for (uint256 i = 0; i < blankPList.length; i++) {
+        for (uint256 i = 0; i < blankPList.length;) {
             Predicate memory _p = _predicates[blankPList[i]];
             if (FieldType.INT == _p.fieldType) {
                 _rdf = string.concat(_rdf, buildIntRDF(blankPList[i], blankOList[i], _predicates));
@@ -237,6 +256,9 @@ library SemanticSBTLogicUpgradeable {
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
+            }
+            unchecked{
+                i++;
             }
         }
 
