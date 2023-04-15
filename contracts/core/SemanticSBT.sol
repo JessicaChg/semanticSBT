@@ -20,7 +20,6 @@ import "../interfaces/IERC5192.sol";
 import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogic} from "../libraries/SemanticSBTLogic.sol";
 
-
 contract SemanticSBT is Ownable, Initializable, ERC165, ERC721Enumerable, ISemanticSBT, ISemanticSBTSchema, IERC5192 {
     using Address for address;
     using Strings for uint256;

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
+import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {Activity} from "./Activity.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract ActivityFactory  {
+contract ActivityFactory {
 
     event CreateActivity(address indexed owner, address indexed activity);
 
@@ -16,14 +17,28 @@ contract ActivityFactory  {
     mapping(address => uint256) public nonce;
     mapping(address => mapping(uint256 => address)) public addressOf;
 
-    function createActivity(string calldata contractName, string calldata symbol, string calldata activityName) external {
+    address public activityImpl;
+    address public owner;
+
+    constructor(){
+        owner = msg.sender;
+    }
+
+    function setActivityImpl(address _activityImpl) external {
+        require(owner == msg.sender, "Not owner");
+        activityImpl = _activityImpl;
+    }
+
+    function createActivity(string calldata contractName, string calldata symbol, string calldata activityName) external returns(address) {
         uint256 index = nonce[msg.sender]++;
-        bytes32 salt = keccak256(abi.encodePacked(msg.sender, index));
-        address activity = address(new Activity{salt:salt}());
+//        bytes32 salt = keccak256(abi.encodePacked(msg.sender, index));
+//        address activity = address(new Activity{salt : salt}());
+        address activity = Clones.clone(activityImpl);
 
         _init(activity, msg.sender, contractName, symbol, activityName);
         addressOf[msg.sender][index] = activity;
         emit CreateActivity(msg.sender, activity);
+        return activity;
     }
 
     function _init(address activityAddress, address owner, string memory contractName, string memory symbol, string memory activityName) internal {

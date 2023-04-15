@@ -45,7 +45,6 @@ describe("FollowRegister contract", function () {
         const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
         const upgradeableBeacon = await UpgradeableBeacon.deploy(follow.address);
         await upgradeableBeacon.deployTransaction.wait();
-        console.log(`Follow:${follow.address} , UpgradeableBeacon:${upgradeableBeacon.address}`);
 
         const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
             libraries: {

@@ -195,7 +195,7 @@ library SemanticSBTLogic {
             } else if (FieldType.BLANKNODE == p.fieldType) {
                 _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
             }
-            string memory suffix = i == spo.pIndex.length - 1 ? "." : ";";
+            string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
             _rdf = string.concat(_rdf, suffix);
             unchecked{
                 i++;

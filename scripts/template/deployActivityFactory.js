@@ -13,15 +13,23 @@ async function main() {
     console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
 
-    const ActivityFactory = await hre.ethers.getContractFactory("ActivityFactory", {
+    const Activity = await hre.ethers.getContractFactory("Activity", {
         libraries: {
             SemanticSBTLogic: semanticSBTLogicLibrary.address,
         }
     });
+    const activity = await Activity.deploy();
+    console.log(`$Activity deployed ,contract address: ${activity.address}`);
+    await activity.deployTransaction.wait();
+
+    const ActivityFactory = await hre.ethers.getContractFactory("ActivityFactory");
     const activityFactory = await ActivityFactory.deploy();
     console.log(`ActivityFactory deployed ,contract address: ${activityFactory.address}`);
 
+    await (await activityFactory.setActivityImpl(activity.address)).wait();
 
+    const contractAddress = await (await activityFactory.createActivity("my-activity","MAC","myActivity")).wait()
+    console.log(contractAddress)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import '@openzeppelin/contracts/utils/Base64.sol';
 import "../core/SemanticBaseStruct.sol";
 
-
 library SemanticSBTLogicUpgradeable {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
@@ -55,6 +54,7 @@ library SemanticSBTLogicUpgradeable {
             require(_classIndex[className_] == 0, "SemanticSBT: already added");
             _classNames.push(className_);
             _classIndex[className_] = _classNames.length - 1;
+            uint256 cIndex = _classIndex[className_];
             unchecked{
                 i++;
             }
@@ -195,7 +195,7 @@ library SemanticSBTLogicUpgradeable {
             } else if (FieldType.BLANKNODE == p.fieldType) {
                 _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
             }
-            string memory suffix = i == spo.pIndex.length - 1 ? "." : ";";
+            string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
             _rdf = string.concat(_rdf, suffix);
             unchecked{
                 i++;

@@ -100,7 +100,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer {
+    ) public virtual initializer {
         require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schema URI cannot be empty");
         require(predicates_.length > 0, "SemanticSBT: predicate size can not be empty");
         before_init();
