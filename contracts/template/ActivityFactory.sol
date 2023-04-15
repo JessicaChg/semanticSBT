@@ -29,24 +29,23 @@ contract ActivityFactory {
         activityImpl = _activityImpl;
     }
 
-    function createActivity(string calldata contractName, string calldata symbol, string calldata activityName) external returns(address) {
+    function createActivity(string calldata contractName, string calldata symbol,string calldata baseURI, string calldata activityName) external returns(address) {
         uint256 index = nonce[msg.sender]++;
-//        bytes32 salt = keccak256(abi.encodePacked(msg.sender, index));
-//        address activity = address(new Activity{salt : salt}());
         address activity = Clones.clone(activityImpl);
 
-        _init(activity, msg.sender, contractName, symbol, activityName);
+        _init(activity, msg.sender, contractName, symbol, baseURI, activityName);
         addressOf[msg.sender][index] = activity;
         emit CreateActivity(msg.sender, activity);
         return activity;
     }
 
-    function _init(address activityAddress, address owner, string memory contractName, string memory symbol, string memory activityName) internal {
+    function _init(address activityAddress, address owner, string memory contractName, string memory symbol,
+                        string memory baseURI, string memory activityName) internal {
         string[] memory class_ = new string[](1);
         class_[0] = ACTIVITY_CLASS_NAME;
         Predicate[] memory predicates_ = new Predicate[](1);
         predicates_[0] = Predicate(PARTICIPATE_PREDICATE, FieldType.SUBJECT);
-        Activity(activityAddress).initialize(address(this), contractName, symbol, "", SCHEMA_URI, class_, predicates_);
+        Activity(activityAddress).initialize(address(this), contractName, symbol, baseURI, SCHEMA_URI, class_, predicates_);
         Activity(activityAddress).setActivity(activityName);
         Activity(activityAddress).setMinter(address(this), false);
         Activity(activityAddress).setMinter(owner, true);

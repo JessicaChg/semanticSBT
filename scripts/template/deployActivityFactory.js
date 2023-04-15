@@ -8,14 +8,16 @@ const hre = require("hardhat");
 
 async function main() {
 
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogic");
+    const [owner] = await ethers.getSigners();
+
+    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
 
     const Activity = await hre.ethers.getContractFactory("Activity", {
         libraries: {
-            SemanticSBTLogic: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
     const activity = await Activity.deploy();
@@ -28,8 +30,11 @@ async function main() {
 
     await (await activityFactory.setActivityImpl(activity.address)).wait();
 
-    const contractAddress = await (await activityFactory.createActivity("my-activity","MAC","myActivity")).wait()
-    console.log(contractAddress)
+    const nonce = await activityFactory.nonce(owner.address);
+    await (await activityFactory.createActivity("my-activity","MAC","","myActivity")).wait()
+    const address = await activityFactory.addressOf(owner.address,nonce);
+    console.log(address)
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere
