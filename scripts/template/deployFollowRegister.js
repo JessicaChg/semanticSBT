@@ -38,7 +38,12 @@ async function main() {
     console.log(
         `Follow deployed ,contract address: ${follow.address}`
     );
-
+    const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+    const upgradeableBeacon = await UpgradeableBeacon.deploy(follow.address);
+    await upgradeableBeacon.deployTransaction.wait();
+    console.log(
+        `UpgradeableBeacon deployed ,contract address: ${upgradeableBeacon.address}`
+    );
 
     const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
         libraries: {
@@ -52,8 +57,6 @@ async function main() {
     await followWithSign.deployed();
     await followWithSign.deployTransaction.wait();
     console.log(`FollowWithSign deployed ,contract address: ${followWithSign.address}`);
-
-
 
 
     const contractName = "FollowRegister";
@@ -77,7 +80,7 @@ async function main() {
     console.log(
         `${contractName} deployed ,contract address: ${followRegister.address}`
     );
-    await (await followRegister.setFollowImpl(follow.address)).wait();
+    await (await followRegister.setFollowImpl(upgradeableBeacon.address)).wait();
     console.log(
         `${contractName} setFollowImpl successfully!`
     );

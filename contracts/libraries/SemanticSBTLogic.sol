@@ -52,7 +52,7 @@ library SemanticSBTLogic {
                 keccak256(abi.encode(className_)) != keccak256(abi.encode("")),
                 "SemanticSBT: Class cannot be empty"
             );
-            require(_classIndex[className_] == 0, "SemanticSBT: already added");
+            require(_classIndex[className_] == 0, "SemanticSBT: class already added");
             _classNames.push(className_);
             _classIndex[className_] = _classNames.length - 1;
             unchecked{
@@ -70,7 +70,7 @@ library SemanticSBTLogic {
                 keccak256(abi.encode("")),
                 "SemanticSBT: Predicate cannot be empty"
             );
-            require(_predicateIndex[predicate_.name] == 0, "SemanticSBT: already added");
+            require(_predicateIndex[predicate_.name] == 0, "SemanticSBT: predicate already added");
             _predicates.push(predicate_);
             _predicateIndex[predicate_.name] = _predicates.length - 1;
             unchecked{
@@ -86,7 +86,7 @@ library SemanticSBTLogic {
         mapping(string => uint256) storage _classIndex) external returns (uint256 sIndex) {
         uint256 cIndex = _classIndex[className_];
         require(cIndex > 0, "SemanticSBT: param error");
-        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: already added");
+        require(_subjectIndex[cIndex][value] == 0, "SemanticSBT: subject already added");
         sIndex = _addSubject(value, cIndex, _subjects, _subjectIndex);
     }
 

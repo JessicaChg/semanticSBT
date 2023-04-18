@@ -5,6 +5,7 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const {ethers,upgrades} = require("hardhat");
+const hre = require("hardhat");
 
 const name = 'Relation Dao Register';
 const symbol = 'SBT';
@@ -31,6 +32,12 @@ async function main() {
     const dao = await Dao.deploy();
     await dao.deployTransaction.wait();
     console.log(`Dao deployed ,contract address: ${dao.address}`);
+    const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
+    const upgradeableBeacon = await UpgradeableBeacon.deploy(dao.address);
+    await upgradeableBeacon.deployTransaction.wait();
+    console.log(`UpgradeableBeacon deployed ,contract address: ${upgradeableBeacon.address}`);
+
+
 
     const DaoWithSign = await ethers.getContractFactory("DaoWithSign", {
         libraries: {
@@ -65,7 +72,7 @@ async function main() {
 
     await daoRegister.deployed();
     console.log(`${contractName} deployed ,contract address: ${daoRegister.address}`);
-    await (await daoRegister.setDaoImpl(dao.address)).wait();
+    await (await daoRegister.setDaoImpl(upgradeableBeacon.address)).wait();
     console.log(`${contractName} setDaoImpl successfully!` );
     await (await daoRegister.setDaoVerifyContract(daoWithSign.address)).wait();
     console.log(`${contractName} setDaoVerifyContract successfully!` );
