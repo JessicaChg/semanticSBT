@@ -107,7 +107,7 @@ describe("Name Service contract", function () {
 
 
 
-        it("User should get name by name after register a name,and then call the function setNameForAddr ", async function () {
+        it("User should get addr by name after register a name,and then call the function setNameForAddr ", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const name = "my-name";
             await nameService.register(owner.address, name, false);
@@ -133,6 +133,31 @@ describe("Name Service contract", function () {
             await nameService.setNameForAddr(owner.address, fullName);
             expect(await nameService.addr(fullName)).to.be.equal(owner.address);
             expect(await nameService.nameOf(owner.address)).to.be.equal(fullName);
+        });
+
+        it("User should get addr by the last set name after call the function setNameForAddr with different name", async function () {
+            const {nameService, owner} = await loadFixture(deployTokenFixture);
+            const firstName = "my-first-name";
+            await nameService.register(owner.address, firstName, false);
+            const secondName = "my-second-name";
+            await nameService.register(owner.address, secondName, false);
+
+
+            const firstFullName = firstName + suffix;
+            expect(await nameService.addr(firstFullName)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal("");
+            await nameService.setNameForAddr(owner.address, firstFullName);
+            expect(await nameService.addr(firstFullName)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(firstFullName);
+
+            const secondFullName = secondName + suffix;
+            expect(await nameService.addr(secondFullName)).to.be.equal("0x0000000000000000000000000000000000000000");
+            expect(await nameService.nameOf(owner.address)).to.be.equal(firstFullName);
+            await nameService.setNameForAddr(owner.address, secondFullName);
+            expect(await nameService.addr(secondFullName)).to.be.equal(owner.address);
+            expect(await nameService.nameOf(owner.address)).to.be.equal(secondFullName);
+
+
         });
 
         it("Should return zero address after call setNameForAddr with zero address", async function () {
@@ -189,16 +214,8 @@ describe("Name Service contract", function () {
         });
 
 
-        it("User should fail to setProfileHash when name has not resolved", async function () {
-            const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
-            const name = "my-name";
-            
-            await nameService.register(owner.address, name, false);
-            const profileURI = String(Math.random())
-            expect(nameService.setProfileURI(profileURI)).to.be.revertedWith("NameService:not resolved the name")
-        })
 
-        it("User could setProfileHash when name has resolved and get the right profileHash", async function () {
+        it("User could setProfileHash  and get the right profileHash", async function () {
             const {nameService, owner, addr1} = await loadFixture(deployTokenFixture);
             const name = "my-name";
             
