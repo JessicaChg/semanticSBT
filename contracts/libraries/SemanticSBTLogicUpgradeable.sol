@@ -45,7 +45,8 @@ library SemanticSBTLogicUpgradeable {
 
 
     function addClass(string[] calldata classList, string[] storage _classNames, mapping(string => uint256) storage _classIndex) external {
-        for (uint256 i = 0; i < classList.length;) {
+        uint256 len = classList.length;
+        for (uint256 i; i < len;) {
             string memory className_ = classList[i];
             require(
                 keccak256(abi.encode(className_)) != keccak256(abi.encode("")),
@@ -55,14 +56,15 @@ library SemanticSBTLogicUpgradeable {
             _classNames.push(className_);
             _classIndex[className_] = _classNames.length - 1;
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
 
     function addPredicate(Predicate[] calldata predicates, Predicate[] storage _predicates, mapping(string => uint256) storage _predicateIndex) external {
-        for (uint256 i = 0; i < predicates.length; ) {
+        uint256 len = predicates.length;
+        for (uint256 i; i < len; ) {
             Predicate memory predicate_ = predicates[i];
             require(
                 keccak256(abi.encode(predicate_.name)) !=
@@ -73,7 +75,7 @@ library SemanticSBTLogicUpgradeable {
             _predicates.push(predicate_);
             _predicateIndex[predicate_.name] = _predicates.length - 1;
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
@@ -103,19 +105,21 @@ library SemanticSBTLogicUpgradeable {
 
 
     function addIntPO(uint256[] storage pIndex, uint256[] storage oIndex, IntPO[] memory intPOList, Predicate[] storage _predicates) internal {
-        for (uint256 i = 0; i < intPOList.length; ) {
+        uint256 len = intPOList.length;
+        for (uint256 i; i < len; ) {
             IntPO memory intPO = intPOList[i];
             checkPredicate(intPO.pIndex, FieldType.INT, _predicates);
             pIndex.push(intPO.pIndex);
             oIndex.push(intPO.o);
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
     function addStringPO(uint256[] storage pIndex, uint256[] storage oIndex, StringPO[] memory stringPOList, Predicate[] storage _predicates, string[] storage _stringO) internal {
-        for (uint256 i = 0; i < stringPOList.length; ) {
+        uint256 len = stringPOList.length;
+        for (uint256 i; i < len; ) {
             StringPO memory stringPO = stringPOList[i];
             checkPredicate(stringPO.pIndex, FieldType.STRING, _predicates);
             uint256 _oIndex = _stringO.length;
@@ -123,38 +127,41 @@ library SemanticSBTLogicUpgradeable {
             pIndex.push(stringPO.pIndex);
             oIndex.push(_oIndex);
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
     function addAddressPO(uint256[] storage pIndex, uint256[] storage oIndex, AddressPO[] memory addressPOList, Predicate[] storage _predicates) internal {
-        for (uint256 i = 0; i < addressPOList.length;) {
+        uint256 len = addressPOList.length;
+        for (uint256 i; i < len;) {
             AddressPO memory addressPO = addressPOList[i];
             checkPredicate(addressPO.pIndex, FieldType.ADDRESS, _predicates);
             pIndex.push(addressPO.pIndex);
             oIndex.push(uint160(addressPO.o));
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
     function addSubjectPO(uint256[] storage pIndex, uint256[] storage oIndex, SubjectPO[] memory subjectPOList, Predicate[] storage _predicates, Subject[] storage _subjects) internal {
-        for (uint256 i = 0; i < subjectPOList.length;) {
+        uint256 len = subjectPOList.length;
+        for (uint256 i; i < len;) {
             SubjectPO memory subjectPO = subjectPOList[i];
             checkPredicate(subjectPO.pIndex, FieldType.SUBJECT, _predicates);
             require(subjectPO.oIndex > 0 && subjectPO.oIndex < _subjects.length, "SemanticSBT: subject not exist");
             pIndex.push(subjectPO.pIndex);
             oIndex.push(subjectPO.oIndex);
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
     function addBlankNodePO(uint256[] storage pIndex, uint256[] storage oIndex, BlankNodePO[] memory blankNodePOList, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) internal {
-        for (uint256 i = 0; i < blankNodePOList.length;) {
+        uint256 len = blankNodePOList.length;
+        for (uint256 i; i < len;) {
             BlankNodePO memory blankNodePO = blankNodePOList[i];
             require(blankNodePO.pIndex < _predicates.length, "SemanticSBT: predicate not exist");
 
@@ -171,7 +178,7 @@ library SemanticSBTLogicUpgradeable {
             pIndex.push(blankNodePO.pIndex);
             oIndex.push(_blankNodeOIndex);
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
@@ -181,56 +188,59 @@ library SemanticSBTLogicUpgradeable {
     function buildRDF(SPO storage spo, string[] storage _classNames, Predicate[] storage _predicates, string[] storage _stringO, Subject[] storage _subjects, BlankNodeO[] storage _blankNodeO) external view returns (string memory _rdf){
         _rdf = buildS(spo, _classNames, _subjects);
 
-        for (uint256 i = 0; i < spo.pIndex.length;) {
-            Predicate memory p = _predicates[spo.pIndex[i]];
-            if (FieldType.INT == p.fieldType) {
-                _rdf = string.concat(_rdf, buildIntRDF(spo.pIndex[i], spo.oIndex[i], _predicates));
-            } else if (FieldType.STRING == p.fieldType) {
-                _rdf = string.concat(_rdf, buildStringRDF(spo.pIndex[i], spo.oIndex[i], _predicates, _stringO));
-            } else if (FieldType.ADDRESS == p.fieldType) {
-                _rdf = string.concat(_rdf, buildAddressRDF(spo.pIndex[i], spo.oIndex[i], _predicates));
-            } else if (FieldType.SUBJECT == p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _subjects));
-            } else if (FieldType.BLANKNODE == p.fieldType) {
-                _rdf = string.concat(_rdf, buildBlankNodeRDF(spo.pIndex[i], spo.oIndex[i], _classNames, _predicates, _stringO, _subjects, _blankNodeO));
+        uint256 len = spo.pIndex.length;
+        for (uint256 i; i < len;) {
+            uint256 pIndex = spo.pIndex[i];
+            uint256 oIndex = spo.oIndex[i];
+            FieldType fieldType = _predicates[pIndex].fieldType;
+            if (FieldType.INT == fieldType) {
+                _rdf = string.concat(_rdf, buildIntRDF(oIndex, _predicates[pIndex].name));
+            } else if (FieldType.STRING == fieldType) {
+                _rdf = string.concat(_rdf, buildStringRDF(_predicates[pIndex].name, _stringO[oIndex]));
+            } else if (FieldType.ADDRESS == fieldType) {
+                _rdf = string.concat(_rdf, buildAddressRDF(oIndex, _predicates[pIndex].name));
+            } else if (FieldType.SUBJECT == fieldType) {
+                _rdf = string.concat(_rdf, buildSubjectRDF(_classNames[_subjects[oIndex].cIndex], _predicates[pIndex].name, _subjects[oIndex].value));
+            } else if (FieldType.BLANKNODE == fieldType) {
+                _rdf = string.concat(_rdf, buildBlankNodeRDF(pIndex, oIndex, _classNames, _predicates, _stringO, _subjects, _blankNodeO));
             }
-            string memory suffix = i == spo.pIndex.length - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
+            string memory suffix = i == len - 1 ? TURTLE_END_SUFFIX : TURTLE_LINE_SUFFIX;
             _rdf = string.concat(_rdf, suffix);
             unchecked{
-                i++;
+                ++i;
             }
         }
     }
 
     function buildS(SPO storage spo, string[] storage _classNames, Subject[] storage _subjects) public view returns (string memory){
-        string memory _className = spo.sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[spo.sIndex].cIndex];
-        string memory subjectValue = spo.sIndex == 0 ? address(spo.owner).toHexString() : _subjects[spo.sIndex].value;
+        uint256 sIndex = spo.sIndex;
+        string memory _className = sIndex == 0 ? SOUL_CLASS_NAME : _classNames[_subjects[sIndex].cIndex];
+        string memory subjectValue = sIndex == 0 ? address(spo.owner).toHexString() : _subjects[sIndex].value;
         return string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, subjectValue, BLANK_SPACE);
     }
 
-    function buildIntRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
-        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
+    function buildIntRDF(uint256 oIndex, string storage name) internal view returns (string memory){
+        string memory p = string.concat(PROPERTY_PREFIX, name);
         string memory o = oIndex.toString();
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildStringRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates, string[] storage _stringO) internal view returns (string memory){
-        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
-        string memory o = string.concat('"', _stringO[oIndex], '"');
+    function buildStringRDF(string storage name, string storage _stringO) internal view returns (string memory){
+        string memory p = string.concat(PROPERTY_PREFIX, name);
+        string memory o = string.concat('"', _stringO, '"');
         return string.concat(p, BLANK_SPACE, o);
     }
 
-    function buildAddressRDF(uint256 pIndex, uint256 oIndex, Predicate[] storage _predicates) internal view returns (string memory){
-        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
+    function buildAddressRDF(uint256 oIndex, string storage name) internal view returns (string memory){
+        string memory p = string.concat(PROPERTY_PREFIX, name);
         string memory o = string.concat(ENTITY_PREFIX, SOUL_CLASS_NAME, CONCATENATION_CHARACTER, address(uint160(oIndex)).toHexString());
         return string.concat(p, BLANK_SPACE, o);
     }
 
 
-    function buildSubjectRDF(uint256 pIndex, uint256 oIndex, string[] storage _classNames, Predicate[] storage _predicates, Subject[] storage _subjects) internal view returns (string memory){
-        string memory _className = _classNames[_subjects[oIndex].cIndex];
-        string memory p = string.concat(PROPERTY_PREFIX, _predicates[pIndex].name);
-        string memory o = string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, _subjects[oIndex].value);
+    function buildSubjectRDF(string storage _className, string storage name, string storage value) internal view returns (string memory){
+        string memory p = string.concat(PROPERTY_PREFIX, name);
+        string memory o = string.concat(ENTITY_PREFIX, _className, CONCATENATION_CHARACTER, value);
         return string.concat(p, BLANK_SPACE, o);
     }
 
@@ -242,22 +252,22 @@ library SemanticSBTLogicUpgradeable {
         uint256[] memory blankOList = _blankNodeO[oIndex].oIndex;
 
         string memory _rdf = "";
-        for (uint256 i = 0; i < blankPList.length;) {
-            Predicate memory _p = _predicates[blankPList[i]];
-            if (FieldType.INT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildIntRDF(blankPList[i], blankOList[i], _predicates));
-            } else if (FieldType.STRING == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildStringRDF(blankPList[i], blankOList[i], _predicates, _stringO));
-            } else if (FieldType.ADDRESS == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildAddressRDF(blankPList[i], blankOList[i], _predicates));
-            } else if (FieldType.SUBJECT == _p.fieldType) {
-                _rdf = string.concat(_rdf, buildSubjectRDF(blankPList[i], blankOList[i], _classNames, _predicates, _subjects));
+        for (uint256 i; i < blankPList.length;) {
+            FieldType fieldType = _predicates[blankPList[i]].fieldType;
+            if (FieldType.INT == fieldType) {
+                _rdf = string.concat(_rdf, buildIntRDF(blankOList[i], _predicates[blankPList[i]].name));
+            } else if (FieldType.STRING == fieldType) {
+                _rdf = string.concat(_rdf, buildStringRDF(_predicates[blankPList[i]].name, _stringO[blankOList[i]]));
+            } else if (FieldType.ADDRESS == fieldType) {
+                _rdf = string.concat(_rdf, buildAddressRDF(blankOList[i], _predicates[blankPList[i]].name));
+            } else if (FieldType.SUBJECT == fieldType) {
+                _rdf = string.concat(_rdf, buildSubjectRDF(_classNames[_subjects[blankOList[i]].cIndex], _predicates[blankPList[i]].name, _subjects[blankOList[i]].value));
             }
             if (i < blankPList.length - 1) {
                 _rdf = string.concat(_rdf, TURTLE_LINE_SUFFIX);
             }
             unchecked{
-                i++;
+                ++i;
             }
         }
 
@@ -358,7 +368,7 @@ library SemanticSBTLogicUpgradeable {
     }
 
 
-    function checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] memory _predicates) public pure {
+    function checkPredicate(uint256 pIndex, FieldType fieldType, Predicate[] storage _predicates) public view {
         require(pIndex > 0 && pIndex < _predicates.length, "SemanticSBT: predicate not exist");
         require(_predicates[pIndex].fieldType == fieldType, "SemanticSBT: predicate type error");
     }
