@@ -76,7 +76,7 @@ contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpg
         address to,
         uint256 firstTokenId,
         uint256 batchSize
-    ) internal override(NameService, ERC721EnumerableUpgradeable) virtual {
+    ) internal override(NameService, ERC721Upgradeable) virtual {
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 

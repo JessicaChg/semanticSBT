@@ -137,7 +137,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         SubjectPO[] memory subjectPOList = NameServiceLogic.register(msg.sender, owner, sIndex, resolve,
             _ownedResolvedName, _ownerOfResolvedName
         );
-        _mint(tokenId, owner, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
+        _mint(tokenId, owner,  subjectPOList);
     }
 
     function _beforeTokenTransfer(
@@ -145,7 +145,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
         address to,
         uint256 firstTokenId,
         uint256 batchSize
-    ) internal override(ERC721EnumerableUpgradeable) virtual {
+    ) internal override(ERC721Upgradeable) virtual {
         require(from == address(0) || _ownerOfResolvedName[firstTokenId] == address(0), "NameService:can not transfer when resolved");
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
