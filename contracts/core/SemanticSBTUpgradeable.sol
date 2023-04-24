@@ -267,7 +267,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
                 currentIndex += 1;
             }
         }
-        revert("ERC721Enumerable: token index out of bounds");
+        revert("ERC721Enumerable: global index out of bounds");
     }
 
 
