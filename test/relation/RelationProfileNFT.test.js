@@ -32,7 +32,7 @@ describe("Relation Name Service contract", function () {
         const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
         const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
 
-        const contractName = "RelationNameService";
+        const contractName = "RelationProfileNFT";
         console.log(contractName)
 
         const MyContract = await ethers.getContractFactory(contractName, {
