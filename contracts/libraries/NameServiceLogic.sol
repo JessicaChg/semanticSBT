@@ -133,7 +133,7 @@ library NameServiceLogic {
 
 
     function recoverAddress(address contractAddress, address caller, string calldata name, uint256 deadline, uint256 _mintCount, uint256 price, bytes memory signature) external view returns (address) {
-        require(deadline > block.timestamp, "signature expired");
+        require(deadline > block.timestamp, "NameService:signature expired");
         bytes32 hash = keccak256(
             abi.encodePacked(
                 contractAddress,

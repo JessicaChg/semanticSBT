@@ -13,7 +13,7 @@ import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradea
 import {NameServiceLogic} from "../libraries/NameServiceLogic.sol";
 
 
-contract RelationNameService is SemanticSBTUpgradeable, NameService, PausableUpgradeable {
+contract RelationProfileNFT is SemanticSBTUpgradeable, NameService, PausableUpgradeable {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
