@@ -7,17 +7,13 @@
 const {ethers, upgrades} = require("hardhat");
 
 
-const name = 'Relation Name Service V1';
-const symbol = 'SBT';
+const name = '.soul profile ';
+const symbol = 'SOUL';
 const schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
 const class_ = ["Name"];
 const predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
-
-const nameLengthControl = [
-    {"_nameLength": 4, "_maxCount": 1000}//means the maxCount of 4 characters is 1000
-];
-const suffix = ".rel";
+const suffix = ".soul";
 
 async function main() {
 
@@ -35,7 +31,7 @@ async function main() {
     );
     await nameServiceLogicLibrary.deployTransaction.wait();
 
-    const contractName = "RelationNameService";
+    const contractName = "RelationProfileNFT";
     console.log(contractName)
 
     const MyContract = await ethers.getContractFactory(contractName, {
@@ -58,16 +54,13 @@ async function main() {
         });
 
     await myContract.deployed();
-    // const myContract = await MyContract.deploy();
     await myContract.deployTransaction.wait();
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    for (let i = 0; i < nameLengthControl.length; i++) {
-        await (await myContract.setNameLengthControl(nameLengthControl[i]._nameLength, nameLengthControl[i]._maxCount)).wait();
-    }
+
     await (await myContract.setTransferable(true)).wait();
-    await (await myContract.setMinter("",true)).wait();
+    await (await myContract.setMinter("0x27546C3D47dECBC5d72C446D9f0593d2141A92F6",true)).wait();
 
     const nameInContract = await myContract.name();
     const ownerInContract = await myContract.owner();
