@@ -23,7 +23,7 @@ async function main() {
     );
     await nameServiceLogicLibrary.deployTransaction.wait();
 
-    const contractName = "RelationNameService";
+    const contractName = "RelationProfileNFT";
     console.log(contractName)
 
     const MyContract = await ethers.getContractFactory(contractName, {
