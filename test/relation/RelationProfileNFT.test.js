@@ -4,6 +4,11 @@
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers");
 const {expect} = require("chai");
 const {ethers, upgrades} = require("hardhat");
+const Web3 = require("web3");
+const {min} = require("hardhat/internal/util/bigint");
+const w3 = new Web3();
+const {hexlify, toUtf8Bytes} = ethers.utils;
+
 
 const name = 'Name Service';
 const symbol = 'SBT';
@@ -125,24 +130,23 @@ describe("Relation Name Service contract", function () {
             //sign with originalData: 0xdc64a140aa3e981100a9beca4e685f962f0cf6c90xf39fd6e51aad88f6f4ce6ab8827279cfffb9226616906912462100my-name
             const signature = "0xba98f67f2e2069a334f1f43faf40f0d2400c1f34831070017d119ce8ce6099464adc101eb90a8c7008ffab310ca68a08c197dd5580842bd9577d0abc65bfd6631c";
 
-            await expect(nameService["register(string,uint256,uint256,uint256,bytes)"]( name, deadline, mintCount, price, signature, {value: (price - 1)})).revertedWith("NameService: insufficient value");
+            await expect(nameService["register(string,uint256,uint256,uint256,bytes)"](name, deadline, mintCount, price, signature, {value: (price - 1)})).revertedWith("NameService: insufficient value");
         })
 
         it("User should register whit a signature by minter", async function () {
             const {nameService, owner} = await loadFixture(deployTokenFixture);
             const minter = "0x000c1dD252027dB65484bA0D3AcdBAB0047A01a1";
-            await nameService.setMinter(minter,true);
+            await nameService.setMinter(minter, true);
             expect(await nameService.minters(minter)).equal(true);
 
             const name = "my-name";
             const deadline = 1690691246;
             const mintCount = 2;
             const price = 100;
-            // const originalData = buildOriginalSignData(nameService.address, owner.address, deadline, mintCount, price, name);
-            //sign with originalData: 0xdc64a140aa3e981100a9beca4e685f962f0cf6c90xf39fd6e51aad88f6f4ce6ab8827279cfffb9226616906912462100my-name
-            const signature = "0xba98f67f2e2069a334f1f43faf40f0d2400c1f34831070017d119ce8ce6099464adc101eb90a8c7008ffab310ca68a08c197dd5580842bd9577d0abc65bfd6631c";
+            const originalData = buildOriginalSignData(nameService.address, owner.address, deadline, mintCount, price, name);
+            const signature = await sign(owner, originalData)
 
-            await nameService["register(string,uint256,uint256,uint256,bytes)"]( name,deadline, mintCount, price, signature,{value:price});
+            await nameService["register(string,uint256,uint256,uint256,bytes)"](name, deadline, mintCount, price, signature, {value: price});
 
         })
 
@@ -235,7 +239,15 @@ describe("Relation Name Service contract", function () {
     })
 
     function buildOriginalSignData(contractAddress, owner, deadline, mintCount, price, name) {
-        return contractAddress.toLowerCase() + owner.toLowerCase() + deadline + mintCount + price + name;
+        return ethers.utils.solidityKeccak256(["address", "address", "uint256", "uint256", "uint256", "string",],
+            [contractAddress, owner, deadline, mintCount, price, name]);
+
+        // return w3.utils.encodePacked(contractAddress.toLowerCase(), owner.toLowerCase(),deadline,mintCount,price,name)
+    }
+
+    async function sign(account, originalData) {
+
+        return await account.signMessage(ethers.utils.arrayify(originalData))
     }
 
 
