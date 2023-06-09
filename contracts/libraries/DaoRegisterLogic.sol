@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.12;
 
-import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
 import {IDao} from "../interfaces/social/IDao.sol";
 import {BeaconProxy} from "../upgrade/BeaconProxy.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";

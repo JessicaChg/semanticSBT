@@ -6,6 +6,7 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 const {ethers, upgrades} = require("hardhat");
+const semanticSBTLogic = require("./deploySemanticSBTLogic");
 
 const name = 'Relation Content';
 const symbol = 'SBT';
@@ -15,16 +16,10 @@ const class_ = [];
 const predicate_ = [["publicContent", 1]];
 
 
-async function main() {
-    const [owner] = await ethers.getSigners();
-
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
-    const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-    console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
-
+async function deployContentWithSign(semanticSBTLogicLibraryAddress) {
     const ContentWithSign = await hre.ethers.getContractFactory("ContentWithSign", {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibraryAddress,
         }
     });
     const contentWithSignName = "Content With Sign";
@@ -34,32 +29,63 @@ async function main() {
     await contentWithSign.deployed();
     await contentWithSign.deployTransaction.wait();
     console.log(`ContentWithSign deployed ,contract address: ${contentWithSign.address}`);
+    return contentWithSign.address
+}
 
-    const contractName = "Content";
-    const MyContract = await hre.ethers.getContractFactory(contractName, {
+async function deployContent(semanticSBTLogicLibraryAddress, contentWithSignAddress, owner) {
+    const MyContract = await hre.ethers.getContractFactory("Content", {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibraryAddress,
         }
     });
 
 
     const contentContract = await upgrades.deployProxy(MyContract,
-        [owner.address,
-            contentWithSign.address,
+        [owner,
+            contentWithSignAddress,
             name,
             symbol,
             baseURI,
             schemaURI,
             class_,
             predicate_],
-        {unsafeAllowLinkedLibraries: true, initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'});
+        {
+            unsafeAllowLinkedLibraries: true,
+            initializer: 'initialize(address, address, string, string, string, string, string[], (string,uint8)[])'
+        });
 
     await contentContract.deployed();
     console.log(
-        `${contractName} deployed ,contract address: ${contentContract.address}`
+        `Content deployed ,contract address: ${contentContract.address}`
     );
+    return contentContract.address
+}
 
+async function upgrade(semanticSBTLogicAddress,proxyAddress){
+    const contractName = "Content";
+    const MyContract = await hre.ethers.getContractFactory(contractName, {
+        libraries: {
+            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
+        }
+    });
 
+    //upgrade
+    await upgrades.upgradeProxy(
+        proxyAddress,
+        MyContract,
+        {unsafeAllowLinkedLibraries: true});
+    console.log(`Content upgrade successfully!`)
+}
+
+async function main() {
+    const [owner] = await ethers.getSigners();
+
+    const semanticSBTLogicAddress = await semanticSBTLogic.deploy()
+    const contentWithSignAddress = await deployContentWithSign(semanticSBTLogicAddress)
+    const contentAddress = await deployContent(semanticSBTLogicAddress, contentWithSignAddress, owner.address)
+
+    //upgrade
+    // await upgrade(semanticSBTLogicAddress,contentAddress)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

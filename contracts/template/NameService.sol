@@ -15,48 +15,35 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    uint256 constant PROFILE_URI_PREDICATE_INDEX = 3;
+    uint256 internal constant PROFILE_URI_PREDICATE_INDEX = 3;
 
-    uint256 constant NAME_CLASS_INDEX = 2;
+    uint256 internal constant NAME_CLASS_INDEX = 2;
 
 
-    uint256 _minNameLength;
-    mapping(uint256 => uint256) _nameLengthControl;
-    mapping(uint256 => uint256) _countOfNameLength;
     string public suffix;
 
-    mapping(uint256 => uint256) _tokenIdOfName;
-    mapping(uint256 => uint256) _nameOf;
 
-    mapping(address => uint256) _ownedResolvedName;
-    mapping(uint256 => address) _ownerOfResolvedName;
-    mapping(uint256 => uint256) _tokenIdOfResolvedName;
+    mapping(address => uint256) internal _ownedResolvedName;
+    mapping(uint256 => address) internal _ownerOfResolvedName;
 
-    mapping(address => string) _profileURI;
-    mapping(address => bool) _ownedProfileURI;
+    mapping(address => string) internal _profileURI;
+    mapping(address => bool) internal _ownedProfileURI;
 
-    function setSuffix(string calldata suffix_) external onlyMinter {
+    function initialize(
+        string memory suffix_,
+        string memory name_,
+        string memory symbol_,
+        string memory schemaURI_,
+        string[] memory classes_,
+        Predicate[] memory predicates_
+    ) public virtual initializer {
+        super.initialize(msg.sender, name_, symbol_, "", schemaURI_, classes_, predicates_);
         suffix = suffix_;
     }
 
-    function setNameLengthControl(uint256 minNameLength_, uint256 _nameLength, uint256 _maxCount) external onlyMinter {
-        _minNameLength = minNameLength_;
-        _nameLengthControl[_nameLength] = _maxCount;
-    }
 
-
-    function register(address owner, string calldata name, bool resolve) external override returns (uint tokenId) {
-        require(NameServiceLogic.checkValidLength(name, _minNameLength, _nameLengthControl, _countOfNameLength), "NameService: invalid length of name");
-        require(msg.sender == owner || _minters[msg.sender], "NameService: permission denied");
-        string memory fullName = string.concat(name, suffix);
-        require(_subjectIndex[NAME_CLASS_INDEX][fullName] == 0, "NameService: already added");
-        tokenId = _addEmptyToken(owner, 0);
-        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, NAME_CLASS_INDEX, _subjects, _subjectIndex);
-        SubjectPO[] memory subjectPOList = NameServiceLogic.register(tokenId, owner, sIndex, resolve,
-            _tokenIdOfName, _nameOf,
-            _ownedResolvedName, _ownerOfResolvedName, _tokenIdOfResolvedName
-        );
-        _mint(tokenId, owner, new IntPO[](0), new StringPO[](0), new AddressPO[](0), subjectPOList, new BlankNodePO[](0));
+    function register(address owner, string calldata name, bool resolve) external virtual override returns (uint tokenId) {
+        return _register(owner, name, resolve);
     }
 
 
@@ -68,11 +55,12 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     function setNameForAddr(address addr_, string calldata name) external override {
         require(addr_ == msg.sender || addr_ == address(0), "NameService:can not set for others");
         uint256 sIndex = _subjectIndex[NAME_CLASS_INDEX][name];
-        uint256 tokenId = _tokenIdOfName[sIndex];
+        uint256 tokenId = sIndex;
         require(ownerOf(tokenId) == msg.sender, "NameService:not the owner");
         SPO storage spo = _tokens[tokenId];
-        NameServiceLogic.setNameForAddr(addr_, sIndex, _tokenIdOfName, _ownedResolvedName,
-            _ownerOfResolvedName, _tokenIdOfResolvedName);
+        NameServiceLogic.setNameForAddr(addr_, sIndex,
+            _ownedResolvedName,
+            _ownerOfResolvedName);
         NameServiceLogic.updatePIndexOfToken(addr_, spo);
         emit UpdateRDF(tokenId, rdfOf(tokenId));
     }
@@ -87,6 +75,7 @@ contract NameService is INameService, SemanticSBTUpgradeable {
             emit UpdateRDF(0, rdf);
         }
     }
+
 
 
     function addr(string calldata name) virtual override external view returns (address){
@@ -104,18 +93,33 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
     function nameOfTokenId(uint256 tokenId) external view returns (string memory){
-        return _subjects[_nameOf[tokenId]].value;
+        return _subjects[tokenId].value;
     }
 
     function profileURI(address addr_) external view returns (string memory){
         return _profileURI[addr_];
     }
 
+    function tokenURI(uint256 tokenId)
+    public
+    virtual
+    view
+    override(SemanticSBTUpgradeable)
+    returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
+        return
+        bytes(_baseTokenURI).length > 0
+        ? string(abi.encodePacked(_baseTokenURI, tokenId.toString(), ".json"))
+        : NameServiceLogic.getTokenURI(tokenId, _subjects[tokenId].value, rdfOf(tokenId));
+    }
 
     function ownerOfName(string calldata name) external view returns (address){
         uint256 sIndex = _subjectIndex[NAME_CLASS_INDEX][name];
-        uint256 tokenId = _tokenIdOfName[sIndex];
-        return ownerOf(tokenId);
+        return ownerOf(sIndex);
     }
 
 
@@ -125,13 +129,24 @@ contract NameService is INameService, SemanticSBTUpgradeable {
     }
 
 
+    function _register(address owner, string calldata name, bool resolve) internal returns (uint tokenId) {
+        string memory fullName = string.concat(name, suffix);
+        require(_subjectIndex[NAME_CLASS_INDEX][fullName] == 0, "NameService: already added");
+        tokenId = _addEmptyToken(owner, 0);
+        uint256 sIndex = SemanticSBTLogicUpgradeable._addSubject(fullName, NAME_CLASS_INDEX, _subjects, _subjectIndex);
+        SubjectPO[] memory subjectPOList = NameServiceLogic.register(msg.sender, owner, sIndex, resolve,
+            _ownedResolvedName, _ownerOfResolvedName
+        );
+        _mint(tokenId, owner,  subjectPOList);
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 firstTokenId,
         uint256 batchSize
-    ) internal override(ERC721EnumerableUpgradeable) virtual {
-        require(from == address(0) || _ownerOfResolvedName[_nameOf[firstTokenId]] == address(0), "NameService:can not transfer when resolved");
+    ) internal override(ERC721Upgradeable) virtual {
+        require(from == address(0) || _ownerOfResolvedName[firstTokenId] == address(0), "NameService:can not transfer when resolved");
         super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
     }
 

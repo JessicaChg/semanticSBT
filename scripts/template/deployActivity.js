@@ -52,7 +52,7 @@ async function main() {
     await (await myContract.addWhiteList(whiteList)).wait();
     console.log(`The whiteList is set successfully!`);
 
-    await (await myContract.participate()).wait();
+    await (await myContract.mint()).wait();
     console.log(`${owner.address} participate the activity successfully!`);
 
     const rdf = await myContract.rdfOf(1);

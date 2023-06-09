@@ -46,7 +46,6 @@ describe("DaoRegister contract", function () {
         const UpgradeableBeacon = await hre.ethers.getContractFactory("UpgradeableBeacon");
         const upgradeableBeacon = await UpgradeableBeacon.deploy(dao.address);
         await upgradeableBeacon.deployTransaction.wait();
-        console.log(`Dao:${dao.address} , UpgradeableBeacon:${upgradeableBeacon.address}`);
 
 
         const DaoWithSign = await hre.ethers.getContractFactory("DaoWithSign", {

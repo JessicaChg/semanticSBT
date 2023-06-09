@@ -2,26 +2,26 @@
 
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+//import "@openzeppelin/contracts/utils/Strings.sol";
+//import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+//import "@openzeppelin/contracts/access/AccessControl.sol";
+//import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 
 import "../interfaces/social/IActivity.sol";
-import "../core/SemanticSBT.sol";
+import "../core/SemanticSBTUpgradeable.sol";
 import "../core/SemanticBaseStruct.sol";
 
-contract Activity is IActivity, SemanticSBT {
-    using Strings for uint256;
-    using Strings for address;
+contract Activity is IActivity, SemanticSBTUpgradeable {
+    using StringsUpgradeable for uint256;
+    using StringsUpgradeable for address;
 
 
-    uint256 private _soulCIndex = 1;
-    uint256 private _activityCIndex = 2;
-    uint256 private _pIndex = 1;
-    uint256 private _oIndex = 1;
+    uint256 _soulCIndex;
+    uint256 _activityCIndex;
+    uint256 _pIndex;
+    uint256 _oIndex;
 
 
     mapping(address => mapping(uint256 => mapping(uint256 => bool)))  _mintedSPO;
@@ -32,6 +32,22 @@ contract Activity is IActivity, SemanticSBT {
     mapping(address => bool) public whiteList;
     address[] _whiteLists;
 
+    function initialize(
+        address minter,
+        string memory name_,
+        string memory symbol_,
+        string memory baseURI_,
+        string memory schemaURI_,
+        string[] memory classes_,
+        Predicate[] memory predicates_
+    ) public override {
+        _soulCIndex = 1;
+        _activityCIndex = 2;
+        _pIndex = 1;
+        _oIndex = 1;
+        super.initialize(minter, name_, symbol_, baseURI_, schemaURI_, classes_, predicates_);
+    }
+
     function duplicatable() public view returns (bool) {
         return _duplicatable;
     }
@@ -41,9 +57,9 @@ contract Activity is IActivity, SemanticSBT {
     }
 
 
-    function setActivity(string memory activityName) external onlyMinter{
-        require(getMinted() == 0,"Activity:can not set activity after minted!" );
-        _oIndex = super.addSubject(activityName, _classNames[_activityCIndex]);
+    function setActivity(string memory activityName) external onlyMinter {
+        require(getMinted() == 0, "Activity:can not set activity after minted!");
+        _oIndex = SemanticSBTLogicUpgradeable.addSubject(activityName, _classNames[_activityCIndex], _subjects, _subjectIndex, _classIndex);
     }
 
     function whiteListRange(uint256 offset, uint256 limit) public view returns (address[] memory whiteList_){
@@ -78,7 +94,7 @@ contract Activity is IActivity, SemanticSBT {
     }
 
 
-    function participate() external {
+    function mint() external {
         require(_freeMintable || whiteList[msg.sender], "Activity: permission denied");
         require(_duplicatable || !_mintedSPO[msg.sender][_pIndex][_oIndex], "Activity: already minted");
         _mintedSPO[msg.sender][_pIndex][_oIndex] = true;

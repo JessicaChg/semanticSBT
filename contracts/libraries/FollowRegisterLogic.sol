@@ -6,7 +6,6 @@ import {IFollow} from "../interfaces/social/IFollow.sol";
 import {Follow} from "../template/Follow.sol";
 import {BeaconProxy} from "../upgrade/BeaconProxy.sol";
 import {Predicate, FieldType} from "../core/SemanticBaseStruct.sol";
-import "hardhat/console.sol";
 
 library FollowRegisterLogic {
 

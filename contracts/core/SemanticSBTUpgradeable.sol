@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721MetadataUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/IERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -16,10 +16,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "../interfaces/ISemanticSBTSchema.sol";
 import "../interfaces/ISemanticSBT.sol";
+import "../interfaces/IERC5192.sol";
 import "./SemanticBaseStruct.sol";
 import {SemanticSBTLogicUpgradeable} from "../libraries/SemanticSBTLogicUpgradeable.sol";
 
-contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, ERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema {
+contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgradeable, ERC721Upgradeable, IERC721EnumerableUpgradeable, ISemanticSBT, ISemanticSBTSchema, IERC5192 {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for uint160;
@@ -33,6 +34,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
     SPO[] internal _tokens;
 
+    uint256 private _burnCount;
 
     mapping(uint256 => address) private _tokenApprovals;
 
@@ -46,7 +48,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
 
     mapping(uint256 => mapping(string => uint256)) internal _subjectIndex;
 
-    string private _baseTokenURI;
+    string internal _baseTokenURI;
 
     string public schemaURI;
 
@@ -99,7 +101,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         string memory schemaURI_,
         string[] memory classes_,
         Predicate[] memory predicates_
-    ) public initializer {
+    ) public virtual initializer {
         require(keccak256(abi.encode(schemaURI_)) != keccak256(abi.encode("")), "SemanticSBT: schema URI cannot be empty");
         require(predicates_.length > 0, "SemanticSBT: predicate size can not be empty");
         before_init();
@@ -115,7 +117,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     }
 
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721EnumerableUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable, ERC721Upgradeable) returns (bool) {
         return interfaceId == type(IERC721Upgradeable).interfaceId ||
         interfaceId == type(IERC721MetadataUpgradeable).interfaceId ||
         interfaceId == type(IERC721EnumerableUpgradeable).interfaceId ||
@@ -133,6 +135,12 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         return _transferable;
     }
 
+    function locked(uint256 tokenId) external override view returns (bool){
+        if (_transferable) {
+            return true;
+        }
+        return false;
+    }
 
     function baseURI() public view returns (string memory) {
         return _baseTokenURI;
@@ -208,6 +216,7 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
     function tokenURI(uint256 tokenId)
     public
     view
+    virtual
     override
     returns (string memory)
     {
@@ -219,6 +228,46 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         bytes(_baseTokenURI).length > 0
         ? string(abi.encodePacked(_baseTokenURI, tokenId.toString(), ".json"))
         : SemanticSBTLogicUpgradeable.getTokenURI(tokenId, _name, rdfOf(tokenId));
+    }
+
+    function totalSupply() public view override returns (uint256) {
+        return getMinted() - _burnCount;
+    }
+
+
+    function tokenOfOwnerByIndex(address owner, uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 currentIndex = 0;
+        for (uint256 i = 1; i < _tokens.length; i++) {
+            if (address(_tokens[i].owner) == owner) {
+                if (currentIndex == index) {
+                    return i;
+                }
+                currentIndex += 1;
+            }
+        }
+        revert("ERC721Enumerable: owner index out of bounds");
+    }
+
+
+    function tokenByIndex(uint256 index)
+    public
+    view
+    returns (uint256)
+    {
+        uint256 currentIndex = 0;
+        for (uint256 i = 1; i < _tokens.length; i++) {
+            if (_tokens[i].owner != 0) {
+                if (currentIndex == index) {
+                    return i;
+                }
+                currentIndex += 1;
+            }
+        }
+        revert("ERC721Enumerable: global index out of bounds");
     }
 
 
@@ -291,10 +340,22 @@ contract SemanticSBTUpgradeable is Initializable, OwnableUpgradeable, ERC165Upgr
         emit CreateRDF(tokenId, rdfOf(tokenId));
     }
 
+    function _mint(uint256 tokenId, address account, SubjectPO[] memory subjectPOList) internal {
+        uint256[] storage pIndex = _tokens[tokenId].pIndex;
+        uint256[] storage oIndex = _tokens[tokenId].oIndex;
+
+        SemanticSBTLogicUpgradeable.addSubjectPO(pIndex, oIndex, subjectPOList, _predicates, _subjects);
+        require(pIndex.length > 0, "SemanticSBT: param error");
+
+        super._safeMint(account, tokenId);
+        emit CreateRDF(tokenId, rdfOf(tokenId));
+    }
+
     function _burn(uint256 tokenId) internal override(ERC721Upgradeable) {
         string memory _rdf = rdfOf(tokenId);
         _tokens[tokenId].owner = 0;
         super._burn(tokenId);
+        _burnCount++;
         emit RemoveRDF(tokenId, _rdf);
     }
 

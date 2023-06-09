@@ -6,6 +6,8 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 const {ethers, upgrades} = require("hardhat");
+const semanticSBTLogic = require("./deploySemanticSBTLogic");
+const upgradeableBeacon = require("./deployUpgradeableBeacon");
 
 const name = 'Relation Follow Register';
 const symbol = 'SBT';
@@ -14,23 +16,19 @@ const schemaURI = 'ar://auPfoCDBtJ3RJ_WyUqV9O7GAARDzkUT4TSuj9uuax-0';
 const class_ = ["Contract"];
 const predicate_ = [["followContract", 3]];
 
-async function main() {
-
-    const [owner] = await ethers.getSigners();
-
-    const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
-    const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
-    console.log(
-        `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
-    );
+async function deployFollowRegisterLogic() {
     const FollowRegisterLogic = await hre.ethers.getContractFactory("FollowRegisterLogic");
     const followRegisterLogicLibrary = await FollowRegisterLogic.deploy();
     console.log(
         `FollowRegisterLogic deployed ,contract address: ${followRegisterLogicLibrary.address}`
     );
+    return followRegisterLogicLibrary.address
+}
+
+async function deployFollow(semanticSBTLogicAddress) {
     const Follow = await hre.ethers.getContractFactory("Follow", {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
         }
     });
     const follow = await Follow.deploy();
@@ -38,11 +36,13 @@ async function main() {
     console.log(
         `Follow deployed ,contract address: ${follow.address}`
     );
+    return follow.address
+}
 
-
+async function deployFollowWithSign(semanticSBTLogicAddress) {
     const FollowWithSign = await hre.ethers.getContractFactory("FollowWithSign", {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
         }
     });
     const followWithSignName = "Follow With Sign";
@@ -52,19 +52,19 @@ async function main() {
     await followWithSign.deployed();
     await followWithSign.deployTransaction.wait();
     console.log(`FollowWithSign deployed ,contract address: ${followWithSign.address}`);
+    return followWithSign.address
+}
 
-
-
-
+async function deployFollowRegister(semanticSBTLogicAddress, followRegisterLogicAddress, owner) {
     const contractName = "FollowRegister";
     const MyContract = await hre.ethers.getContractFactory(contractName, {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
-            FollowRegisterLogic: followRegisterLogicLibrary.address,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
+            FollowRegisterLogic: followRegisterLogicAddress,
         }
     });
     const followRegister = await upgrades.deployProxy(MyContract,
-        [owner.address,
+        [owner,
             name,
             symbol,
             baseURI,
@@ -77,15 +77,38 @@ async function main() {
     console.log(
         `${contractName} deployed ,contract address: ${followRegister.address}`
     );
-    await (await followRegister.setFollowImpl(follow.address)).wait();
-    console.log(
-        `${contractName} setFollowImpl successfully!`
-    );
+    return followRegister.address
+}
 
-    await (await followRegister.setFollowVerifyContract(followWithSign.address)).wait();
+async function setImpl(followRegisterAddress, followImplAddress) {
+    const followRegister = await hre.ethers.getContractAt("FollowRegister", followRegisterAddress)
+    await (await followRegister.setFollowImpl(followImplAddress)).wait();
     console.log(
-        `${contractName} setFollowVerifyContract successfully!`
+        `FollowRegister setFollowImpl successfully!`
     );
+}
+
+async function setVerifyContract(followRegisterAddress, followWithSignAddress) {
+    const followRegister = await hre.ethers.getContractAt("FollowRegister", followRegisterAddress)
+    await (await followRegister.setFollowVerifyContract(followWithSignAddress)).wait();
+    console.log(
+        `FollowRegister setFollowVerifyContract successfully!`
+    );
+}
+
+async function main() {
+
+    const [owner] = await ethers.getSigners();
+
+    const semanticSBTLogicAddress = await semanticSBTLogic.deploy()
+    const followRegisterLogicAddress = await deployFollowRegisterLogic()
+    const followAddress = await deployFollow(semanticSBTLogicAddress)
+    const followUpgradeableBeaconAddress = await upgradeableBeacon.deploy(followAddress)
+    const followWithSignAddress = await deployFollowWithSign(semanticSBTLogicAddress)
+    const followRegisterAddress = await deployFollowRegister(semanticSBTLogicAddress, followRegisterLogicAddress,owner.address)
+
+    await setImpl(followRegisterAddress, followUpgradeableBeaconAddress)
+    await setVerifyContract(followRegisterAddress, followWithSignAddress)
 
 }
 

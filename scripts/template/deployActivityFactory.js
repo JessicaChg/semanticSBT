@@ -4,29 +4,36 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const {ethers, upgrades} = require("hardhat");
 const hre = require("hardhat");
 
-
 async function main() {
+
+    const [owner] = await ethers.getSigners();
 
     const SemanticSBTLogic = await hre.ethers.getContractFactory("SemanticSBTLogicUpgradeable");
     const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
     console.log(`SemanticSBTLogic deployed ,contract address: ${semanticSBTLogicLibrary.address}`);
 
-    const contractName = "Content";
-    const MyContract = await hre.ethers.getContractFactory(contractName, {
+
+    const Activity = await hre.ethers.getContractFactory("Activity", {
         libraries: {
             SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
         }
     });
+    const activity = await Activity.deploy();
+    console.log(`$Activity deployed ,contract address: ${activity.address}`);
+    await activity.deployTransaction.wait();
 
-    //upgrade
-    const proxyAddress = "0xb4cf83be1800add6d981ab031d4cb017b7494286";
-    await upgrades.upgradeProxy(
-    proxyAddress,
-        MyContract,
-        {unsafeAllowLinkedLibraries: true});
+    const ActivityFactory = await hre.ethers.getContractFactory("ActivityFactory");
+    const activityFactory = await ActivityFactory.deploy();
+    console.log(`ActivityFactory deployed ,contract address: ${activityFactory.address}`);
+
+    await (await activityFactory.setActivityImpl(activity.address)).wait();
+
+    const nonce = await activityFactory.nonce(owner.address);
+    await (await activityFactory.createActivity("my-activity","MAC","","myActivity")).wait()
+    const address = await activityFactory.addressOf(owner.address,nonce);
+    console.log(address)
 
 }
 

@@ -5,40 +5,44 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const {ethers, upgrades} = require("hardhat");
-const semanticSBTLogic = require("./deploySemanticSBTLogic");
 
 
-const name = 'Relation Name Service V1';
-const symbol = 'SBT';
-const baseURI = '';
+const name = '.soul profile ';
+const symbol = 'SOUL';
 const schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
 const class_ = ["Name"];
 const predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
 const suffix = ".soul";
 
-async function deployNameServiceLogic() {
+async function main() {
+
+    const SemanticSBTLogic = await ethers.getContractFactory("SemanticSBTLogicUpgradeable");
+    const semanticSBTLogicLibrary = await SemanticSBTLogic.deploy();
+    console.log(
+        `SemanticSBTLogicUpgradeable deployed ,contract address: ${semanticSBTLogicLibrary.address}`
+    );
+    await semanticSBTLogicLibrary.deployTransaction.wait();
+
     const NameServiceLogicLibrary = await ethers.getContractFactory("NameServiceLogic");
     const nameServiceLogicLibrary = await NameServiceLogicLibrary.deploy();
     console.log(
         `NameServiceLogicLibrary deployed ,contract address: ${nameServiceLogicLibrary.address}`
     );
     await nameServiceLogicLibrary.deployTransaction.wait();
-    return nameServiceLogicLibrary.address
-}
 
-async function deployNameService(semanticSBTLogicAddress, nameServiceLogicAddress, owner) {
-    const contractName = "NameService";
+    const contractName = "RelationProfileNFT";
     console.log(contractName)
 
     const MyContract = await ethers.getContractFactory(contractName, {
         libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
-            NameServiceLogic: nameServiceLogicAddress,
+            SemanticSBTLogicUpgradeable: semanticSBTLogicLibrary.address,
+            NameServiceLogic: nameServiceLogicLibrary.address,
         }
     });
     const myContract = await upgrades.deployProxy(MyContract,
-        [suffix,
+        [
+            suffix,
             name,
             symbol,
             schemaURI,
@@ -47,44 +51,30 @@ async function deployNameService(semanticSBTLogicAddress, nameServiceLogicAddres
         {
             unsafeAllowLinkedLibraries: true,
             initializer: 'initialize(string, string, string, string, string[], (string,uint8)[])'
-        }
-    );
+        });
 
     await myContract.deployed();
     await myContract.deployTransaction.wait();
     console.log(
         `${contractName} deployed ,contract address: ${myContract.address}`
     );
-    return myContract.address
-}
 
+    await (await myContract.setTransferable(true)).wait();
+    await (await myContract.setMinter("0x27546C3D47dECBC5d72C446D9f0593d2141A92F6",true)).wait();
 
-async function upgrade(semanticSBTLogicAddress, nameServiceLogicAddress, proxyAddress) {
-    const contractName = "NameService";
+    const nameInContract = await myContract.name();
+    const ownerInContract = await myContract.owner();
+    const schemaURIInContract = await myContract.schemaURI();
+    const suffixInContract = await myContract.suffix();
+    const transferable = await myContract.transferable();
+    console.log(
+        `${contractName} nameInContract: ${nameInContract},
+        \t ownerInContract:${ownerInContract},
+        \t schemaURIInContract:${schemaURIInContract},
+        \t suffixInContract:${suffixInContract}
+        \t transferable:${transferable}`
+    );
 
-    const MyContract = await ethers.getContractFactory(contractName, {
-        libraries: {
-            SemanticSBTLogicUpgradeable: semanticSBTLogicAddress,
-            NameServiceLogic: nameServiceLogicAddress,
-        }
-    });
-
-    await upgrades.upgradeProxy(
-        proxyAddress,
-        MyContract,
-        {unsafeAllowLinkedLibraries: true});
-    console.log(`${contractName} upgrade successfully!`)
-}
-
-async function main() {
-    const [owner] = await ethers.getSigners();
-
-    const semanticSBTLogicAddress = await semanticSBTLogic.deploy()
-    const nameServiceLogicAddress = await deployNameServiceLogic()
-    const nameServiceAddress = await deployNameService(semanticSBTLogicAddress, nameServiceLogicAddress, owner.address)
-
-
-    // await upgrade(semanticSBTLogicAddress, nameServiceLogicAddress, nameServiceAddress)
 }
 
 // We recommend this pattern to be able to use async/await everywhere
