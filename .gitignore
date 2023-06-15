@@ -12,3 +12,7 @@ typechain-types
 cache
 *artifacts
 *.deps
+
+# brownie
+build
+.pytest_cache
