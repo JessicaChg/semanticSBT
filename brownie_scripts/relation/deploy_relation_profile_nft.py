@@ -1,5 +1,5 @@
 from brownie import (
-    NameService,
+    RelationProfileNFT,
     config,
     network,
 )
@@ -22,34 +22,35 @@ from ..utils.helpful_scripts import (
 
 )
 
-name = 'Relation Name Service V1'
-symbol = 'SBT'
-schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E'
-class_ = ["Name"]
-predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]]
-suffix = ".soul"
+name = '.soul profile ';
+symbol = 'SOUL';
+schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
+class_ = ["Name"];
+predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
 
-proxy_name = "nameService_transparent_upgradeable_proxy"
+suffix = ".soul";
+
+proxy_name = "relation_profile_nft_transparent_upgradeable_proxy"
 
 load_dotenv()
 
 
-def deploy_name_service():
+def deploy_relation_profile_nft():
     account = get_account()
     print("====> use the address :{} to deploy... ".format(account))
-    name_service = NameService.deploy(
+    relation_profile_nft = RelationProfileNFT.deploy(
         {"from": account},
         publish_source=config["networks"][network.show_active()].get(
             "verify", False),
     )
-    update_address("nameService_logic", name_service)
-    print("====> NameService has deployed,the contract address is:{}".format(name_service))
-    return name_service
+    update_address("RelationProfileNFT_logic", relation_profile_nft)
+    print("====> RelationProfileNFT has deployed,the contract address is:{}".format(relation_profile_nft))
+    return relation_profile_nft
 
 
-def deploy_name_service_fully():
+def deploy_relation_profile_nft_fully():
     proxy_admin = get_admin()
-    logic_address = deploy_name_service()
+    logic_address = deploy_relation_profile_nft()
     init_data = encode_function_data(logic_address.initialize,
                                      suffix,
                                      name,
@@ -63,24 +64,26 @@ def deploy_name_service_fully():
 
 def upgrade():
     account = get_account()
-    logic_address = deploy_name_service()
+    logic_address = deploy_relation_profile_nft()
     proxy_admin = get_admin()
     proxy_address = get_proxy_address(proxy_name)
     proxy_admin.upgrade(proxy_address, logic_address, {"from": account})
-    print("===> NameService has upgrade successfully!")
+    print("===> RelationProfileNFT has upgrade successfully!")
 
 
-def call_name_service():
-    name_service = read_address("nameService_transparent_upgradeable_proxy", NameService)
-    owner = name_service.owner()
-    name_from_contract = name_service.name()
-    suffix_from_contract = name_service.suffix()
-    print("===> NameService has deployed successfully!\n\t owner:{}\n\t name:{}\n\t suffix:{}".format(owner,
+def call_relation_profile_nft():
+    relation_profile_nft = read_address(proxy_name, RelationProfileNFT)
+    owner = relation_profile_nft.owner()
+    name_from_contract = relation_profile_nft.name()
+    suffix_from_contract = relation_profile_nft.suffix()
+    print("===> RelationProfileNFT has deployed successfully!\n\t owner:{}\n\t name:{}\n\t suffix:{}".format(owner,
                                                                                                       name_from_contract,
                                                                                                       suffix_from_contract))
 
 
 def main():
-    deploy_name_service_fully()
+    deploy_relation_profile_nft_fully()
     upgrade()
-    call_name_service()
+
+    call_relation_profile_nft()
+
