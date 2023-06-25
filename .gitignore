@@ -16,3 +16,4 @@ cache
 # brownie
 build
 .pytest_cache
+metadata

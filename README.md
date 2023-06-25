@@ -31,7 +31,17 @@ git clone git@github.com:JessicaChg/semanticSBT.git
 cd semanticSBT
 ```
 
-## use brownie
+## Set environment
+
+
+```shell
+# require Node.js 14+
+cp .env.example .env
+# modify the env variable `*_PrivateKey` to your own private key
+
+```
+
+## Use brownie
 
 ### compile the contracts 
 - 
@@ -50,9 +60,7 @@ brownie test
 
 ### deploy 
 
-1. fill in the parameters in  .env
-
-2. deploy to testnet, take the mumbai as example
+1. deploy to testnet, take the mumbai as example
 
 + add network
 ```shell
