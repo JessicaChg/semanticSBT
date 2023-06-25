@@ -71,22 +71,22 @@ brownie networks add polygon mumbai host=<RPC_URL> chainid=80001 explorer=<EXPOR
 + deploy
 ```sh
 # libraries
-brownie run brownie_scripts/libraries/deploy_semanticUpgradeLogic.py --network relation-test
-brownie run brownie_scripts/libraries/deploy_nameserviceLogic.py  --network relation-test 
-brownie run brownie_scripts/libraries/deploy_daoregisterLogic.py  --network relation-test 
-brownie run brownie_scripts/libraries/deploy_followregisterLogic.py  --network relation-test 
+brownie run brownie_scripts/libraries/deploy_semanticUpgradeLogic.py --network mumbai
+brownie run brownie_scripts/libraries/deploy_nameserviceLogic.py  --network mumbai 
+brownie run brownie_scripts/libraries/deploy_daoregisterLogic.py  --network mumbai 
+brownie run brownie_scripts/libraries/deploy_followregisterLogic.py  --network mumbai 
 
 # upgradeable
-brownie run brownie_scripts/upgrade/deploy_proxyadmin.py --network relation-test
+brownie run brownie_scripts/upgrade/deploy_proxyadmin.py --network mumbai
 
 # social
-brownie run brownie_scripts/social/deploy_nameservice.py  --network relation-test 
-brownie run brownie_scripts/social/deploy_dao_register.py  --network relation-test 
-brownie run brownie_scripts/social/deploy_follow_register.py  --network relation-test 
-brownie run brownie_scripts/social/deploy_content.py  --network relation-test 
+brownie run brownie_scripts/social/deploy_nameservice.py  --network mumbai 
+brownie run brownie_scripts/social/deploy_dao_register.py  --network mumbai 
+brownie run brownie_scripts/social/deploy_follow_register.py  --network mumbai 
+brownie run brownie_scripts/social/deploy_content.py  --network mumbai 
 
 # relation
-brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network relation-test 
+brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network mumbai 
 ```
 
 
@@ -128,12 +128,12 @@ npx hardhat run scripts/deploy.js
 
 ```
 
-3. deploy to testnet, take the rinkeby as example
+3. deploy to testnet, take the mumbai as example
 
 + deploy and verify
 ```sh
-npx hardhat run scripts/deploy.js --network relation-test
+npx hardhat run scripts/deploy.js --network mumbai
 
-npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network rinkeby <DEPLOYED_CONTRACT_ADDRESS>
+npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network mumbai <DEPLOYED_CONTRACT_ADDRESS>
 ```
 
