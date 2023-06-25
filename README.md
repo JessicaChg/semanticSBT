@@ -1,37 +1,14 @@
 # Semantic Soulbound Token
-## Semantic Soulbound Token
-Solidity Implementation of Semantic Soulbound Token.
 
-## Problem Trying to solve
-For now, social identity data has no common standard, then the corresponding NFT or SBT can usually only supply a single function.
-In order to solve this problem, Semantic Soulbound Token take ``Resource Description Framework`` as data model for SBT metadata, that make SBT can cantain more semantic information.
+## Setup
 
-## How to Use 
-```
-contracts/
-          core/
-          interfaces/
-          libraries/
-          template/
-```
-
-## Contract
-``Activity.sol`` : A example which use semantic Soubound Token contract to create a contract for an activity. \
-``NameService.sol`` : A example which use semantic Soubound Token contract to create a contract for a name service. \
-``SharePrivacy.sol`` : A example which use semantic Soubound Token contract to create a contract for share privacy data. \
-``SemanticBaseStruct.sol`` : Data structure which used in Semantic Soulbound Token. \
-``SemanticSBT.sol`` : Semantic Soulbound Token Contract. \
-``ISemanticSBT.sol`` : Semantic Soulbound Token Interface. \
-``ISemanticSBTSchema.sol`` : Semantic Soulbound Token Metadata Interface.
-
-
-## Clone the Repository
+### Clone the Repository
 ```
 git clone git@github.com:JessicaChg/semanticSBT.git
 cd semanticSBT
 ```
 
-## Set environment
+### Set environment
 
 
 ```shell
@@ -41,9 +18,9 @@ cp .env.example .env
 
 ```
 
-## Use brownie
+### Use brownie
 
-### compile the contracts 
+#### compile the contracts 
 - 
 - install the library of this project depends on
 ```
@@ -58,7 +35,7 @@ brownie compile
 brownie test
 ```
 
-### deploy 
+#### deploy 
 
 1. deploy to testnet, take the mumbai as example
 
@@ -91,9 +68,9 @@ brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network m
 
 
 
-## use hardhat
+### use hardhat
 
-### compile the contracts
+#### compile the contracts
 - install the library of this project depends on
 ```
 npm install
@@ -107,7 +84,7 @@ npx hardhat compile
 npx hardhat test
 ```
 
-### deploy
+#### deploy
 
 1. fill in the parameters in  hardhat.config.js
 ```
@@ -136,4 +113,35 @@ npx hardhat run scripts/deploy.js --network mumbai
 
 npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network mumbai <DEPLOYED_CONTRACT_ADDRESS>
 ```
+
+
+## Overview
+
+The Contract Open Standard is a smart contract specification defined by the Relation Protocol. It has two basic requirements:
+
+* The contracts should conform to the data format and interface specification defined by the [Open Standard API](https://docs.relationlabs.ai/protocol/open-standard-api/introduction).
+* The RDF data constructed by these contracts should conform to the [Schema Standard](https://docs.relationlabs.ai/protocol/schema-standard/overview).
+
+Relation Protocol defined a set of Base Contracts based on the Contract Open Standard to address the three following scenarios.
+
+**Identity**: Describe users' identity via SBT contracts.
+
+* [Name Service](./contracts/template/NameService.sol)
+
+**Relationships**: Describe connections between different users via SBT contracts.
+
+* [Follow](./contracts/template/Follow.sol)
+* [DAO](./contracts/template/Dao.sol)
+
+**Publication**: Describe users' public or privacy content published via SBT contracts.
+
+* [Content](./contracts/template/Content.sol)
+* [Privacy Content](./contracts/template/PrivacyContent.sol)
+
+
+<figure style="float: right; text-align: center;font-style: italic;font-size: smaller;text-indent: 0;margin: 0.5em;padding: 0.5em;">
+  <p><img src="./doc/image/social-contracts.png"
+    alt="Base Contracts">
+  <figcaption>Base Contracts</figcaption>
+</figure>
 
