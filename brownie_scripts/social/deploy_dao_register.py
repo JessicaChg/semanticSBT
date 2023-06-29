@@ -36,8 +36,8 @@ predicate_ = [["daoContract", 3]]
 
 dao_with_sign_name = "Relation Dao With Sign"
 
-proxy_name = "Dao_TransparentUpgradeableProxy"
-beacon_name = "Dao_UpgradeableBeacon"
+dao_register_proxy_name = "DaoRegister_TransparentUpgradeableProxy"
+dao_beacon_name = "Dao_UpgradeableBeacon"
 dao_with_sign_proxy_name = "DaoWithSign_UpgradeableBeacon"
 
 load_dotenv()
@@ -52,21 +52,18 @@ def deploy_dao():
             "verify", False),
     )
     update_address("Dao", dao)
-    print("====> Dao has deployed,the contract address is:{}".format(dao))
     return dao
-
 
 
 def deploy_dao_register():
     account = get_account()
-    print("====> use the address :{} to deploy... ".format(account))
+    print("====> use the address :{} to deploy DaoRegister... ".format(account))
     dao_register = DaoRegister.deploy(
         {"from": account},
         publish_source=config["networks"][network.show_active()].get(
             "verify", False),
     )
     update_address("DaoRegister", dao_register)
-    print("====> DaoRegister has deployed,the contract address is:{}".format(dao_register))
     return dao_register
 
 
@@ -79,16 +76,15 @@ def deploy_dao_with_sign():
             "verify", False),
     )
     update_address("DaoWithSign", dao_with_sign)
-    print("====> DaoWithSign has deployed,the contract address is:{}".format(dao_with_sign))
     return dao_with_sign
 
 
 def set_dao_impl():
     account = get_account()
     dao = deploy_dao()
-    dao_beacon = deploy_upgradeable_beacon(dao, beacon_name)
+    dao_beacon = deploy_upgradeable_beacon(dao, dao_beacon_name)
 
-    dao_register = read_address(proxy_name, DaoRegister)
+    dao_register = read_address(dao_register_proxy_name, DaoRegister)
     dao_register.setDaoImpl(dao_beacon, {"from": account})
 
 
@@ -99,11 +95,11 @@ def set_dao_verify_contract():
     init_data = encode_function_data(dao_with_sign.initialize,
                                      dao_with_sign_name
                                      )
-    dao_with_sign_proxy = deploy_transparentUpgradeableProxy(dao_with_sign,proxy_admin, init_data,dao_with_sign_proxy_name)
+    dao_with_sign_proxy = deploy_transparentUpgradeableProxy(dao_with_sign, proxy_admin, init_data,
+                                                             dao_with_sign_proxy_name)
 
-    dao_register = read_address(proxy_name, DaoRegister)
+    dao_register = read_address(dao_register_proxy_name, DaoRegister)
     dao_register.setDaoVerifyContract(dao_with_sign_proxy, {"from": account})
-
 
 
 def deploy_follow_register_fully():
@@ -119,7 +115,7 @@ def deploy_follow_register_fully():
                                      class_,
                                      predicate_
                                      )
-    deploy_transparentUpgradeableProxy(logic_address, proxy_admin, init_data, proxy_name)
+    deploy_transparentUpgradeableProxy(logic_address, proxy_admin, init_data, dao_register_proxy_name)
     set_dao_impl()
     set_dao_verify_contract()
 
@@ -128,13 +124,13 @@ def upgrade():
     account = get_account()
     logic_address = deploy_dao_register()
     proxy_admin = get_admin()
-    proxy_address = get_proxy_address(proxy_name)
+    proxy_address = get_proxy_address(dao_register_proxy_name)
     proxy_admin.upgrade(proxy_address, logic_address, {"from": account})
     print("===> DaoRegister has upgrade successfully!")
 
 
 def call_dao_register():
-    dao_register = read_address(proxy_name, DaoRegister)
+    dao_register = read_address(dao_register_proxy_name, DaoRegister)
     owner = dao_register.owner()
     name_from_contract = dao_register.name()
     dao_impl_from_contract = dao_register.followImpl()
@@ -145,14 +141,14 @@ def call_dao_register():
 
 def create_dao(dao_name):
     account = get_account()
-    dao_register = read_address(proxy_name, DaoRegister)
+    dao_register = read_address(dao_register_proxy_name, DaoRegister)
     dao_register.deployDaoContract(account, dao_name, {"from": account})
     print("===> {} has created a dao".format(account))
 
 
 def get_dao_list():
     account = get_account()
-    dao_register = read_address(proxy_name, DaoRegister)
+    dao_register = read_address(dao_register_proxy_name, DaoRegister)
     balance = dao_register.balanceOf(account)
     print("===>{} balance is :{}".format(account, balance))
     for i in range(0, balance):

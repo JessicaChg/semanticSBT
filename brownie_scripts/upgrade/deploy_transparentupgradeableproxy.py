@@ -37,6 +37,3 @@ def get_proxy_address(name):
     read_address(name, TransparentUpgradeableProxy)
     return read_address(name, TransparentUpgradeableProxy)
 
-
-def main():
-    get_proxy_address("nameService_transparent_upgradeable_proxy")

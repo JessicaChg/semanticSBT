@@ -22,15 +22,14 @@ from ..utils.helpful_scripts import (
 
 )
 
-name = '.soul profile ';
-symbol = 'SOUL';
-schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E';
-class_ = ["Name"];
-predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]];
+name = '.soul profile '
+symbol = 'SOUL'
+schemaURI = 'ar://PsqAxxDYdxfk4iYa4UpPam5vm8XaEyKco3rzYwZJ_4E'
+class_ = ["Name"]
+predicate_ = [["hold", 3], ["resolved", 3], ["profileURI", 1]]
+suffix = ".soul"
 
-suffix = ".soul";
-
-proxy_name = "relation_profile_nft_transparent_upgradeable_proxy"
+proxy_name = "RelationProfileNFT_TransparentUpgradeableProxy"
 
 load_dotenv()
 
@@ -43,8 +42,7 @@ def deploy_relation_profile_nft():
         publish_source=config["networks"][network.show_active()].get(
             "verify", False),
     )
-    update_address("RelationProfileNFT_logic", relation_profile_nft)
-    print("====> RelationProfileNFT has deployed,the contract address is:{}".format(relation_profile_nft))
+    update_address("RelationProfileNFT", relation_profile_nft)
     return relation_profile_nft
 
 

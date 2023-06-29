@@ -6,7 +6,6 @@ from brownie import (
     network,
     Contract
 )
-
 from dotenv import load_dotenv
 
 from ..upgrade.deploy_proxyadmin import (
@@ -37,8 +36,8 @@ predicate_ = [["followContract", 3]]
 
 follow_with_sign_name = "Relation Follow With Sign"
 
-proxy_name = "Follow_TransparentUpgradeableProxy"
-beacon_name = "Follow_UpgradeableBeacon"
+follow_register_proxy_name = "FollowRegister_TransparentUpgradeableProxy"
+follow_beacon_name = "Follow_UpgradeableBeacon"
 follow_with_sign_proxy_name = "FollowWithSign_TransparentUpgradeableProxy"
 
 load_dotenv()
@@ -53,20 +52,18 @@ def deploy_follow():
             "verify", False),
     )
     update_address("Follow", follow)
-    print("====> Follow has deployed,the contract address is:{}".format(follow))
     return follow
 
 
 def deploy_follow_register():
     account = get_account()
-    print("====> use the address :{} to deploy... ".format(account))
+    print("====> use the address :{} to deploy FollowRegister... ".format(account))
     follow_register = FollowRegister.deploy(
         {"from": account},
         publish_source=config["networks"][network.show_active()].get(
             "verify", False),
     )
-    update_address("FollowRegister_logic", follow_register)
-    print("====> FollowRegister has deployed,the contract address is:{}".format(follow_register))
+    update_address("FollowRegister", follow_register)
     return follow_register
 
 
@@ -79,16 +76,15 @@ def deploy_follow_with_sign():
             "verify", False),
     )
     update_address("FollowWithSign", follow_with_sign)
-    print("====> FollowWithSign has deployed,the contract address is:{}".format(follow_with_sign))
     return follow_with_sign
 
 
 def set_follow_impl():
     account = get_account()
     follow = deploy_follow()
-    follow_beacon = deploy_upgradeable_beacon(follow,beacon_name)
+    follow_beacon = deploy_upgradeable_beacon(follow, follow_beacon_name)
 
-    follow_register = read_address(proxy_name, FollowRegister)
+    follow_register = read_address(follow_register_proxy_name, FollowRegister)
     follow_register.setFollowImpl(follow_beacon,
                                   {"from": account}
                                   )
@@ -104,7 +100,7 @@ def set_follow_verify_contract():
                                      )
     follow_with_sign_proxy = deploy_transparentUpgradeableProxy(follow_with_sign, proxy_admin, init_data,
                                                                 follow_with_sign_proxy_name)
-    follow_register = read_address(proxy_name, FollowRegister)
+    follow_register = read_address(follow_register_proxy_name, FollowRegister)
 
     follow_register.setFollowVerifyContract(follow_with_sign_proxy,
                                             {"from": account}
@@ -124,7 +120,7 @@ def deploy_follow_register_fully():
                                      class_,
                                      predicate_
                                      )
-    deploy_transparentUpgradeableProxy(logic_address, proxy_admin, init_data, proxy_name)
+    deploy_transparentUpgradeableProxy(logic_address, proxy_admin, init_data, follow_register_proxy_name)
     set_follow_impl()
     set_follow_verify_contract()
 
@@ -133,13 +129,13 @@ def upgrade():
     account = get_account()
     logic_address = deploy_follow_register()
     proxy_admin = get_admin()
-    proxy_address = get_proxy_address(proxy_name)
+    proxy_address = get_proxy_address(follow_register_proxy_name)
     proxy_admin.upgrade(proxy_address, logic_address, {"from": account})
     print("===> FollowRegister has upgrade successfully!")
 
 
 def call_follow_register():
-    follow_register = read_address(proxy_name, FollowRegister)
+    follow_register = read_address(follow_register_proxy_name, FollowRegister)
     owner = follow_register.owner()
     name_from_contract = follow_register.name()
     follow_impl_from_contract = follow_register.followImpl()
@@ -147,18 +143,20 @@ def call_follow_register():
                                                                                                                  name_from_contract,
                                                                                                                  follow_impl_from_contract))
 
+
 def create_follow_contract(to):
     account = get_account()
-    follow_register = read_address(proxy_name, FollowRegister)
+    follow_register = read_address(follow_register_proxy_name, FollowRegister)
     follow_register.deployFollowContract(to,
                                          {"from": account}
                                          )
     follow_contract = follow_register.ownedFollowContract(to)
-    print("===> {} has deployed follow contract successfully!The contract address is :{}".format(to,follow_contract))
+    print("===> {} has deployed follow contract successfully!The contract address is :{}".format(to, follow_contract))
+
 
 def follow(to_follow):
     account = get_account()
-    follow_register = read_address(proxy_name, FollowRegister)
+    follow_register = read_address(follow_register_proxy_name, FollowRegister)
     follow_contract = follow_register.ownedFollowContract(to_follow)
     follow = Contract.from_abi(
         "Follow",
@@ -167,7 +165,8 @@ def follow(to_follow):
     )
     follow.follow({"from": account})
     is_following = follow.isFollowing(account)
-    print("==> {} following {} : {}".format(account,to_follow,is_following))
+    print("==> {} following {} : {}".format(account, to_follow, is_following))
+
 
 def main():
     deploy_follow_register_fully()
@@ -176,6 +175,6 @@ def main():
     call_follow_register()
 
     # Test
-    wallet_address = ""
-    create_follow_contract(wallet_address)
-    follow(wallet_address)
+    # wallet_address = ""
+    # create_follow_contract(wallet_address)
+    # follow(wallet_address)

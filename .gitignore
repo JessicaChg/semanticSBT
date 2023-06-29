@@ -16,4 +16,4 @@ cache
 # brownie
 build
 .pytest_cache
-metadata
+metadata/network_to_cid.json

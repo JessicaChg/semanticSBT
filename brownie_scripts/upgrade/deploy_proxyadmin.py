@@ -19,14 +19,13 @@ load_dotenv()
 
 def deploy_proxy_admin():
     account = get_account()
-    print("====> use the address :{} to deploy proxy admin... ".format(account))
+    print("====> use the address :{} to deploy ProxyAdmin... ".format(account))
     proxy_admin = ProxyAdmin.deploy(
         {"from": account},
         publish_source=config["networks"][network.show_active()].get(
             "verify", False),
     )
     update_address("ProxyAdmin", proxy_admin)
-    print("====> ProxyAdmin has deployed,the contract address is:{}".format(proxy_admin))
     return proxy_admin
 
 

@@ -2,10 +2,8 @@ from brownie import (
     Content,
     ContentWithSign,
     config,
-    network,
-    Contract
+    network
 )
-
 from dotenv import load_dotenv
 
 from ..upgrade.deploy_proxyadmin import (
@@ -14,9 +12,6 @@ from ..upgrade.deploy_proxyadmin import (
 from ..upgrade.deploy_transparentupgradeableproxy import (
     get_proxy_address,
     deploy_transparentUpgradeableProxy
-)
-from ..upgrade.deploy_upgradeable_beacon import (
-    deploy_upgradeable_beacon,
 )
 from ..utils.file_functions import (
     update_address,
@@ -51,10 +46,7 @@ def deploy_content():
             "verify", False),
     )
     update_address("Content", content)
-    print("====> Content has deployed,the contract address is:{}".format(content))
     return content
-
-
 
 
 def deploy_content_with_sign():
@@ -66,10 +58,7 @@ def deploy_content_with_sign():
             "verify", False),
     )
     update_address("ContentWithSign", content_with_sign)
-    print("====> ContentWithSign has deployed,the contract address is:{}".format(content_with_sign))
     return content_with_sign
-
-
 
 
 def deploy_content_with_sign_proxy():
@@ -80,7 +69,7 @@ def deploy_content_with_sign_proxy():
                                      content_with_sign_name
                                      )
     content_with_sign_proxy = deploy_transparentUpgradeableProxy(content_with_sign, proxy_admin, init_data,
-                                                                content_with_sign_proxy_name)
+                                                                 content_with_sign_proxy_name)
     return content_with_sign_proxy
 
 
@@ -108,23 +97,25 @@ def upgrade():
     proxy_admin = get_admin()
     proxy_address = get_proxy_address(proxy_name)
     proxy_admin.upgrade(proxy_address, logic_address, {"from": account})
-    print("===> FollowRegister has upgrade successfully!")
+    print("===> Content has upgrade successfully!")
 
 
 def call_content():
     content = read_address(proxy_name, Content)
     owner = content.owner()
     name_from_contract = content.name()
-    print("===> FollowRegister has deployed successfully!\n\t owner:{}\n\t name:{}\n\t ".format(owner,name_from_contract))
+    print("===> Content has deployed successfully!\n\t owner:{}\n\t name:{}\n\t ".format(owner,
+                                                                                                name_from_contract))
 
 
 def post(post_content):
     account = get_account()
     content = read_address(proxy_name, Content)
-    content.post(post_content,{"from": account})
+    content.post(post_content, {"from": account})
     total_supply = content.totalSupply()
     content_from_contract = content.contentOf(total_supply)
-    print("==> token_id={} content:{}".format(total_supply,content_from_contract))
+    print("==> token_id={} content:{}".format(total_supply, content_from_contract))
+
 
 def main():
     deploy_content_fully()

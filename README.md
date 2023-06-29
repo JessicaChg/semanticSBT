@@ -21,7 +21,7 @@ cp .env.example .env
 ### Use brownie
 
 #### compile the contracts 
-- 
+
 - install the library of this project depends on
 ```
 pip3 install eth-brownie
@@ -37,33 +37,38 @@ brownie test
 
 #### deploy 
 
-1. deploy to testnet, take the mumbai as example
+1. deploy to testnet, take the goerli as example
 
 + add network
 ```shell
 brownie networks list
-brownie networks add polygon mumbai host=<RPC_URL> chainid=80001 explorer=<EXPORE_URL>
+brownie networks add polygon goerli host=<RPC_URL> chainid=5 explorer=<EXPORE_URL>
+```
+
++ set network_to_cid
+```shell
+cp metadata/network_to_cid.json.sample metadata/network_to_cid.json
 ```
 
 + deploy
 ```sh
 # libraries
-brownie run brownie_scripts/libraries/deploy_semanticUpgradeLogic.py --network mumbai
-brownie run brownie_scripts/libraries/deploy_nameserviceLogic.py  --network mumbai 
-brownie run brownie_scripts/libraries/deploy_daoregisterLogic.py  --network mumbai 
-brownie run brownie_scripts/libraries/deploy_followregisterLogic.py  --network mumbai 
+brownie run brownie_scripts/libraries/deploy_semanticUpgradeLogic.py --network goerli
+brownie run brownie_scripts/libraries/deploy_nameserviceLogic.py  --network goerli 
+brownie run brownie_scripts/libraries/deploy_daoregisterLogic.py  --network goerli 
+brownie run brownie_scripts/libraries/deploy_followregisterLogic.py  --network goerli 
 
 # upgradeable
-brownie run brownie_scripts/upgrade/deploy_proxyadmin.py --network mumbai
+brownie run brownie_scripts/upgrade/deploy_proxyadmin.py --network goerli
 
 # social
-brownie run brownie_scripts/social/deploy_nameservice.py  --network mumbai 
-brownie run brownie_scripts/social/deploy_dao_register.py  --network mumbai 
-brownie run brownie_scripts/social/deploy_follow_register.py  --network mumbai 
-brownie run brownie_scripts/social/deploy_content.py  --network mumbai 
+brownie run brownie_scripts/social/deploy_nameservice.py  --network goerli 
+brownie run brownie_scripts/social/deploy_dao_register.py  --network goerli 
+brownie run brownie_scripts/social/deploy_follow_register.py  --network goerli 
+brownie run brownie_scripts/social/deploy_content.py  --network goerli 
 
 # relation
-brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network mumbai 
+brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network goerli 
 ```
 
 
@@ -105,13 +110,13 @@ npx hardhat run scripts/deploy.js
 
 ```
 
-3. deploy to testnet, take the mumbai as example
+3. deploy to testnet, take the goerli as example
 
 + deploy and verify
 ```sh
-npx hardhat run scripts/deploy.js --network mumbai
+npx hardhat run scripts/deploy.js --network goerli
 
-npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network mumbai <DEPLOYED_CONTRACT_ADDRESS>
+npx hardhat verify --contract contracts/core/Semantic.sol:Semantic  --network goerli <DEPLOYED_CONTRACT_ADDRESS>
 ```
 
 

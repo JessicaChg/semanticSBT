@@ -16,9 +16,10 @@ from ..utils.helpful_scripts import (
 
 load_dotenv()
 
-def deploy_upgradeable_beacon(logic_address,beacon_name):
+
+def deploy_upgradeable_beacon(logic_address, beacon_name):
     account = get_account()
-    print("====> use the address :{} to deploy {}... ".format(account,beacon_name))
+    print("====> use the address :{} to deploy {}... ".format(account, beacon_name))
     upgradeable_beacon = UpgradeableBeacon.deploy(
         logic_address,
         {"from": account},
@@ -26,11 +27,9 @@ def deploy_upgradeable_beacon(logic_address,beacon_name):
             "verify", False),
     )
     update_address(beacon_name, upgradeable_beacon)
-    print("====> {} has deployed,the contract address is:{}".format(beacon_name,upgradeable_beacon))
     return upgradeable_beacon
 
 
 def get_proxy_address(name):
     read_address(name, UpgradeableBeacon)
     return read_address(name, UpgradeableBeacon)
-

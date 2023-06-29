@@ -24,7 +24,7 @@ def deploy_nameServiceLogic():
             "verify", False),
     )
 
-    update_address("nameServiceLogic", nameServiceLogic)
+    update_address("NameServiceLogic", nameServiceLogic)
     return nameServiceLogic
 
 
