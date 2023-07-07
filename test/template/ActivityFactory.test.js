@@ -58,7 +58,7 @@ describe("ActivityFactory contract", function () {
                 .withArgs(1, `:Soul_${owner.address.toLowerCase()} p:participate :Activity_myActivity . `)
         });
 
-        it("user mint failed when paused", async function () {
+        it("user should mint failed when paused", async function () {
             const {activityFactory, owner} = await loadFixture(deployTokenFixture);
             await (await activityFactory.createActivity("my-activity", "MAC", "", "myActivity")).wait()
             const nonce = await activityFactory.nonce(owner.address)
