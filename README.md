@@ -71,6 +71,7 @@ brownie run brownie_scripts/social/deploy_content.py  --network goerli
 
 # relation
 brownie run brownie_scripts/relation/deploy_relation_profile_nft.py  --network goerli 
+brownie run brownie_scripts/relation/deploy_relation_withdraw.py --network goerli
 ```
 
 
