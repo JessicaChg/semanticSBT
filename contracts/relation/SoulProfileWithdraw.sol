@@ -8,13 +8,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 
-contract RelationWithdraw is Ownable, Pausable {
+contract SoulProfileWithdraw is Ownable, Pausable {
     using Strings for uint256;
     using Strings for address;
 
     using ECDSA for bytes;
     using ECDSA for bytes32;
 
+    string public name;
     mapping(address => bool) public minters;
     mapping(address => uint256) public totalWithdrawn;
 
@@ -26,13 +27,19 @@ contract RelationWithdraw is Ownable, Pausable {
         _;
     }
 
-    constructor() {
+    constructor(address minter,string memory _name) {
         setMinter(msg.sender, true);
+        setMinter(minter, true);
+        name = _name;
     }
 
     function setMinter(address addr, bool _isMinter) public onlyOwner {
         minters[addr] = _isMinter;
         emit SetMinter(addr, _isMinter);
+    }
+
+    function setName(string memory _name) public onlyOwner {
+        name = _name;
     }
 
     function pause() external onlyOwner {
@@ -51,8 +58,8 @@ contract RelationWithdraw is Ownable, Pausable {
     }
 
     function withdraw(uint256 deadline, uint256 _withdrawAmount, uint256 _totalWithdrawnAmount, bytes memory signature) public whenNotPaused {
-        require(totalWithdrawn[msg.sender] + _withdrawAmount == _totalWithdrawnAmount, "RelationWithdraw: invalid withdraw value");
-        require(minters[recoverAddress(msg.sender, deadline, _withdrawAmount, _totalWithdrawnAmount, signature)], "RelationWithdraw: invalid signature");
+        require(totalWithdrawn[msg.sender] + _withdrawAmount == _totalWithdrawnAmount, "Please don't initiate a withdrawal request repeatedly.");
+        require(minters[recoverAddress(msg.sender, deadline, _withdrawAmount, _totalWithdrawnAmount, signature)], "Invalid signature, please retry.");
         totalWithdrawn[msg.sender] = _totalWithdrawnAmount;
         payable(msg.sender).transfer(_withdrawAmount);
         emit Withdraw(msg.sender, _withdrawAmount);
@@ -60,7 +67,7 @@ contract RelationWithdraw is Ownable, Pausable {
 
 
     function recoverAddress(address caller, uint256 deadline, uint256 _withdrawAmount, uint256 _totalWithdrawnAmount, bytes memory signature) internal view returns (address) {
-        require(deadline > block.timestamp, "RelationWithdraw:signature expired");
+        require(deadline > block.timestamp, "Signature expired, please retry.");
         bytes32 hash = keccak256(
             abi.encodePacked(
                 address(this),
